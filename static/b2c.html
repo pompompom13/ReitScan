@@ -3,429 +3,939 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>РейтСкан — Личный кабинет покупателя</title>
+  <title>РейтСкан — Личный кабинет</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/static/js/api.js"></script>
   <style>
-    .tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: 600; }
-    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
-    .star-btn { cursor: pointer; font-size: 1.6rem; transition: color .1s; }
-    .star-btn:hover, .star-btn.active { color: #fbbf24; }
-    .star-btn { color: #d1d5db; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f5f4ff; color: #1a1a2e; }
+    :root {
+      --primary: #6366f1; --primary-light: #eef2ff; --violet: #8b5cf6;
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f5f4ff; --card: #ffffff; --border: #e8e7f5; --text: #1a1a2e;
+      --muted: #6b7280; --radius: 16px;
+    }
+    .card { background:#fff; border:1px solid #e8e7f5; border-radius:16px; box-shadow:0 1px 4px rgba(99,102,241,0.06); }
+    .tab-btn { padding:6px 16px; border-radius:10px; font-size:13px; font-weight:500; color:#6b7280; cursor:pointer; transition:all 0.18s; white-space:nowrap; border:none; background:transparent; }
+    .tab-btn.active { background:#6366f1; color:#fff; }
+    .tab-btn:hover:not(.active) { background:#eef2ff; color:#6366f1; }
+    .btn-primary { background:#6366f1; color:#fff; border:none; border-radius:10px; padding:10px 20px; font-weight:600; font-size:14px; cursor:pointer; transition:opacity 0.18s; }
+    .btn-primary:hover { opacity:0.88; }
+    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-outline { background:transparent; color:#6366f1; border:1.5px solid #6366f1; border-radius:10px; padding:9px 20px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.18s; }
+    .btn-outline:hover { background:#eef2ff; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+    @keyframes petFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes fadeSlideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation:fadeSlideIn 0.3s ease forwards; }
+    .pet-legendary { animation:petFloat 3s ease-in-out infinite; }
+    .modal-backdrop { position:fixed;inset:0;z-index:50;background:rgba(15,15,35,0.55);display:flex;align-items:center;justify-content:center;padding:16px; }
+    .modal-box { background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.18); }
+    .star-btn { cursor:pointer; font-size:28px; color:#d1d5db; transition:color 0.1s; }
+    .star-btn.active,.star-btn:hover { color:#f59e0b; }
+    .msg-bubble-b2c { background:#6366f1;color:#fff;border-radius:16px 16px 4px 16px; }
+    .msg-bubble-b2b { background:#f3f4f6;color:#374151;border-radius:16px 16px 16px 4px; }
+    ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+    .progress-bar { height:8px;background:#e8e7f5;border-radius:10px;overflow:hidden; }
+    .progress-fill { height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:10px;transition:width 0.6s ease; }
+    .acc-item { border:2px solid #e8e7f5;border-radius:12px;padding:10px;cursor:pointer;text-align:center;transition:all 0.18s; }
+    .acc-item.selected { border-color:#6366f1;background:#eef2ff; }
+    .acc-item:hover:not(.selected) { border-color:#a5b4fc; }
+    input,textarea,select { outline:none; font-family:'Inter',sans-serif; }
+    input:focus,textarea:focus,select:focus { border-color:#6366f1!important; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
 
 <!-- HEADER -->
-<header class="bg-white border-b shadow-sm sticky top-0 z-30">
+<header style="background:#fff;border-bottom:1px solid #e8e7f5;position:sticky;top:0;z-index:30;">
   <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-indigo-700 rounded-lg flex items-center justify-center">
-        <span class="text-white font-black">R</span>
+    <div class="flex items-center gap-2">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#fff"/></svg>
       </div>
-      <span class="font-bold text-gray-800">РейтСкан</span>
-    </a>
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-full text-sm">
-        <span class="text-yellow-500">⭐</span>
-        <span id="points-badge" class="font-semibold text-yellow-700">0 баллов</span>
+      <span style="font-weight:700;font-size:17px;">РейтСкан</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#6366f1" opacity=".15"/><path d="M12 6l1.5 3.5 3.5.5-2.5 2.5.5 3.5L12 14l-3 2 .5-3.5L7 10l3.5-.5L12 6z" fill="#6366f1"/></svg>
+        <span id="header-points">0</span> б
       </div>
-      <div id="user-name-badge" class="text-sm text-gray-600 font-medium hidden"></div>
-      <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition">Выйти</button>
+      <span id="header-username" style="font-size:13px;font-weight:500;color:#6b7280;"></span>
+      <button onclick="logout()" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:500;">Выйти</button>
     </div>
   </div>
 </header>
 
-<!-- NAV TABS -->
-<div class="bg-white border-b">
+<!-- TABS -->
+<div style="background:#fff;border-bottom:1px solid #e8e7f5;position:sticky;top:57px;z-index:25;">
   <div class="max-w-5xl mx-auto px-4">
-    <div class="flex gap-6">
-      <button onclick="showTab('search')" id="tab-search" class="py-3 text-sm tab-active">🔍 Поиск товаров</button>
-      <button onclick="showTab('myreviews')" id="tab-myreviews" class="py-3 text-sm text-gray-500 hover:text-gray-700">📝 Мои отзывы</button>
+    <div class="flex gap-1 py-2 overflow-x-auto" id="tab-nav" style="scrollbar-width:none;">
+      <button class="tab-btn active" onclick="switchTab('search')">Поиск</button>
+      <button class="tab-btn" onclick="switchTab('quests')">Задания</button>
+      <button class="tab-btn" onclick="switchTab('rewards')">Награды</button>
+      <button class="tab-btn" onclick="switchTab('character')">Рейтик</button>
+      <button class="tab-btn" onclick="switchTab('messages')" style="position:relative;">
+        Сообщения
+        <span id="msg-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:none;position:absolute;top:4px;right:4px;"></span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('myreviews')">Мои отзывы</button>
     </div>
   </div>
 </div>
 
-<!-- MAIN -->
-<main class="max-w-5xl mx-auto px-4 py-8">
+<div class="max-w-5xl mx-auto px-4 py-6">
 
-  <!-- SEARCH TAB -->
-  <div id="tab-search-content">
-    <!-- Search bar -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
-      <h2 class="font-bold text-lg text-gray-800 mb-3">Найти товар или заведение</h2>
-      <div class="flex gap-3">
-        <input id="search-input" type="text" placeholder="Например: мороженое, ресторан, кофейня..."
-          class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"/>
-        <button onclick="doSearch()" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition text-sm">
-          Найти
+<!-- SEARCH TAB -->
+<div id="tab-search">
+  <div class="card p-4 mb-5">
+    <div class="flex gap-2">
+      <div style="flex:1;position:relative;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search-input" type="text" placeholder="Найти товар, бренд..."
+          style="width:100%;padding:10px 12px 10px 38px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;background:#fafafa;"
+          oninput="searchProducts()"/>
+      </div>
+      <select id="category-filter" onchange="searchProducts()"
+        style="padding:10px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;background:#fafafa;color:#374151;min-width:140px;">
+        <option value="">Все категории</option>
+      </select>
+    </div>
+  </div>
+  <div id="products-grid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));"></div>
+</div>
+
+<!-- QUESTS TAB -->
+<div id="tab-quests" class="hidden">
+  <div class="grid gap-5">
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h2 style="font-weight:700;font-size:18px;margin-bottom:4px;">Ежедневное вращение</h2>
+          <p style="color:#6b7280;font-size:14px;">Крутите колесо раз в день — получайте бонусы</p>
+        </div>
+        <div id="spin-result-badge" class="hidden badge" style="background:#d1fae5;color:#065f46;font-size:14px;padding:6px 14px;"></div>
+      </div>
+      <div class="flex flex-col items-center gap-4">
+        <div style="position:relative;">
+          <canvas id="wheel-canvas" width="260" height="260"></canvas>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;background:#fff;border:3px solid #6366f1;border-radius:50%;box-shadow:0 2px 10px rgba(99,102,241,0.3);"></div>
+        </div>
+        <button id="spin-btn" onclick="spinWheel()" class="btn-primary" style="padding:12px 40px;font-size:15px;">Крутить</button>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-weight:600;font-size:16px;margin-bottom:14px;">Задания</h3>
+      <div id="quests-container" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));"></div>
+    </div>
+
+    <div>
+      <h3 style="font-weight:600;font-size:16px;margin-bottom:14px;">Опросы</h3>
+      <div id="surveys-container" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));"></div>
+    </div>
+  </div>
+</div>
+
+<!-- REWARDS TAB -->
+<div id="tab-rewards" class="hidden">
+  <div class="flex items-center justify-between mb-5">
+    <h2 style="font-weight:700;font-size:20px;">Магазин наград</h2>
+    <div style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:600;">Баллы: <span id="rewards-points">0</span></div>
+  </div>
+  <div id="rewards-grid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
+</div>
+
+<!-- CHARACTER TAB -->
+<div id="tab-character" class="hidden">
+  <div class="grid gap-5" style="grid-template-columns:1fr 1.4fr;">
+    <div class="card p-6 flex flex-col items-center gap-4">
+      <div id="pet-container" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;"></div>
+      <div style="text-align:center;">
+        <div id="pet-name" style="font-weight:700;font-size:18px;"></div>
+        <div id="pet-stage-label" style="color:#6b7280;font-size:13px;margin-top:2px;"></div>
+      </div>
+      <div style="width:100%;">
+        <div class="flex justify-between mb-1" style="font-size:12px;color:#6b7280;">
+          <span id="pet-pts-label"></span>
+          <span id="pet-next-label"></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="pet-progress" style="width:0%;"></div></div>
+      </div>
+      <button onclick="openAccModal()" class="btn-outline" style="width:100%;">Сменить аксессуар</button>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div class="card p-5">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">О Рейтике</h3>
+        <p style="color:#4b5563;font-size:14px;line-height:1.7;" id="pet-lore"></p>
+      </div>
+      <div class="card p-5">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:14px;">Стадии развития</h3>
+        <div class="flex flex-col gap-2" id="stages-list"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card p-5 mt-5">
+    <h3 style="font-weight:600;font-size:15px;margin-bottom:14px;">Достижения</h3>
+    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));" id="achievements-list"></div>
+  </div>
+</div>
+
+<!-- MESSAGES TAB -->
+<div id="tab-messages" class="hidden">
+  <div class="grid gap-4" style="grid-template-columns:300px 1fr;min-height:500px;">
+    <div class="card overflow-hidden flex flex-col">
+      <div style="padding:16px;border-bottom:1px solid #e8e7f5;"><h3 style="font-weight:600;font-size:15px;">Сообщения</h3></div>
+      <div id="conv-list" style="overflow-y:auto;flex:1;"></div>
+    </div>
+    <div class="card overflow-hidden flex flex-col">
+      <div id="chat-header" style="padding:16px;border-bottom:1px solid #e8e7f5;display:none;">
+        <div id="chat-title" style="font-weight:600;font-size:15px;"></div>
+        <div id="chat-subtitle" style="color:#6b7280;font-size:12px;margin-top:2px;"></div>
+      </div>
+      <div id="chat-empty" class="flex flex-col items-center justify-center" style="flex:1;color:#9ca3af;padding:40px;text-align:center;">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="margin-bottom:10px;opacity:0.35;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5"/></svg>
+        <p style="font-size:14px;">Выберите диалог</p>
+      </div>
+      <div id="chat-messages" class="hidden" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="chat-input-area" class="hidden" style="padding:12px 16px;border-top:1px solid #e8e7f5;display:flex;gap:8px;">
+        <input id="chat-input" type="text" placeholder="Написать сообщение..."
+          style="flex:1;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"
+          onkeydown="if(event.key==='Enter')sendReply()"/>
+        <button onclick="sendReply()" class="btn-primary" style="padding:10px 16px;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2"/></svg>
         </button>
       </div>
-      <div id="category-chips" class="flex gap-2 mt-3 flex-wrap"></div>
-    </div>
-
-    <!-- Results -->
-    <div id="search-results" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    <div id="search-empty" class="hidden text-center py-12 text-gray-400">
-      <div class="text-4xl mb-3">🔍</div>
-      <div>Ничего не найдено. Попробуйте другой запрос.</div>
-    </div>
-  </div>
-
-  <!-- MY REVIEWS TAB -->
-  <div id="tab-myreviews-content" class="hidden">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="font-bold text-xl text-gray-800">Мои отзывы</h2>
-      <div class="text-sm text-gray-500">За каждый отзыв +10–15 баллов</div>
-    </div>
-    <div id="my-reviews-list" class="space-y-4"></div>
-    <div id="my-reviews-empty" class="hidden text-center py-12 text-gray-400">
-      <div class="text-4xl mb-3">📝</div>
-      <div class="mb-4">Вы ещё не оставили ни одного отзыва</div>
-      <button onclick="showTab('search')" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold">Найти товар →</button>
-    </div>
-  </div>
-
-</main>
-
-<!-- PRODUCT DETAIL MODAL -->
-<div id="product-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-start justify-center p-4 overflow-y-auto">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-6">
-    <div class="flex items-center justify-between p-5 border-b">
-      <h3 id="modal-product-name" class="font-bold text-lg text-gray-800"></h3>
-      <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
-    </div>
-    <div class="p-5 space-y-5" id="modal-content">
-      <!-- filled by JS -->
-    </div>
-    <div class="p-5 border-t">
-      <button onclick="openReviewModal()" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">
-        ✍️ Написать отзыв (+10–15 баллов)
-      </button>
     </div>
   </div>
 </div>
 
-<!-- REVIEW WRITE MODAL -->
-<div id="review-modal" class="fixed inset-0 z-60 hidden modal-bg flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-    <div class="flex items-center justify-between p-5 border-b">
-      <h3 class="font-bold text-lg text-gray-800">Написать отзыв</h3>
-      <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
-    </div>
-    <form onsubmit="submitReview(event)" class="p-5 space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Оценка</label>
-        <div class="flex gap-1" id="star-rating">
-          <span class="star-btn" data-val="1" onclick="setRating(1)">★</span>
-          <span class="star-btn" data-val="2" onclick="setRating(2)">★</span>
-          <span class="star-btn" data-val="3" onclick="setRating(3)">★</span>
-          <span class="star-btn" data-val="4" onclick="setRating(4)">★</span>
-          <span class="star-btn" data-val="5" onclick="setRating(5)">★</span>
+<!-- MY REVIEWS TAB -->
+<div id="tab-myreviews" class="hidden">
+  <div id="my-reviews-list" class="flex flex-col gap-3"></div>
+</div>
+
+</div>
+
+<!-- PRODUCT MODAL -->
+<div id="product-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h2 id="modal-name" style="font-weight:700;font-size:18px;"></h2>
+          <div id="modal-meta" style="color:#6b7280;font-size:13px;margin-top:4px;"></div>
         </div>
-        <input type="hidden" id="selected-rating" value="0"/>
+        <button onclick="closeProductModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Ваш отзыв</label>
-        <textarea id="review-text" rows="4" required minlength="10"
-          placeholder="Расскажите о вашем опыте..."
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
-        <div class="text-xs text-gray-400 mt-1">Отзыв длиннее 50 символов даёт +5 доп. баллов</div>
+      <div id="modal-ratings" class="flex gap-3 flex-wrap mb-4"></div>
+      <div id="modal-prices" class="flex gap-3 mb-5" style="flex-wrap:wrap;"></div>
+      <div style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Анализ отзывов</h3>
+        <div id="modal-analysis" class="grid gap-3" style="grid-template-columns:1fr 1fr;"></div>
       </div>
-      <div id="review-error" class="text-red-500 text-sm hidden"></div>
-      <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">
-        Отправить отзыв
-      </button>
-    </form>
+      <div style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Отзывы</h3>
+        <div id="modal-reviews" class="flex flex-col gap-3" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="openReviewModal()" class="btn-primary" style="flex:1;">Написать отзыв</button>
+        <button id="contact-manufacturer-btn" onclick="openContactModal()" class="btn-outline hidden" style="flex:1;">Связаться с брендом</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div id="review-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-5">
+        <h2 style="font-weight:700;font-size:17px;">Написать отзыв</h2>
+        <button onclick="closeReviewModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Оценка</label>
+        <div class="flex gap-2">
+          <span class="star-btn" data-v="1" onclick="setRating(1)">&#9733;</span>
+          <span class="star-btn" data-v="2" onclick="setRating(2)">&#9733;</span>
+          <span class="star-btn" data-v="3" onclick="setRating(3)">&#9733;</span>
+          <span class="star-btn" data-v="4" onclick="setRating(4)">&#9733;</span>
+          <span class="star-btn" data-v="5" onclick="setRating(5)">&#9733;</span>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Текст отзыва</label>
+        <textarea id="review-text" rows="4" placeholder="Поделитесь впечатлениями..."
+          style="width:100%;padding:12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;resize:none;"></textarea>
+        <p style="font-size:12px;color:#9ca3af;margin-top:6px;">За отзыв длиннее 50 символов — дополнительные +5 баллов</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeReviewModal()" class="btn-outline" style="flex:1;">Отмена</button>
+        <button onclick="submitReview()" class="btn-primary" style="flex:1;">Отправить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SURVEY MODAL -->
+<div id="survey-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-2">
+        <div id="survey-title" style="font-weight:700;font-size:17px;"></div>
+        <button onclick="closeSurveyModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="progress-bar"><div class="progress-fill" id="survey-progress" style="width:0%;"></div></div>
+        <div id="survey-step-label" style="font-size:12px;color:#9ca3af;margin-top:6px;"></div>
+      </div>
+      <div id="survey-question-area" style="min-height:140px;"></div>
+      <div class="flex gap-3 mt-6">
+        <button id="survey-back-btn" onclick="surveyBack()" class="btn-outline" style="flex:1;display:none;">Назад</button>
+        <button id="survey-next-btn" onclick="surveyNext()" class="btn-primary" style="flex:1;">Далее</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div id="contact-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-5">
+        <h2 style="font-weight:700;font-size:17px;">Написать бренду</h2>
+        <button onclick="closeContactModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Тема</label>
+        <input id="contact-subject" type="text" placeholder="Например: Вопрос о составе"
+          style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Сообщение</label>
+        <textarea id="contact-message" rows="4" placeholder="Ваш вопрос или предложение..."
+          style="width:100%;padding:12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;resize:none;"></textarea>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeContactModal()" class="btn-outline" style="flex:1;">Отмена</button>
+        <button onclick="submitContact()" class="btn-primary" style="flex:1;">Отправить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCESSORY MODAL -->
+<div id="acc-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-5">
+        <h2 style="font-weight:700;font-size:17px;">Аксессуары для Рейтика</h2>
+        <button onclick="closeAccModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="grid gap-3" id="acc-grid" style="grid-template-columns:repeat(3,1fr);"></div>
+      <p style="font-size:12px;color:#9ca3af;margin-top:12px;">Аксессуары открываются по мере набора баллов</p>
+      <button onclick="saveAccessory()" class="btn-primary" style="width:100%;margin-top:16px;">Сохранить</button>
+    </div>
   </div>
 </div>
 
 <script>
-let currentProductId = null;
-let currentUser = null;
+const ALL_TABS = ["search","quests","rewards","character","messages","myreviews"];
+let currentTab = "search";
+let currentProductId = null, currentProductData = null;
+let currentConvId = null;
+let reviewRating = 5;
+let surveyData = null, surveyStep = 0, surveyAnswers = [], currentSurveyId = null;
+let userPoints = 0;
+let selectedAcc = localStorage.getItem("ratescan_acc") || "none";
+let pendingAcc = selectedAcc;
 
-// Auth guard
-if (!isLoggedIn()) { window.location.href = "/"; }
+const ACCESSORIES = [
+  {id:"none",label:"Без аксессуара",minPts:0},
+  {id:"ribbon",label:"Бант",minPts:0},
+  {id:"flower",label:"Цветок",minPts:100},
+  {id:"cap",label:"Кепка",minPts:300},
+  {id:"hat",label:"Шляпа",minPts:700},
+  {id:"halo",label:"Нимб",minPts:700},
+  {id:"crown",label:"Корона",minPts:1500},
+];
 
-async function loadUser() {
-  try {
-    currentUser = await apiGet("/api/auth/me");
-    document.getElementById("points-badge").textContent = `${currentUser.points} баллов`;
-    document.getElementById("user-name-badge").textContent = currentUser.username;
-    document.getElementById("user-name-badge").classList.remove("hidden");
-  } catch(e) { logout(); }
+const PET_STAGES = [
+  {min:0,max:99,name:"Рейтик-яйцо",label:"Стадия 1: Яйцо",lore:"Таинственное существо, дремлющее внутри светящегося яйца. Оно появляется у тех, кто только начинает делиться своим мнением о мире.",color:"#a5b4fc"},
+  {min:100,max:299,name:"Рейтик-малыш",label:"Стадия 2: Детёныш",lore:"Рейтик вылупился! Маленький, пушистый, с огромными любопытными глазами. С интересом изучает всё вокруг.",color:"#818cf8"},
+  {min:300,max:699,name:"Рейтик",label:"Стадия 3: Юный",lore:"Рейтик подрастает. Появились острые ушки и пушистый хвост — смесь кота и лисы. Он уже отличает хорошее от плохого.",color:"#6366f1"},
+  {min:700,max:1499,name:"Рейтик-знаток",label:"Стадия 4: Взрослый",lore:"Рейтик стал настоящим экспертом. Его суждения точны, а оценки ценны для всего сообщества.",color:"#4f46e5"},
+  {min:1500,max:Infinity,name:"Легендарный Рейтик",label:"Стадия 5: Легенда",lore:"Высшая форма Рейтика. Золотой окрас, сияющая аура. Его слово — закон в мире отзывов.",color:"#f59e0b"},
+];
+
+function getPetStage(pts){return PET_STAGES.find(s=>pts>=s.min&&pts<=s.max)||PET_STAGES[0];}
+
+function buildHatSVG(hat,cx,cy,s){
+  if(hat==="crown"){return `<g transform="translate(${cx},${cy-s*0.32})"><polygon points="-${s*0.15},-${s*0.09} -${s*0.09},0 0,-${s*0.13} ${s*0.09},0 ${s*0.15},-${s*0.09} ${s*0.15},${s*0.025} -${s*0.15},${s*0.025}" fill="#f59e0b" stroke="#d97706" stroke-width="1"/><circle cx="-${s*0.1}" cy="-${s*0.065}" r="${s*0.02}" fill="#ef4444"/><circle cx="0" cy="-${s*0.1}" r="${s*0.023}" fill="#3b82f6"/><circle cx="${s*0.1}" cy="-${s*0.065}" r="${s*0.02}" fill="#10b981"/></g>`;}
+  if(hat==="cap"){return `<g transform="translate(${cx},${cy-s*0.28})"><ellipse cx="0" cy="0" rx="${s*0.18}" ry="${s*0.05}" fill="#374151"/><path d="M-${s*0.13},-${s*0.09} Q0,-${s*0.18} ${s*0.13},-${s*0.09} L${s*0.15},0 L-${s*0.15},0 Z" fill="#4b5563"/><rect x="-${s*0.17}" y="-${s*0.013}" width="${s*0.34}" height="${s*0.038}" rx="${s*0.019}" fill="#374151"/></g>`;}
+  if(hat==="halo"){return `<g transform="translate(${cx},${cy-s*0.35})"><ellipse cx="0" cy="0" rx="${s*0.17}" ry="${s*0.05}" fill="none" stroke="#fbbf24" stroke-width="${s*0.025}"/><ellipse cx="0" cy="0" rx="${s*0.17}" ry="${s*0.05}" fill="none" stroke="#fde68a" stroke-width="${s*0.013}" opacity="0.5"/></g>`;}
+  if(hat==="flower"){return `<g transform="translate(${cx+s*0.12},${cy-s*0.2})"><circle cx="0" cy="-${s*0.04}" r="${s*0.04}" fill="#ec4899"/><circle cx="${s*0.035}" cy="0" r="${s*0.04}" fill="#f472b6"/><circle cx="-${s*0.035}" cy="0" r="${s*0.04}" fill="#f9a8d4"/><circle cx="0" cy="-${s*0.007}" r="${s*0.033}" fill="#fde68a"/></g>`;}
+  if(hat==="hat"){return `<g transform="translate(${cx},${cy-s*0.28})"><rect x="-${s*0.19}" y="0" width="${s*0.38}" height="${s*0.05}" rx="${s*0.025}" fill="#1f2937"/><rect x="-${s*0.1}" y="-${s*0.17}" width="${s*0.2}" height="${s*0.18}" rx="${s*0.038}" fill="#111827"/><rect x="-${s*0.115}" y="-${s*0.17}" width="${s*0.23}" height="${s*0.038}" rx="${s*0.019}" fill="#374151"/></g>`;}
+  if(hat==="ribbon"){return `<g transform="translate(${cx+s*0.16},${cy-s*0.1})"><path d="M0,0 C-${s*0.075},-${s*0.075} -${s*0.15},-${s*0.05} -${s*0.113},0 C-${s*0.15},${s*0.05} -${s*0.075},${s*0.075} 0,0 Z" fill="#f472b6"/><path d="M0,0 C${s*0.075},-${s*0.075} ${s*0.15},-${s*0.05} ${s*0.113},0 C${s*0.15},${s*0.05} ${s*0.075},${s*0.075} 0,0 Z" fill="#ec4899"/><circle cx="0" cy="0" r="${s*0.025}" fill="#fde68a"/></g>`;}
+  return "";
 }
 
-function logout() {
-  clearAuth();
-  window.location.href = "/";
+function petSVG(pts,hat){
+  const stageIdx=PET_STAGES.findIndex(s=>pts>=s.min&&pts<=s.max);
+  const si=Math.max(0,Math.min(stageIdx,4));
+  const sz=160,cx=80,cy=80;
+  const configs=[
+    {body:"#c7d2fe",inner:"#e0e7ff",spot:"#a5b4fc",bg:"#eef2ff"},
+    {body:"#a5b4fc",inner:"#ddd6fe",ear:"#818cf8",eye:"#3730a3",cheek:"#c4b5fd",bg:"#ede9fe"},
+    {body:"#818cf8",inner:"#c7d2fe",ear:"#6366f1",eye:"#312e81",cheek:"#a5b4fc",bg:"#e0e7ff"},
+    {body:"#6366f1",inner:"#a5b4fc",ear:"#4f46e5",eye:"#1e1b4b",cheek:"#818cf8",bg:"#ede9fe"},
+    {body:"#f59e0b",inner:"#fde68a",ear:"#d97706",eye:"#78350f",cheek:"#fbbf24",bg:"#fffbeb"},
+  ];
+  const c=configs[si];
+  const glowEl=si===4?`<circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="none" stroke="#fde68a" stroke-width="3" opacity="0.3"/>
+    <circle cx="${cx}" cy="${cy}" r="${sz/2-2}" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.2"/>`:"";
+  const hatEl=buildHatSVG(hat,cx,cy,sz);
+
+  if(si===0){
+    return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="${c.bg}"/>
+      <ellipse cx="${cx}" cy="${cy+8}" rx="42" ry="54" fill="${c.body}"/>
+      <ellipse cx="${cx}" cy="${cy+12}" rx="28" ry="38" fill="${c.inner}"/>
+      <ellipse cx="${cx-8}" cy="${cy-6}" rx="5" ry="7" fill="${c.spot}" opacity="0.6"/>
+      <circle cx="${cx-10}" cy="${cy+4}" r="7" fill="white"/>
+      <circle cx="${cx+10}" cy="${cy+4}" r="7" fill="white"/>
+      <circle cx="${cx-8}" cy="${cy+4}" r="4" fill="#312e81"/>
+      <circle cx="${cx+12}" cy="${cy+4}" r="4" fill="#312e81"/>
+      <path d="M${cx-6} ${cy+18} Q${cx} ${cy+24} ${cx+6} ${cy+18}" stroke="#312e81" stroke-width="1.5" stroke-linecap="round"/>
+      ${hatEl}</svg>`;
+  }
+
+  const scale=si<2?0.85:1;
+  const br=36*scale,hr=32*scale;
+  const bx=cx,by=cy+12*scale;
+  const hx=cx,hy=cy-10*scale;
+  const e1x=cx-13*scale,e2x=cx+13*scale,ey=hy-2;
+  const tailEl=`<path d="M${bx+26*scale} ${by-8*scale} Q${bx+46*scale} ${by-24*scale} ${bx+44*scale} ${by+18*scale} Q${bx+28*scale} ${by+36*scale} ${bx+14*scale} ${by+22*scale}" stroke="${c.ear}" stroke-width="${10*scale}" stroke-linecap="round" fill="none"/>
+    <path d="M${bx+26*scale} ${by-8*scale} Q${bx+42*scale} ${by-20*scale} ${bx+40*scale} ${by+16*scale} Q${bx+26*scale} ${by+32*scale} ${bx+14*scale} ${by+20*scale}" stroke="${c.inner}" stroke-width="${5*scale}" stroke-linecap="round" fill="none"/>`;
+  const earOffX=22*scale,earOffY=16*scale;
+  const earsEl=`<polygon points="${hx-earOffX},${hy-earOffY} ${hx-earOffX-12*scale},${hy+10*scale} ${hx-earOffX+8*scale},${hy+8*scale}" fill="${c.ear}"/>
+    <polygon points="${hx+earOffX},${hy-earOffY} ${hx+earOffX+12*scale},${hy+10*scale} ${hx+earOffX-8*scale},${hy+8*scale}" fill="${c.ear}"/>
+    <polygon points="${hx-earOffX},${hy-earOffY+4*scale} ${hx-earOffX-8*scale},${hy+8*scale} ${hx-earOffX+6*scale},${hy+7*scale}" fill="${c.inner}" opacity="0.7"/>
+    <polygon points="${hx+earOffX},${hy-earOffY+4*scale} ${hx+earOffX+8*scale},${hy+8*scale} ${hx+earOffX-6*scale},${hy+7*scale}" fill="${c.inner}" opacity="0.7"/>`;
+
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="${c.bg}"/>
+    ${glowEl}
+    ${tailEl}
+    <ellipse cx="${bx}" cy="${by}" rx="${br}" ry="${br*0.78}" fill="${c.body}"/>
+    <ellipse cx="${bx}" cy="${by+4*scale}" rx="${br*0.68}" ry="${br*0.55}" fill="${c.inner}"/>
+    <circle cx="${hx}" cy="${hy}" r="${hr}" fill="${c.body}"/>
+    ${earsEl}
+    <ellipse cx="${e1x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
+    <ellipse cx="${e2x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
+    <circle cx="${e1x+2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
+    <circle cx="${e2x-2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
+    <circle cx="${e1x+3*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
+    <circle cx="${e2x-1*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
+    <ellipse cx="${hx-16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
+    <ellipse cx="${hx+16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
+    <ellipse cx="${hx}" cy="${hy+18*scale}" rx="${3*scale}" ry="${2*scale}" fill="${c.ear}"/>
+    <path d="M${hx-7*scale} ${hy+23*scale} Q${hx} ${hy+29*scale} ${hx+7*scale} ${hy+23*scale}" stroke="${c.eye}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    ${hatEl}
+  </svg>`;
 }
 
-async function loadCategories() {
-  try {
-    const cats = await apiGet("/api/b2c/categories");
-    const el = document.getElementById("category-chips");
-    el.innerHTML = cats.map(c =>
-      `<button onclick="doSearch('${c}')" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium hover:bg-indigo-100 transition">${c}</button>`
-    ).join("");
-  } catch(e) {}
+// INIT
+window.addEventListener("DOMContentLoaded",async()=>{
+  if(!isLoggedIn()){window.location.href="/";return;}
+  document.getElementById("header-username").textContent=localStorage.getItem("rs_username")||"";
+  await Promise.all([loadCategories(),loadRewards(),loadQuests(),loadSurveys(),loadMyReviews(),checkUnread()]);
+  await searchProducts();
+  await updatePointsDisplay();
+  renderCharacterTab();
+  initWheel();
+});
+
+async function updatePointsDisplay(){
+  try{
+    const me=await apiGet("/api/auth/me");
+    userPoints=me.points;
+    document.getElementById("header-points").textContent=me.points;
+    document.getElementById("rewards-points").textContent=me.points;
+    renderCharacterTab();
+  }catch(e){}
+}
+function logout(){clearAuth();window.location.href="/";}
+
+function switchTab(name){
+  ALL_TABS.forEach(t=>document.getElementById("tab-"+t).classList.add("hidden"));
+  document.getElementById("tab-"+name).classList.remove("hidden");
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>b.classList.toggle("active",ALL_TABS[i]===name));
+  currentTab=name;
+  if(name==="messages")loadConversations();
+  if(name==="character")renderCharacterTab();
 }
 
-function showTab(name) {
-  ["search","myreviews"].forEach(t => {
-    document.getElementById(`tab-${t}-content`).classList.add("hidden");
-    document.getElementById(`tab-${t}`).className = "py-3 text-sm text-gray-500 hover:text-gray-700";
-  });
-  document.getElementById(`tab-${name}-content`).classList.remove("hidden");
-  document.getElementById(`tab-${name}`).className = "py-3 text-sm tab-active";
-  if (name === "myreviews") loadMyReviews();
+async function loadCategories(){
+  try{
+    const cats=await apiGet("/api/b2c/categories");
+    const sel=document.getElementById("category-filter");
+    cats.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);});
+  }catch(e){}
 }
 
-async function doSearch(category) {
-  const q = category || document.getElementById("search-input").value.trim();
-  const url = category ? `/api/b2c/products?category=${encodeURIComponent(category)}`
-                       : `/api/b2c/products${q ? `?q=${encodeURIComponent(q)}` : ""}`;
-  const container = document.getElementById("search-results");
-  const empty = document.getElementById("search-empty");
-  container.innerHTML = `<div class="col-span-3 text-center py-8 text-gray-400">Загрузка...</div>`;
-  empty.classList.add("hidden");
-  try {
-    const products = await apiGet(url);
-    if (!products.length) {
-      container.innerHTML = "";
-      empty.classList.remove("hidden");
-      return;
+async function searchProducts(){
+  const q=document.getElementById("search-input").value;
+  const cat=document.getElementById("category-filter").value;
+  try{
+    let url="/api/b2c/products?";
+    if(q)url+=`q=${encodeURIComponent(q)}&`;
+    if(cat)url+=`category=${encodeURIComponent(cat)}&`;
+    const prods=await apiGet(url);
+    renderProducts(prods);
+  }catch(e){}
+}
+
+function renderProducts(prods){
+  const grid=document.getElementById("products-grid");
+  if(!prods.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#9ca3af;font-size:14px;">Товары не найдены</div>`;return;
+  }
+  grid.innerHTML=prods.map(p=>`
+    <div class="card p-4 cursor-pointer hover:shadow-md transition-shadow fade-in" onclick="openProductModal(${p.id})">
+      <div class="flex items-start justify-between mb-2">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;line-height:1.4;">${p.name}</div>
+          <div style="color:#6b7280;font-size:12px;margin-top:3px;">${p.brand} · ${p.category}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+          <div style="font-weight:700;font-size:16px;color:#6366f1;">${p.avg_rating.toFixed(1)}</div>
+          <div style="font-size:11px;color:#9ca3af;">${p.review_count} отз.</div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-1 mt-2">
+        ${p.price_wb?`<span class="badge" style="background:#faf5ff;color:#7c3aed;">WB ${p.price_wb} ₽</span>`:""}
+        ${p.price_ozon?`<span class="badge" style="background:#eff6ff;color:#1d4ed8;">Ozon ${p.price_ozon} ₽</span>`:""}
+        ${p.price_ym?`<span class="badge" style="background:#fffbeb;color:#b45309;">YM ${p.price_ym} ₽</span>`:""}
+      </div>
+      <div class="flex items-center gap-0.5 mt-3">
+        ${[1,2,3,4,5].map(i=>`<svg width="11" height="11" fill="${i<=Math.round(p.avg_rating)?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+async function openProductModal(id){
+  currentProductId=id;
+  try{
+    const p=await apiGet(`/api/b2c/products/${id}`);
+    currentProductData=p;
+    document.getElementById("modal-name").textContent=p.name;
+    document.getElementById("modal-meta").textContent=`${p.brand} · ${p.category}`;
+    const ratings=[{k:"wb",label:"Wildberries",v:p.rating_wb,color:"#7c3aed"},{k:"ozon",label:"Ozon",v:p.rating_ozon,color:"#1d4ed8"},{k:"ym",label:"ЯМ",v:p.rating_ym,color:"#b45309"},{k:"gmaps",label:"Google",v:p.rating_gmaps,color:"#15803d"},{k:"2gis",label:"2ГИС",v:p.rating_2gis,color:"#065f46"}].filter(r=>r.v>0);
+    document.getElementById("modal-ratings").innerHTML=ratings.map(r=>`<div style="background:#f9fafb;border-radius:10px;padding:6px 12px;text-align:center;min-width:68px;"><div style="font-weight:700;font-size:16px;color:${r.color};">${r.v.toFixed(1)}</div><div style="font-size:11px;color:#6b7280;">${r.label}</div></div>`).join("");
+    const prices=[{l:"WB",v:p.price_wb},{l:"Ozon",v:p.price_ozon},{l:"YM",v:p.price_ym}].filter(x=>x.v);
+    document.getElementById("modal-prices").innerHTML=prices.map(x=>`<span style="font-size:15px;font-weight:600;color:#374151;">${x.l}: ${x.v} ₽</span>`).join('<span style="color:#d1d5db;margin:0 4px;">·</span>');
+    try{
+      const an=await apiGet(`/api/b2c/products/${id}/analysis`);
+      const topPros=an.pros.slice(0,3),topCons=an.cons.slice(0,3);
+      document.getElementById("modal-analysis").innerHTML=`
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#10b981;margin-bottom:8px;">Достоинства</div>
+          ${topPros.length?topPros.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${p.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${p.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#ef4444;margin-bottom:8px;">Недостатки</div>
+          ${topCons.length?topCons.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${c.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${c.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
+        </div>`;
+    }catch(e){document.getElementById("modal-analysis").innerHTML="";}
+    const revs=p.reviews||[];
+    document.getElementById("modal-reviews").innerHTML=revs.map(r=>`
+      <div style="border:1px solid #e8e7f5;border-radius:10px;padding:10px 12px;">
+        <div class="flex items-center justify-between mb-1">
+          <span style="font-size:12px;font-weight:500;">${r.author_name}</span>
+          <span style="font-size:11px;color:#9ca3af;">${formatDate(r.created_at)}</span>
+        </div>
+        <div class="flex gap-0.5 mb-1">${[1,2,3,4,5].map(i=>`<svg width="10" height="10" fill="${i<=r.rating?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}</div>
+        <p style="font-size:13px;color:#4b5563;line-height:1.5;">${r.text}</p>
+      </div>`).join("")||`<p style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">Нет отзывов</p>`;
+    const btn=document.getElementById("contact-manufacturer-btn");
+    p.business_id?btn.classList.remove("hidden"):btn.classList.add("hidden");
+    document.getElementById("product-modal").classList.remove("hidden");
+  }catch(e){showToast("Ошибка загрузки товара","error");}
+}
+function closeProductModal(){document.getElementById("product-modal").classList.add("hidden");}
+
+function openReviewModal(){closeProductModal();reviewRating=5;setRating(5);document.getElementById("review-text").value="";document.getElementById("review-modal").classList.remove("hidden");}
+function closeReviewModal(){document.getElementById("review-modal").classList.add("hidden");}
+function setRating(v){reviewRating=v;document.querySelectorAll(".star-btn").forEach(s=>s.classList.toggle("active",parseInt(s.dataset.v)<=v));}
+async function submitReview(){
+  const text=document.getElementById("review-text").value.trim();
+  if(!text){showToast("Введите текст отзыва","error");return;}
+  try{
+    await apiPost("/api/b2c/reviews",{product_id:currentProductId,rating:reviewRating,text});
+    closeReviewModal();showToast("Отзыв опубликован!");
+    markQuestDone("review_any");
+    if(text.length>100)markQuestDone("share_review");
+    await Promise.all([updatePointsDisplay(),loadMyReviews()]);
+  }catch(e){showToast(e.message,"error");}
+}
+
+function openContactModal(){closeProductModal();document.getElementById("contact-subject").value="";document.getElementById("contact-message").value="";document.getElementById("contact-modal").classList.remove("hidden");}
+function closeContactModal(){document.getElementById("contact-modal").classList.add("hidden");}
+async function submitContact(){
+  const subject=document.getElementById("contact-subject").value.trim();
+  const msg=document.getElementById("contact-message").value.trim();
+  if(!subject||!msg){showToast("Заполните все поля","error");return;}
+  try{
+    await apiPost("/api/messages/start",{business_id:currentProductData.business_id,product_id:currentProductData.id,subject,first_message:msg});
+    closeContactModal();showToast("Сообщение отправлено");
+  }catch(e){showToast(e.message,"error");}
+}
+
+// WHEEL
+const WHEEL_PRIZES=[
+  {label:"5 б",color:"#6366f1"},{label:"10 б",color:"#8b5cf6"},{label:"15 б",color:"#a78bfa"},
+  {label:"20 б",color:"#c4b5fd"},{label:"25 б",color:"#6366f1"},{label:"50 б",color:"#4f46e5"},{label:"0 б",color:"#d1d5db"},
+];
+let wheelAngle=0,isSpinning=false;
+function initWheel(){drawWheel(0);}
+function drawWheel(rotation){
+  const canvas=document.getElementById("wheel-canvas");
+  if(!canvas)return;
+  const ctx=canvas.getContext("2d"),cx=130,cy=130,r=122,n=WHEEL_PRIZES.length,arc=(Math.PI*2)/n;
+  ctx.clearRect(0,0,260,260);
+  ctx.save();ctx.shadowColor="rgba(99,102,241,0.2)";ctx.shadowBlur=20;
+  ctx.beginPath();ctx.arc(cx,cy,r+2,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.restore();
+  for(let i=0;i<n;i++){
+    const start=rotation+i*arc-Math.PI/2,end=start+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();
+    ctx.fillStyle=WHEEL_PRIZES[i].color;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+arc/2);
+    ctx.textAlign="right";ctx.fillStyle="#fff";ctx.font="bold 13px Inter,sans-serif";
+    ctx.fillText(WHEEL_PRIZES[i].label,r-12,5);ctx.restore();
+  }
+  ctx.beginPath();ctx.moveTo(cx+r-8,cy);ctx.lineTo(cx+r+14,cy-8);ctx.lineTo(cx+r+14,cy+8);
+  ctx.closePath();ctx.fillStyle="#ef4444";ctx.fill();
+}
+async function spinWheel(){
+  if(isSpinning)return;
+  isSpinning=true;document.getElementById("spin-btn").disabled=true;
+  document.getElementById("spin-result-badge").classList.add("hidden");
+  let result;
+  try{result=await apiPost("/api/surveys/daily-spin",{});}
+  catch(e){showToast(e.message,"error");isSpinning=false;document.getElementById("spin-btn").disabled=false;return;}
+  const ptsLabels=[5,10,15,20,25,50,0];
+  let segIdx=ptsLabels.indexOf(result.points_earned);if(segIdx<0)segIdx=0;
+  const n=WHEEL_PRIZES.length,arc=(Math.PI*2)/n;
+  const targetAngle=-(segIdx*arc+arc/2);
+  const spins=5*Math.PI*2,finalAngle=targetAngle+spins;
+  const startAngle=wheelAngle,startTime=performance.now(),duration=3200;
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+  function animate(now){
+    const elapsed=now-startTime,t=Math.min(elapsed/duration,1);
+    const current=startAngle+(finalAngle-startAngle)*easeOut(t);
+    drawWheel(current);
+    if(t<1){requestAnimationFrame(animate);}
+    else{
+      wheelAngle=current%(Math.PI*2);isSpinning=false;document.getElementById("spin-btn").disabled=false;
+      const badge=document.getElementById("spin-result-badge");badge.textContent=result.prize_label;badge.classList.remove("hidden");
+      showToast(`Получено: ${result.prize_label}`);updatePointsDisplay();markQuestDone("daily_spin");
     }
-    container.innerHTML = products.map(p => productCard(p)).join("");
-  } catch(e) {
-    container.innerHTML = `<div class="col-span-3 text-red-500 text-sm">${e.message}</div>`;
   }
+  requestAnimationFrame(animate);
 }
 
-function productCard(p) {
-  const stars = starsHtml(Math.round(p.avg_rating));
-  const platforms = [
-    p.rating_wb ? `WB: ${p.rating_wb}` : null,
-    p.rating_ozon ? `Ozon: ${p.rating_ozon}` : null,
-    p.rating_ym ? `ЯМ: ${p.rating_ym}` : null,
-    p.rating_gmaps ? `GMaps: ${p.rating_gmaps}` : null,
-    p.rating_2gis ? `2ГИС: ${p.rating_2gis}` : null,
-  ].filter(Boolean).slice(0,3).join(" · ");
-
-  const prices = [
-    p.price_wb ? `WB ${p.price_wb}₽` : null,
-    p.price_ozon ? `Ozon ${p.price_ozon}₽` : null,
-    p.price_ym ? `ЯМ ${p.price_ym}₽` : null,
-  ].filter(Boolean);
-  const minPrice = prices.length ? prices[0] : null;
-
-  return `
-  <div onclick="openProduct(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer p-5">
-    <div class="flex items-start justify-between mb-3">
-      <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-        ${p.category === 'мороженое' ? '🍦' : p.category === 'ресторан' ? '🍽️' : p.category === 'кофейня' ? '☕' : '📦'}
+// QUESTS
+const QUEST_DEFS=[
+  {id:"daily_spin",title:"Ежедневное вращение",desc:"Прокрутите колесо фортуны",points:0,type:"daily"},
+  {id:"review_any",title:"Поделитесь мнением",desc:"Напишите первый отзыв на товар",points:10,type:"review"},
+  {id:"review_3",title:"Активный reviewer",desc:"Напишите 3 отзыва",points:30,type:"review"},
+  {id:"share_review",title:"Подробный отзыв",desc:"Напишите отзыв длиннее 100 символов",points:15,type:"review"},
+  {id:"visit_food",title:"Исследователь",desc:"Изучите категорию «Кофе и чай»",points:20,type:"location",category:"Кофе и чай"},
+  {id:"visit_cosmetics",title:"Бьюти-эксперт",desc:"Изучите категорию «Косметика»",points:20,type:"location",category:"Косметика"},
+  {id:"visit_3cats",title:"Путешественник",desc:"Изучите 3 разных категории",points:40,type:"exploration"},
+  {id:"survey_1",title:"Первый опрос",desc:"Пройдите любой опрос",points:0,type:"survey"},
+  {id:"login_streak",title:"Постоянный гость",desc:"Заходите 3 дня подряд",points:25,type:"streak"},
+];
+function getQuestProgress(){return JSON.parse(localStorage.getItem("ratescan_quests")||"{}");}
+function setQuestProgress(d){localStorage.setItem("ratescan_quests",JSON.stringify(d));}
+function markQuestDone(id){const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);renderQuestCards();}
+async function loadQuests(){
+  renderQuestCards();
+  const today=new Date().toDateString();
+  if(localStorage.getItem("ratescan_last_login")!==today){
+    const streak=parseInt(localStorage.getItem("ratescan_streak")||"0")+1;
+    localStorage.setItem("ratescan_streak",streak);localStorage.setItem("ratescan_last_login",today);
+    if(streak>=3)markQuestDone("login_streak");
+  }
+}
+const TYPE_COLORS={daily:["#e0e7ff","#4338ca"],review:["#dcfce7","#15803d"],location:["#fef3c7","#b45309"],exploration:["#dbeafe","#1d4ed8"],survey:["#fce7f3","#be185d"],streak:["#f0fdf4","#16a34a"]};
+function renderQuestCards(){
+  const prog=getQuestProgress();
+  document.getElementById("quests-container").innerHTML=QUEST_DEFS.map(q=>{
+    const done=isQuestDone(q,prog);
+    const [bg,tc]=TYPE_COLORS[q.type]||["#f3f4f6","#374151"];
+    const typeLabel={daily:"Ежедневное",review:"Отзыв",location:"Локация",exploration:"Исследование",survey:"Опрос",streak:"Серия"}[q.type]||q.type;
+    return `<div class="card p-4 transition-all" style="border-color:${done?"#a7f3d0":"#e8e7f5"};">
+      <div class="flex items-start gap-3">
+        <div style="width:38px;height:38px;border-radius:11px;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:11px;font-weight:600;color:${tc};">${typeLabel}</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;">${q.title}</div>
+          <div style="color:#6b7280;font-size:12px;margin-top:2px;">${q.desc}</div>
+          ${q.points>0?`<div style="font-size:12px;color:#6366f1;font-weight:500;margin-top:4px;">+${q.points} баллов</div>`:""}
+        </div>
+        ${done?`<div style="width:22px;height:22px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`:
+          q.type==="location"?`<button onclick="markLocationVisit('${q.id}','${q.category}')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Отметить</button>`:
+          q.type==="review"?`<button onclick="switchTab('search')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">К поиску</button>`:""}
       </div>
-      <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${p.category}</span>
-    </div>
-    <h3 class="font-bold text-gray-800 text-sm mb-1 leading-snug">${p.name}</h3>
-    <div class="text-xs text-gray-400 mb-3">${p.brand}</div>
-    <div class="flex items-center gap-2 mb-2">
-      <div class="text-lg font-black text-gray-800">${p.avg_rating}</div>
-      <div class="text-sm">${stars}</div>
-    </div>
-    <div class="text-xs text-gray-400 mb-3">${platforms}</div>
-    ${minPrice ? `<div class="text-xs text-green-600 font-semibold">от ${minPrice}</div>` : ""}
-    <div class="text-xs text-gray-400 mt-2">${p.review_count} отзывов</div>
-  </div>`;
+    </div>`;
+  }).join("");
+}
+function isQuestDone(q,prog){
+  if(q.id==="review_3")return(prog["review_any"]||0)>=3;
+  return!!prog[q.id];
+}
+function markLocationVisit(questId,category){
+  markQuestDone(questId);
+  const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
+  if(!cats.includes(category)){cats.push(category);localStorage.setItem("ratescan_cats_visited",JSON.stringify(cats));if(cats.length>=3)markQuestDone("visit_3cats");}
+  showToast(`Категория «${category}» отмечена!`);
 }
 
-async function openProduct(id) {
-  currentProductId = id;
-  document.getElementById("modal-content").innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
-  document.getElementById("product-modal").classList.remove("hidden");
-  document.getElementById("product-modal").classList.add("flex");
-
-  try {
-    const p = await apiGet(`/api/b2c/products/${id}`);
-    document.getElementById("modal-product-name").textContent = p.name;
-    document.getElementById("modal-content").innerHTML = renderProductDetail(p);
-  } catch(e) {
-    document.getElementById("modal-content").innerHTML = `<div class="text-red-500">${e.message}</div>`;
+// SURVEYS
+async function loadSurveys(){
+  try{
+    const surveys=await apiGet("/api/surveys");
+    const cont=document.getElementById("surveys-container");
+    if(!surveys.length){cont.innerHTML=`<p style="color:#9ca3af;font-size:14px;grid-column:1/-1;">Опросы пока не добавлены</p>`;return;}
+    cont.innerHTML=surveys.map(s=>`
+      <div class="card p-4 ${s.already_completed?"opacity-60":""}">
+        <div class="flex items-start justify-between mb-2">
+          <div style="font-weight:600;font-size:14px;">${s.title}</div>
+          <span style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;flex-shrink:0;margin-left:8px;">+${s.points_reward} б</span>
+        </div>
+        <p style="color:#6b7280;font-size:12px;line-height:1.5;margin-bottom:12px;">${s.description}</p>
+        <div class="flex items-center justify-between">
+          <span style="font-size:11px;color:#9ca3af;">${s.estimated_minutes} мин · ${s.question_count} вопр.</span>
+          ${s.already_completed?`<span style="font-size:12px;color:#10b981;font-weight:500;">Пройден</span>`:`<button onclick="startSurvey(${s.id})" class="btn-primary" style="padding:6px 14px;font-size:12px;">Начать</button>`}
+        </div>
+      </div>`).join("");
+  }catch(e){}
+}
+async function startSurvey(id){
+  try{
+    surveyData=await apiGet(`/api/surveys/${id}`);currentSurveyId=id;surveyStep=0;surveyAnswers=[];
+    document.getElementById("survey-title").textContent=surveyData.title;
+    renderSurveyStep();document.getElementById("survey-modal").classList.remove("hidden");
+  }catch(e){showToast(e.message,"error");}
+}
+function renderSurveyStep(){
+  const qs=surveyData.questions,total=qs.length;
+  document.getElementById("survey-progress").style.width=Math.round(surveyStep/total*100)+"%";
+  document.getElementById("survey-step-label").textContent=`Вопрос ${surveyStep+1} из ${total}`;
+  document.getElementById("survey-back-btn").style.display=surveyStep>0?"block":"none";
+  const q=qs[surveyStep];
+  let html=`<p style="font-weight:500;font-size:15px;margin-bottom:16px;">${q.question_text}</p>`;
+  if(q.question_type==="choice"&&q.options){
+    html+=q.options.map((opt,i)=>`<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;cursor:pointer;margin-bottom:8px;" onclick="selectSurveyOption(${i},this)"><input type="radio" name="sq" value="${i}" style="accent-color:#6366f1;"/><span style="font-size:14px;">${opt}</span></label>`).join("");
+  }else if(q.question_type==="rating"){
+    html+=`<div class="flex gap-2 justify-center">${[1,2,3,4,5].map(i=>`<span class="star-btn" data-v="${i}" onclick="setSurveyRating(${i},this)">&#9733;</span>`).join("")}</div>`;
+  }else{
+    html+=`<textarea id="survey-text-input" rows="4" placeholder="Ваш ответ..." style="width:100%;padding:12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;resize:none;"></textarea>`;
+  }
+  document.getElementById("survey-question-area").innerHTML=html;
+  document.getElementById("survey-next-btn").textContent=surveyStep===total-1?"Завершить":"Далее";
+}
+function selectSurveyOption(idx,el){
+  document.querySelectorAll("[onclick^='selectSurveyOption']").forEach(e=>{e.style.borderColor="#e8e7f5";e.style.background="#fff";});
+  el.style.borderColor="#6366f1";el.style.background="#eef2ff";surveyAnswers[surveyStep]=idx;
+}
+function setSurveyRating(v,el){
+  surveyAnswers[surveyStep]=v;
+  document.querySelectorAll("[onclick^='setSurveyRating']").forEach(s=>s.classList.toggle("active",parseInt(s.dataset.v)<=v));
+}
+function surveyBack(){if(surveyStep>0){surveyStep--;renderSurveyStep();}}
+async function surveyNext(){
+  const q=surveyData.questions[surveyStep];
+  if(q.question_type==="text")surveyAnswers[surveyStep]=document.getElementById("survey-text-input")?.value||"";
+  if(surveyStep<surveyData.questions.length-1){surveyStep++;renderSurveyStep();}
+  else{
+    try{
+      const res=await apiPost(`/api/surveys/${currentSurveyId}/complete`,{});
+      document.getElementById("survey-modal").classList.add("hidden");
+      showToast(`Опрос завершён! +${res.points_earned} баллов`);markQuestDone("survey_1");
+      await Promise.all([updatePointsDisplay(),loadSurveys()]);
+    }catch(e){showToast(e.message,"error");}
   }
 }
+function closeSurveyModal(){document.getElementById("survey-modal").classList.add("hidden");}
 
-function renderProductDetail(p) {
-  const platformRatings = [
-    { key: "wb", label: "Wildberries", val: p.rating_wb, price: p.price_wb },
-    { key: "ozon", label: "Ozon", val: p.rating_ozon, price: p.price_ozon },
-    { key: "ym", label: "Яндекс.Маркет", val: p.rating_ym, price: p.price_ym },
-    { key: "gmaps", label: "Google Maps", val: p.rating_gmaps },
-    { key: "2gis", label: "2ГИС", val: p.rating_2gis },
-    { key: "zoon", label: "Zoon", val: p.rating_zoon },
-  ].filter(x => x.val > 0);
-
-  const platformHtml = platformRatings.map(pl => `
-    <div class="flex items-center justify-between">
-      <span class="text-sm text-gray-600">${pl.label}</span>
-      <div class="flex items-center gap-3">
-        ${pl.price ? `<span class="text-xs text-green-600 font-semibold">${pl.price}₽</span>` : ""}
-        <div class="flex items-center gap-1">
-          <span class="text-yellow-400 text-sm">★</span>
-          <span class="text-sm font-semibold text-gray-800">${pl.val}</span>
+// REWARDS
+async function loadRewards(){
+  try{
+    const rewards=await apiGet("/api/b2c/rewards");
+    document.getElementById("rewards-grid").innerHTML=rewards.map(r=>`
+      <div class="card p-4 ${r.already_purchased?"opacity-70":""}">
+        <div class="flex items-start gap-3 mb-3">
+          <div style="width:44px;height:44px;background:#eef2ff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${r.icon}</div>
+          <div><div style="font-weight:600;font-size:14px;">${r.name}</div><div style="font-size:12px;color:#6b7280;">${r.partner}</div></div>
         </div>
-        <div class="w-24 bg-gray-100 rounded-full h-2">
-          <div class="bg-indigo-500 h-2 rounded-full" style="width:${(pl.val/5*100)}%"></div>
+        <p style="font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:12px;">${r.description}</p>
+        <div class="flex items-center justify-between">
+          <span style="font-weight:700;font-size:15px;color:#6366f1;">${r.points_cost} б</span>
+          ${r.already_purchased?`<span style="font-size:12px;color:#10b981;font-weight:500;">Куплено</span>`:`<button onclick="purchaseReward(${r.id})" class="btn-primary" style="padding:7px 14px;font-size:12px;" ${!r.can_afford?'disabled':''}>Получить</button>`}
         </div>
-      </div>
-    </div>
-  `).join("");
-
-  const recentReviews = p.reviews.slice(0, 5).map(r => `
-    <div class="border border-gray-100 rounded-xl p-4">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700">
-            ${r.author_name[0]}
-          </div>
-          <span class="text-sm font-medium text-gray-700">${r.author_name}</span>
-          ${r.is_verified ? '<span class="text-xs text-green-500">✓ проверен</span>' : ""}
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
-          <span class="text-yellow-400 text-sm">${starsHtml(r.rating)}</span>
-        </div>
-      </div>
-      <p class="text-sm text-gray-600">${r.text}</p>
-      ${r.response ? `
-        <div class="mt-3 bg-blue-50 border-l-4 border-blue-400 pl-3 py-2 rounded-r-xl">
-          <div class="text-xs text-blue-600 font-semibold mb-1">💬 ${r.response.author_name}</div>
-          <p class="text-xs text-blue-700">${r.response.text}</p>
-        </div>` : ""}
-    </div>
-  `).join("");
-
-  return `
-    <div>
-      <div class="text-2xl font-black text-gray-800 mb-1">${p.avg_rating} <span class="text-yellow-400">★</span></div>
-      <div class="text-sm text-gray-500">Агрегированная оценка · ${p.review_count} отзывов</div>
-    </div>
-    <div>
-      <h4 class="text-sm font-semibold text-gray-700 mb-3">Рейтинг по платформам</h4>
-      <div class="space-y-2">${platformHtml}</div>
-    </div>
-    ${p.description ? `<p class="text-sm text-gray-500 italic">${p.description}</p>` : ""}
-    ${recentReviews ? `
-    <div>
-      <h4 class="text-sm font-semibold text-gray-700 mb-3">Последние отзывы</h4>
-      <div class="space-y-3">${recentReviews}</div>
-    </div>` : ""}
-  `;
+      </div>`).join("");
+  }catch(e){}
+}
+async function purchaseReward(id){
+  try{const res=await apiPost(`/api/b2c/rewards/${id}/purchase`,{});showToast(`Промокод: ${res.promo_code}`);await Promise.all([loadRewards(),updatePointsDisplay()]);}
+  catch(e){showToast(e.message,"error");}
 }
 
-function closeProductModal() {
-  document.getElementById("product-modal").classList.add("hidden");
-  document.getElementById("product-modal").classList.remove("flex");
-}
-
-let selectedRating = 0;
-function openReviewModal() {
-  selectedRating = 0;
-  document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
-  document.getElementById("review-text").value = "";
-  document.getElementById("review-modal").classList.remove("hidden");
-  document.getElementById("review-modal").classList.add("flex");
-}
-
-function closeReviewModal() {
-  document.getElementById("review-modal").classList.add("hidden");
-  document.getElementById("review-modal").classList.remove("flex");
-}
-
-function setRating(val) {
-  selectedRating = val;
-  document.querySelectorAll(".star-btn").forEach(s => {
-    s.classList.toggle("active", parseInt(s.dataset.val) <= val);
-  });
-  document.getElementById("selected-rating").value = val;
-}
-
-async function submitReview(e) {
-  e.preventDefault();
-  const errEl = document.getElementById("review-error");
-  errEl.classList.add("hidden");
-  if (!selectedRating) {
-    errEl.textContent = "Выберите оценку";
-    errEl.classList.remove("hidden");
-    return;
-  }
-  try {
-    await apiPost("/api/b2c/reviews", {
-      product_id: currentProductId,
-      rating: selectedRating,
-      text: document.getElementById("review-text").value,
-    });
-    closeReviewModal();
-    closeProductModal();
-    showToast("Отзыв опубликован! Баллы начислены ⭐");
-    await loadUser();
-    doSearch();
-  } catch(err) {
-    errEl.textContent = err.message;
-    errEl.classList.remove("hidden");
-  }
-}
-
-async function loadMyReviews() {
-  const list = document.getElementById("my-reviews-list");
-  const empty = document.getElementById("my-reviews-empty");
-  list.innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
-  try {
-    const reviews = await apiGet("/api/b2c/my-reviews");
-    if (!reviews.length) {
-      list.innerHTML = "";
-      empty.classList.remove("hidden");
-      return;
-    }
-    empty.classList.add("hidden");
-    list.innerHTML = reviews.map(r => `
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-3">
-          <span class="font-semibold text-gray-800">${starsHtml(r.rating)} ${r.rating}/5</span>
+// MY REVIEWS
+async function loadMyReviews(){
+  try{
+    const reviews=await apiGet("/api/b2c/my-reviews");
+    const list=document.getElementById("my-reviews-list");
+    if(!reviews.length){list.innerHTML=`<div style="text-align:center;padding:60px;color:#9ca3af;font-size:14px;">Вы ещё не писали отзывов</div>`;return;}
+    list.innerHTML=reviews.map(r=>`
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex gap-0.5">${[1,2,3,4,5].map(i=>`<svg width="13" height="13" fill="${i<=r.rating?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}</div>
           <div class="flex items-center gap-2">
-            <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
-            <span class="text-xs text-gray-400">${formatDate(r.created_at)}</span>
+            <span style="font-size:11px;color:#9ca3af;">${formatDate(r.created_at)}</span>
+            <span class="badge" style="background:${r.sentiment==='positive'?'#d1fae5':r.sentiment==='negative'?'#fee2e2':'#f3f4f6'};color:${r.sentiment==='positive'?'#065f46':r.sentiment==='negative'?'#991b1b':'#374151'};">${r.sentiment==='positive'?'Позитивный':r.sentiment==='negative'?'Негативный':'Нейтральный'}</span>
           </div>
         </div>
-        <p class="text-sm text-gray-700">${r.text}</p>
-        ${r.topics ? `<div class="mt-2 flex gap-1 flex-wrap">${r.topics.split(",").map(t => `<span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${t}</span>`).join("")}</div>` : ""}
-        ${r.response ? `
-          <div class="mt-3 bg-blue-50 border-l-4 border-blue-400 pl-3 py-2 rounded-r-xl">
-            <div class="text-xs text-blue-600 font-semibold mb-1">💬 ${r.response.author_name} ответил:</div>
-            <p class="text-xs text-blue-700">${r.response.text}</p>
-          </div>` : `<div class="mt-2 text-xs text-gray-400">Ответ от бренда не получен</div>`}
-      </div>
-    `).join("");
-  } catch(e) {
-    list.innerHTML = `<div class="text-red-500 text-sm">${e.message}</div>`;
-  }
+        <p style="font-size:14px;color:#374151;line-height:1.6;">${r.text}</p>
+        ${r.response?`<div style="margin-top:12px;padding:10px 14px;background:#f9fafb;border-radius:10px;border-left:3px solid #6366f1;"><div style="font-size:12px;font-weight:500;color:#6366f1;margin-bottom:4px;">Ответ бренда</div><p style="font-size:13px;color:#4b5563;">${r.response.text}</p></div>`:""}
+      </div>`).join("");
+  }catch(e){}
 }
 
-// Close modals on backdrop click
-document.getElementById("product-modal").addEventListener("click", function(e) {
-  if (e.target === this) closeProductModal();
-});
-document.getElementById("review-modal").addEventListener("click", function(e) {
-  if (e.target === this) closeReviewModal();
-});
+// CHARACTER
+function renderCharacterTab(){
+  const pts=userPoints,stage=getPetStage(pts),si=PET_STAGES.indexOf(stage),acc=selectedAcc;
+  const container=document.getElementById("pet-container");
+  container.innerHTML=petSVG(pts,acc);
+  if(si===4){const svg=container.querySelector("svg");if(svg)svg.classList.add("pet-legendary");}
+  document.getElementById("pet-name").textContent=stage.name;
+  document.getElementById("pet-stage-label").textContent=stage.label;
+  document.getElementById("pet-lore").textContent=stage.lore;
+  const nextStage=PET_STAGES[si+1];
+  if(nextStage){
+    const pct=Math.min(100,Math.round((pts-stage.min)/(nextStage.min-stage.min)*100));
+    document.getElementById("pet-progress").style.width=pct+"%";
+    document.getElementById("pet-pts-label").textContent=`${pts} баллов`;
+    document.getElementById("pet-next-label").textContent=`до след. стадии: ${nextStage.min} б`;
+  }else{
+    document.getElementById("pet-progress").style.width="100%";
+    document.getElementById("pet-pts-label").textContent=`${pts} баллов — максимум!`;
+    document.getElementById("pet-next-label").textContent="";
+  }
+  document.getElementById("stages-list").innerHTML=PET_STAGES.map((s,i)=>{
+    const unlocked=pts>=s.min,current=si===i;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;background:${current?"#eef2ff":"transparent"};border:1px solid ${current?"#c7d2fe":"transparent"};">
+      <div style="width:8px;height:8px;border-radius:50%;background:${unlocked?s.color:"#d1d5db"};flex-shrink:0;"></div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:${current?"600":"400"};color:${unlocked?"#1a1a2e":"#9ca3af"};">${s.name}</div><div style="font-size:11px;color:#9ca3af;">от ${s.min} баллов</div></div>
+      ${current?`<span style="font-size:11px;color:#6366f1;font-weight:500;">Текущий</span>`:""}
+    </div>`;
+  }).join("");
+  const ACHV=[{id:"review_any",label:"Первый отзыв",desc:"Написан первый отзыв"},{id:"review_3",label:"Ценитель",desc:"3 отзыва"},{id:"daily_spin",label:"Удачливый",desc:"Первое вращение"},{id:"survey_1",label:"Эксперт",desc:"Первый опрос"},{id:"visit_food",label:"Гурман",desc:"Категория еды"},{id:"visit_3cats",label:"Путешественник",desc:"3 категории"}];
+  const prog=getQuestProgress();
+  document.getElementById("achievements-list").innerHTML=ACHV.map(a=>{
+    const earned=!!prog[a.id];
+    return `<div style="padding:12px;border-radius:12px;background:${earned?"#eef2ff":"#f9fafb"};border:1px solid ${earned?"#c7d2fe":"#e8e7f5"};">
+      <div style="width:32px;height:32px;border-radius:8px;background:${earned?"#6366f1":"#e5e7eb"};margin-bottom:8px;"></div>
+      <div style="font-size:13px;font-weight:600;color:${earned?"#4338ca":"#9ca3af"};">${a.label}</div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${a.desc}</div>
+    </div>`;
+  }).join("");
+}
 
-document.getElementById("search-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") doSearch();
-});
+// ACCESSORY
+function openAccModal(){pendingAcc=selectedAcc;renderAccGrid();document.getElementById("acc-modal").classList.remove("hidden");}
+function closeAccModal(){document.getElementById("acc-modal").classList.add("hidden");}
+function renderAccGrid(){
+  document.getElementById("acc-grid").innerHTML=ACCESSORIES.map(a=>{
+    const unlocked=userPoints>=a.minPts;
+    const preview=petSVG(Math.max(300,userPoints),a.id).replace(`width="160" height="160"`,`width="50" height="50"`);
+    return `<div class="acc-item ${pendingAcc===a.id?"selected":""} ${!unlocked?"opacity-50":""}" onclick="${unlocked?`selectAcc('${a.id}')`:""}" style="${!unlocked?"cursor:not-allowed;":""}">
+      <div style="height:54px;display:flex;align-items:center;justify-content:center;">${preview}</div>
+      <div style="font-size:11px;font-weight:500;margin-top:4px;color:#374151;">${a.label}</div>
+      ${!unlocked?`<div style="font-size:10px;color:#9ca3af;">от ${a.minPts} б</div>`:""}
+    </div>`;
+  }).join("");
+}
+function selectAcc(id){pendingAcc=id;renderAccGrid();}
+function saveAccessory(){selectedAcc=pendingAcc;localStorage.setItem("ratescan_acc",selectedAcc);closeAccModal();renderCharacterTab();showToast("Аксессуар сохранён");}
 
-// Init
-loadUser();
-loadCategories();
-doSearch();
+// MESSAGES
+async function checkUnread(){
+  try{const cs=await apiGet("/api/messages/conversations");document.getElementById("msg-dot").style.display=cs.some(c=>!c.is_read_b2c)?"block":"none";}catch(e){}
+}
+async function loadConversations(){
+  try{
+    const cs=await apiGet("/api/messages/conversations");
+    const list=document.getElementById("conv-list");
+    if(!cs.length){list.innerHTML=`<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Нет сообщений</div>`;return;}
+    list.innerHTML=cs.map(c=>`
+      <div onclick="openConversation(${c.id})" style="padding:14px 16px;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background 0.15s;background:${currentConvId===c.id?"#f5f4ff":"#fff"};">
+        <div class="flex items-center justify-between mb-1">
+          <span style="font-size:13px;font-weight:${c.is_read_b2c?"500":"700"};">${c.subject}</span>
+          ${!c.is_read_b2c?`<span style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;"></span>`:""}
+        </div>
+        <div style="font-size:11px;color:#9ca3af;">${c.business_name||"Бренд"}</div>
+      </div>`).join("");
+  }catch(e){}
+}
+async function openConversation(id){
+  currentConvId=id;
+  try{
+    const conv=await apiGet(`/api/messages/conversations/${id}`);
+    document.getElementById("chat-header").style.display="block";
+    document.getElementById("chat-title").textContent=conv.subject;
+    document.getElementById("chat-subtitle").textContent=conv.business_name||"Бренд";
+    document.getElementById("chat-empty").classList.add("hidden");
+    document.getElementById("chat-messages").classList.remove("hidden");
+    document.getElementById("chat-input-area").classList.remove("hidden");
+    const msgs=document.getElementById("chat-messages");
+    msgs.innerHTML=conv.messages.map(m=>{
+      const isMe=m.sender_type==="b2c";
+      return `<div style="display:flex;justify-content:${isMe?"flex-end":"flex-start"};">
+        <div class="${isMe?"msg-bubble-b2c":"msg-bubble-b2b"}" style="max-width:70%;padding:10px 14px;">
+          <p style="font-size:14px;line-height:1.5;">${m.text}</p>
+          <div style="font-size:11px;opacity:0.65;margin-top:4px;text-align:${isMe?"right":"left"}">${formatDate(m.created_at)}</div>
+        </div>
+      </div>`;
+    }).join("");
+    msgs.scrollTop=msgs.scrollHeight;loadConversations();
+  }catch(e){}
+}
+async function sendReply(){
+  const text=document.getElementById("chat-input").value.trim();
+  if(!text||!currentConvId)return;
+  try{await apiPost(`/api/messages/conversations/${currentConvId}/reply`,{text});document.getElementById("chat-input").value="";openConversation(currentConvId);}
+  catch(e){showToast(e.message,"error");}
+}
 </script>
 </body>
 </html>

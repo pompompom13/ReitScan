@@ -6,7 +6,7 @@ import os
 
 from database import engine, SessionLocal
 import models
-from routers import auth_router, b2c_router, b2b_router
+from routers import auth_router, b2c_router, b2b_router, surveys_router, messages_router
 from seed import seed_database
 
 models.Base.metadata.create_all(bind=engine)
@@ -24,6 +24,8 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(b2c_router.router)
 app.include_router(b2b_router.router)
+app.include_router(surveys_router.router)
+app.include_router(messages_router.router)
 
 
 @app.on_event("startup")

@@ -3,522 +3,787 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>РейтСкан — Личный кабинет бизнеса</title>
+  <title>РейтСкан — Бизнес-кабинет</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/static/js/api.js"></script>
   <style>
-    .tab-active { border-bottom: 2px solid #7c3aed; color: #7c3aed; font-weight: 600; }
-    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
-    .metric-card { transition: transform .2s; }
-    .metric-card:hover { transform: translateY(-2px); }
+    *,*::before,*::after{box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:#f5f4ff;color:#1a1a2e;}
+    :root{--primary:#6366f1;--primary-light:#eef2ff;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--card:#fff;--border:#e8e7f5;--muted:#6b7280;}
+    .card{background:#fff;border:1px solid #e8e7f5;border-radius:16px;box-shadow:0 1px 4px rgba(99,102,241,0.06);}
+    .tab-btn{padding:6px 16px;border-radius:10px;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.18s;white-space:nowrap;border:none;background:transparent;}
+    .tab-btn.active{background:#6366f1;color:#fff;}
+    .tab-btn:hover:not(.active){background:#eef2ff;color:#6366f1;}
+    .btn-primary{background:#6366f1;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:600;font-size:14px;cursor:pointer;transition:opacity 0.18s;}
+    .btn-primary:hover{opacity:0.88;}
+    .btn-outline{background:transparent;color:#6366f1;border:1.5px solid #6366f1;border-radius:10px;padding:9px 20px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.18s;}
+    .btn-outline:hover{background:#eef2ff;}
+    .btn-danger{background:transparent;color:#ef4444;border:1.5px solid #ef4444;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+    .modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(15,15,35,0.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-box{background:#fff;border-radius:20px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.18);}
+    .msg-bubble-b2b{background:#6366f1;color:#fff;border-radius:16px 16px 4px 16px;}
+    .msg-bubble-b2c{background:#f3f4f6;color:#374151;border-radius:16px 16px 16px 4px;}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+    @keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .fade-in{animation:fadeSlideIn 0.3s ease forwards;}
+    input,textarea,select{outline:none;font-family:'Inter',sans-serif;}
+    input:focus,textarea:focus,select:focus{border-color:#6366f1!important;box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
+    .stat-card{background:#fff;border:1px solid #e8e7f5;border-radius:14px;padding:18px;}
+    .review-card{background:#fff;border:1px solid #e8e7f5;border-radius:12px;padding:14px;transition:box-shadow 0.18s;}
+    .review-card:hover{box-shadow:0 2px 12px rgba(99,102,241,0.1);}
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
 
 <!-- HEADER -->
-<header class="bg-white border-b shadow-sm sticky top-0 z-30">
+<header style="background:#fff;border-bottom:1px solid #e8e7f5;position:sticky;top:0;z-index:30;">
   <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-violet-700 rounded-lg flex items-center justify-center">
-        <span class="text-white font-black">R</span>
+    <div class="flex items-center gap-2">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#fff"/></svg>
       </div>
-      <span class="font-bold text-gray-800">РейтСкан</span>
-      <span class="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-semibold ml-1">B2B</span>
-    </a>
-    <div class="flex items-center gap-4">
-      <span id="brand-header" class="text-sm font-semibold text-gray-700 hidden"></span>
-      <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition">Выйти</button>
+      <span style="font-weight:700;font-size:17px;">РейтСкан</span>
+      <span style="background:#eef2ff;color:#6366f1;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:4px;">Бизнес</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="header-brand" style="font-size:13px;font-weight:600;color:#374151;"></span>
+      <span id="header-username" style="font-size:13px;color:#9ca3af;"></span>
+      <button onclick="logout()" style="font-size:12px;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:500;">Выйти</button>
     </div>
   </div>
 </header>
 
-<!-- NAV TABS -->
-<div class="bg-white border-b">
+<!-- TABS -->
+<div style="background:#fff;border-bottom:1px solid #e8e7f5;position:sticky;top:57px;z-index:25;">
   <div class="max-w-6xl mx-auto px-4">
-    <div class="flex gap-6">
-      <button onclick="showTab('dashboard')" id="tab-dashboard" class="py-3 text-sm tab-active">📊 Дашборд</button>
-      <button onclick="showTab('reviews')" id="tab-reviews" class="py-3 text-sm text-gray-500 hover:text-gray-700">💬 Отзывы</button>
-      <button onclick="showTab('competitors')" id="tab-competitors" class="py-3 text-sm text-gray-500 hover:text-gray-700">🏆 Конкуренты</button>
-    </div>
-  </div>
-</div>
-
-<main class="max-w-6xl mx-auto px-4 py-8">
-
-  <!-- DASHBOARD TAB -->
-  <div id="tab-dashboard-content">
-    <div id="dashboard-loading" class="text-center py-16 text-gray-400">
-      <div class="text-4xl mb-3 animate-pulse">📊</div>Загрузка аналитики...
-    </div>
-    <div id="dashboard-data" class="hidden space-y-6">
-
-      <!-- Top metrics -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="metrics-row"></div>
-
-      <!-- Charts row -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Rating dynamics -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 class="font-bold text-gray-800 mb-4">Динамика рейтинга (6 мес.)</h3>
-          <canvas id="ratingChart" height="200"></canvas>
-        </div>
-        <!-- Sentiment donut -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 class="font-bold text-gray-800 mb-4">Тональность отзывов</h3>
-          <div class="flex items-center gap-6">
-            <canvas id="sentimentChart" width="160" height="160" style="max-width:160px;max-height:160px"></canvas>
-            <div id="sentiment-legend" class="space-y-2 flex-1"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Platform breakdown + Topics -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <!-- Platform ratings -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 class="font-bold text-gray-800 mb-4">Рейтинг по площадкам</h3>
-          <div id="platform-bars" class="space-y-3"></div>
-        </div>
-        <!-- Topics -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 class="font-bold text-gray-800 mb-1">Темы отзывов (AI-анализ)</h3>
-          <p class="text-xs text-gray-400 mb-4">Что чаще всего упоминают клиенты</p>
-          <div id="topics-bars" class="space-y-3"></div>
-        </div>
-      </div>
-
-      <!-- Recent reviews -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-gray-800">Последние отзывы</h3>
-          <button onclick="showTab('reviews')" class="text-sm text-violet-600 hover:underline">Все отзывы →</button>
-        </div>
-        <div id="recent-reviews-list" class="space-y-3"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- REVIEWS TAB -->
-  <div id="tab-reviews-content" class="hidden">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="font-bold text-xl text-gray-800">Все отзывы о вашем бренде</h2>
-      <div class="flex gap-2">
-        <select id="reviews-filter" onchange="filterReviews()" class="text-sm border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500">
-          <option value="">Все</option>
-          <option value="positive">Позитивные</option>
-          <option value="negative">Негативные</option>
-          <option value="neutral">Нейтральные</option>
-          <option value="no-response">Без ответа</option>
-        </select>
-      </div>
-    </div>
-    <div id="reviews-list" class="space-y-4"></div>
-  </div>
-
-  <!-- COMPETITORS TAB -->
-  <div id="tab-competitors-content" class="hidden">
-    <div class="mb-6">
-      <h2 class="font-bold text-xl text-gray-800 mb-1">Сравнение с конкурентами</h2>
-      <p class="text-sm text-gray-500">Все бренды в вашей категории — рейтинг по версии покупателей</p>
-    </div>
-    <div id="competitors-loading" class="text-center py-12 text-gray-400">Загрузка...</div>
-    <div id="competitors-data" class="hidden space-y-6">
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h3 class="font-bold text-gray-800 mb-4">Рейтинг по агрегированной оценке</h3>
-        <canvas id="competitorChart" height="120"></canvas>
-      </div>
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
-            <tr>
-              <th class="text-left px-5 py-3">Бренд</th>
-              <th class="text-center px-4 py-3">Рейтинг</th>
-              <th class="text-center px-4 py-3">Отзывов</th>
-              <th class="text-center px-4 py-3">% позитивных</th>
-              <th class="text-center px-4 py-3">WB</th>
-              <th class="text-center px-4 py-3">Ozon</th>
-              <th class="text-center px-4 py-3">ЯМ</th>
-            </tr>
-          </thead>
-          <tbody id="competitors-table"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<!-- RESPOND MODAL -->
-<div id="respond-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-    <div class="flex items-center justify-between p-5 border-b">
-      <h3 class="font-bold text-lg text-gray-800">Ответить на отзыв</h3>
-      <button onclick="closeRespondModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
-    </div>
-    <div class="p-5">
-      <div id="respond-review-preview" class="bg-gray-50 rounded-xl p-4 mb-4 text-sm text-gray-600 italic"></div>
-      <textarea id="respond-text" rows="4" placeholder="Напишите официальный ответ от имени бренда..."
-        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm resize-none"></textarea>
-      <div id="respond-error" class="text-red-500 text-sm mt-2 hidden"></div>
-      <button onclick="submitResponse()" class="mt-4 w-full py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 transition">
-        Опубликовать ответ
+    <div class="flex gap-1 py-2 overflow-x-auto" id="tab-nav" style="scrollbar-width:none;">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">Обзор</button>
+      <button class="tab-btn" onclick="switchTab('reviews')">Отзывы</button>
+      <button class="tab-btn" onclick="switchTab('competitors')">Конкуренты</button>
+      <button class="tab-btn" onclick="switchTab('ranking')">Рейтинг</button>
+      <button class="tab-btn" onclick="switchTab('analysis')">Анализ</button>
+      <button class="tab-btn" onclick="switchTab('surveys')">Опросы</button>
+      <button class="tab-btn" onclick="switchTab('messages')" style="position:relative;">
+        Сообщения
+        <span id="msg-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:none;position:absolute;top:4px;right:4px;"></span>
       </button>
     </div>
   </div>
 </div>
 
-<script>
-let allReviews = [];
-let respondingReviewId = null;
-let ratingChartInstance = null;
-let sentimentChartInstance = null;
-let competitorChartInstance = null;
+<div class="max-w-6xl mx-auto px-4 py-6">
 
-if (!isLoggedIn()) { window.location.href = "/"; }
+<!-- DASHBOARD -->
+<div id="tab-dashboard">
+  <div class="grid gap-4 mb-6" style="grid-template-columns:repeat(4,1fr);" id="stat-cards"></div>
+  <div class="grid gap-4" style="grid-template-columns:1.4fr 1fr;">
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:16px;">Динамика рейтинга</h3>
+      <div style="position:relative;height:200px;"><canvas id="rating-chart"></canvas></div>
+    </div>
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:16px;">Тональность отзывов</h3>
+      <div style="position:relative;height:200px;"><canvas id="sentiment-chart"></canvas></div>
+    </div>
+  </div>
+  <div class="card p-5 mt-4">
+    <div class="flex items-center justify-between mb-4">
+      <h3 style="font-weight:600;font-size:15px;">Последние отзывы</h3>
+      <button onclick="exportExcel()" class="btn-outline" style="padding:7px 14px;font-size:12px;">Экспорт в Excel</button>
+    </div>
+    <div id="recent-reviews" class="flex flex-col gap-3"></div>
+  </div>
+</div>
 
-async function init() {
-  try {
-    const user = await apiGet("/api/auth/me");
-    if (user.user_type !== "b2b") { window.location.href = "/b2c"; return; }
-    document.getElementById("brand-header").textContent = user.company_name || user.username;
-    document.getElementById("brand-header").classList.remove("hidden");
-    loadDashboard();
-  } catch(e) { logout(); }
-}
+<!-- REVIEWS -->
+<div id="tab-reviews" class="hidden">
+  <div class="flex items-center justify-between mb-5">
+    <h2 style="font-weight:700;font-size:20px;">Все отзывы</h2>
+    <div class="flex gap-2">
+      <select id="sentiment-filter" onchange="filterReviews()" style="padding:8px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;background:#fff;">
+        <option value="">Все тональности</option>
+        <option value="positive">Позитивные</option>
+        <option value="negative">Негативные</option>
+        <option value="neutral">Нейтральные</option>
+      </select>
+      <select id="platform-filter" onchange="filterReviews()" style="padding:8px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;background:#fff;">
+        <option value="">Все площадки</option>
+        <option value="wb">Wildberries</option>
+        <option value="ozon">Ozon</option>
+        <option value="ym">Яндекс.Маркет</option>
+        <option value="gmaps">Google Maps</option>
+        <option value="2gis">2ГИС</option>
+        <option value="ratescan">РейтСкан</option>
+      </select>
+    </div>
+  </div>
+  <div id="reviews-list" class="flex flex-col gap-3"></div>
+</div>
 
-function logout() { clearAuth(); window.location.href = "/"; }
+<!-- COMPETITORS -->
+<div id="tab-competitors" class="hidden">
+  <h2 style="font-weight:700;font-size:20px;margin-bottom:20px;">Конкурентный анализ</h2>
+  <div id="competitors-table"></div>
+</div>
 
-function showTab(name) {
-  ["dashboard","reviews","competitors"].forEach(t => {
-    document.getElementById(`tab-${t}-content`).classList.add("hidden");
-    document.getElementById(`tab-${t}`).className = "py-3 text-sm text-gray-500 hover:text-gray-700";
-  });
-  document.getElementById(`tab-${name}-content`).classList.remove("hidden");
-  document.getElementById(`tab-${name}`).className = "py-3 text-sm tab-active";
-  if (name === "reviews") loadReviews();
-  if (name === "competitors") loadCompetitors();
-}
+<!-- RANKING -->
+<div id="tab-ranking" class="hidden">
+  <div class="grid gap-4 mb-5" style="grid-template-columns:repeat(4,1fr);" id="ranking-stats"></div>
+  <div class="grid gap-4" style="grid-template-columns:1fr 1.2fr;">
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:16px;">Таблица лидеров</h3>
+      <div id="ranking-table"></div>
+    </div>
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:16px;">Динамика позиции</h3>
+      <div style="position:relative;height:250px;"><canvas id="ranking-chart"></canvas></div>
+    </div>
+  </div>
+</div>
 
-async function loadDashboard() {
-  try {
-    const d = await apiGet("/api/b2b/dashboard");
-    document.getElementById("dashboard-loading").classList.add("hidden");
-    document.getElementById("dashboard-data").classList.remove("hidden");
-    renderMetrics(d);
-    renderRatingChart(d.monthly_ratings);
-    renderSentimentChart(d.sentiment_breakdown);
-    renderPlatformBars(d.platform_breakdown);
-    renderTopicBars(d.topic_breakdown);
-    renderRecentReviews(d.recent_reviews);
-  } catch(e) {
-    document.getElementById("dashboard-loading").innerHTML =
-      `<div class="text-red-500 text-sm">${e.message}</div>`;
-  }
-}
+<!-- ANALYSIS -->
+<div id="tab-analysis" class="hidden">
+  <div class="grid gap-4" style="grid-template-columns:1fr 1fr;">
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:4px;">Проблемные зоны</h3>
+      <p style="font-size:12px;color:#9ca3af;margin-bottom:16px;">Негативные темы из отзывов за 30 дней</p>
+      <div style="position:relative;height:220px;"><canvas id="problems-chart"></canvas></div>
+      <div id="problems-list" class="mt-4"></div>
+    </div>
+    <div class="card p-5">
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:4px;">Сильные стороны</h3>
+      <p style="font-size:12px;color:#9ca3af;margin-bottom:16px;">Позитивные темы из отзывов</p>
+      <div style="position:relative;height:220px;"><canvas id="strengths-chart"></canvas></div>
+      <div id="strengths-list" class="mt-4"></div>
+    </div>
+  </div>
+  <div class="card p-5 mt-4" id="unique-advantages-block"></div>
+</div>
 
-function renderMetrics(d) {
-  const items = [
-    { label: "Средний рейтинг", value: `${d.avg_rating} ★`, sub: "по всем площадкам", color: "yellow" },
-    { label: "Всего отзывов", value: d.total_reviews, sub: "накоплено", color: "blue" },
-    { label: "Процент ответов", value: `${d.response_rate}%`, sub: "из всех отзывов", color: "green" },
-    { label: "Позитивных", value: `${Math.round((d.sentiment_breakdown.positive||0)/Math.max(d.total_reviews,1)*100)}%`, sub: "отзывов", color: "violet" },
-  ];
-  const colors = { yellow:"bg-yellow-50 border-yellow-200", blue:"bg-blue-50 border-blue-200",
-                   green:"bg-green-50 border-green-200", violet:"bg-violet-50 border-violet-200" };
-  const textColors = { yellow:"text-yellow-700", blue:"text-blue-700", green:"text-green-700", violet:"text-violet-700" };
-  document.getElementById("metrics-row").innerHTML = items.map(m => `
-    <div class="metric-card ${colors[m.color]} border rounded-2xl p-5">
-      <div class="text-2xl font-black ${textColors[m.color]}">${m.value}</div>
-      <div class="text-sm font-semibold text-gray-700 mt-1">${m.label}</div>
-      <div class="text-xs text-gray-400 mt-0.5">${m.sub}</div>
-    </div>`).join("");
-}
-
-function renderRatingChart(monthly) {
-  const labels = monthly.map(m => m.month);
-  const data = monthly.map(m => m.avg_rating);
-  const counts = monthly.map(m => m.count);
-  if (ratingChartInstance) ratingChartInstance.destroy();
-  ratingChartInstance = new Chart(document.getElementById("ratingChart"), {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        label: "Средний рейтинг",
-        data,
-        borderColor: "#7c3aed",
-        backgroundColor: "rgba(124,58,237,.1)",
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: "#7c3aed",
-        pointRadius: 5,
-        spanGaps: true,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { afterLabel: (ctx) => `Отзывов: ${counts[ctx.dataIndex]}` }
-      }},
-      scales: {
-        y: { min: 0, max: 5, grid: { color: "#f3f4f6" }, ticks: { stepSize: 1 } },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-}
-
-function renderSentimentChart(s) {
-  const positive = s.positive || 0;
-  const negative = s.negative || 0;
-  const neutral = s.neutral || 0;
-  const total = positive + negative + neutral;
-  if (sentimentChartInstance) sentimentChartInstance.destroy();
-  sentimentChartInstance = new Chart(document.getElementById("sentimentChart"), {
-    type: "doughnut",
-    data: {
-      labels: ["Позитивные", "Нейтральные", "Негативные"],
-      datasets: [{ data: [positive, neutral, negative],
-        backgroundColor: ["#22c55e","#94a3b8","#ef4444"], borderWidth: 0 }]
-    },
-    options: {
-      cutout: "70%",
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/total*100)}%)` }
-      }}
-    }
-  });
-  document.getElementById("sentiment-legend").innerHTML = [
-    { label: "Позитивные", val: positive, color: "bg-green-500" },
-    { label: "Нейтральные", val: neutral, color: "bg-slate-400" },
-    { label: "Негативные", val: negative, color: "bg-red-500" },
-  ].map(x => `
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 rounded-full ${x.color}"></div>
-        <span class="text-sm text-gray-600">${x.label}</span>
-      </div>
-      <div class="text-sm font-semibold text-gray-800">${x.val} <span class="text-gray-400 font-normal text-xs">(${Math.round(x.val/Math.max(total,1)*100)}%)</span></div>
-    </div>`).join("");
-}
-
-function renderPlatformBars(breakdown) {
-  const platformNames = { wb:"Wildberries", ozon:"Ozon", ym:"Яндекс.Маркет",
-    gmaps:"Google Maps", "2gis":"2ГИС", zoon:"Zoon", ratescan:"РейтСкан" };
-  const html = Object.entries(breakdown).map(([k, v]) => `
+<!-- SURVEYS -->
+<div id="tab-surveys" class="hidden">
+  <div class="flex items-center justify-between mb-5">
     <div>
-      <div class="flex justify-between text-sm mb-1">
-        <span class="text-gray-600">${platformNames[k] || k}</span>
-        <span class="font-semibold text-gray-800">${v} ★</span>
-      </div>
-      <div class="w-full bg-gray-100 rounded-full h-2.5">
-        <div class="bg-violet-500 h-2.5 rounded-full transition-all" style="width:${v/5*100}%"></div>
-      </div>
-    </div>`).join("");
-  document.getElementById("platform-bars").innerHTML = html || '<div class="text-sm text-gray-400">Нет данных</div>';
-}
+      <h2 style="font-weight:700;font-size:20px;">Опросы</h2>
+      <p style="color:#6b7280;font-size:13px;margin-top:2px;">Создавайте опросы и собирайте обратную связь от пользователей</p>
+    </div>
+    <button onclick="openSurveyBuilder()" class="btn-primary" style="display:flex;align-items:center;gap:6px;">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Создать опрос
+    </button>
+  </div>
+  <div id="surveys-list" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
+</div>
 
-function renderTopicBars(topics) {
-  const total = Object.values(topics).reduce((a,b) => a+b, 0);
-  const topicIcons = { качество:"🔬", упаковка:"📦", вкус:"😋", цена:"💰", доставка:"🚚", сервис:"🤝" };
-  const html = Object.entries(topics).slice(0,6).map(([k, v]) => `
-    <div>
-      <div class="flex justify-between text-sm mb-1">
-        <span class="text-gray-600">${topicIcons[k] || "📌"} ${k}</span>
-        <span class="text-xs text-gray-400">${v} упомин.</span>
+<!-- MESSAGES -->
+<div id="tab-messages" class="hidden">
+  <div class="grid gap-4" style="grid-template-columns:300px 1fr;min-height:500px;">
+    <div class="card overflow-hidden flex flex-col">
+      <div style="padding:16px;border-bottom:1px solid #e8e7f5;"><h3 style="font-weight:600;font-size:15px;">Входящие</h3></div>
+      <div id="b2b-conv-list" style="overflow-y:auto;flex:1;"></div>
+    </div>
+    <div class="card overflow-hidden flex flex-col">
+      <div id="b2b-chat-header" style="padding:16px;border-bottom:1px solid #e8e7f5;display:none;">
+        <div id="b2b-chat-title" style="font-weight:600;font-size:15px;"></div>
+        <div id="b2b-chat-subtitle" style="color:#6b7280;font-size:12px;margin-top:2px;"></div>
       </div>
-      <div class="w-full bg-gray-100 rounded-full h-2.5">
-        <div class="bg-indigo-400 h-2.5 rounded-full" style="width:${Math.min(v/Math.max(total,1)*100*2,100)}%"></div>
+      <div id="b2b-chat-empty" class="flex flex-col items-center justify-center" style="flex:1;color:#9ca3af;padding:40px;text-align:center;">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="margin-bottom:10px;opacity:0.35;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5"/></svg>
+        <p style="font-size:14px;">Выберите диалог</p>
       </div>
-    </div>`).join("");
-  document.getElementById("topics-bars").innerHTML = html || '<div class="text-sm text-gray-400">Нет данных</div>';
-}
+      <div id="b2b-chat-messages" class="hidden" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="b2b-chat-input-area" class="hidden" style="padding:12px 16px;border-top:1px solid #e8e7f5;display:flex;gap:8px;">
+        <input id="b2b-chat-input" type="text" placeholder="Написать ответ..."
+          style="flex:1;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"
+          onkeydown="if(event.key==='Enter')sendB2bReply()"/>
+        <button onclick="sendB2bReply()" class="btn-primary" style="padding:10px 16px;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-function renderRecentReviews(reviews) {
-  document.getElementById("recent-reviews-list").innerHTML = reviews.slice(0,5).map(r => reviewCard(r, true)).join("");
-}
+</div><!-- end main -->
 
-function reviewCard(r, compact = false) {
-  const sentiment = r.sentiment === "positive" ? "border-l-green-400" :
-                    r.sentiment === "negative" ? "border-l-red-400" : "border-l-gray-300";
-  const topics = r.topics ? r.topics.split(",").map(t =>
-    `<span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${t}</span>`).join("") : "";
-  const responseBlock = r.response
-    ? `<div class="mt-3 bg-violet-50 border-l-4 border-violet-400 pl-3 py-2 rounded-r-xl">
-        <div class="text-xs text-violet-600 font-semibold mb-1">✍️ ${r.response.author_name}</div>
-        <p class="text-xs text-violet-700">${r.response.text}</p>
-       </div>`
-    : `<button onclick="openRespondModal(${r.id}, \`${r.text.replace(/`/g,"'")}\`)"
-         class="mt-3 text-xs text-violet-600 hover:text-violet-800 font-semibold border border-violet-200 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition">
-         💬 Ответить на отзыв
-       </button>`;
+<!-- RESPOND MODAL -->
+<div id="respond-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-4">
+        <h2 style="font-weight:700;font-size:17px;">Ответить на отзыв</h2>
+        <button onclick="closeRespondModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="respond-review-preview" style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;"></div>
+      <textarea id="respond-text" rows="4" placeholder="Ваш ответ покупателю..."
+        style="width:100%;padding:12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;resize:none;"></textarea>
+      <div class="flex gap-3 mt-4">
+        <button onclick="closeRespondModal()" class="btn-outline" style="flex:1;">Отмена</button>
+        <button onclick="submitResponse()" class="btn-primary" style="flex:1;">Отправить ответ</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  return `
-    <div class="border-l-4 ${sentiment} bg-white rounded-r-xl border border-gray-100 shadow-sm p-4">
-      <div class="flex items-start justify-between gap-2 mb-2">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
-            ${r.author_name[0]}
+<!-- SURVEY BUILDER MODAL -->
+<div id="survey-builder-modal" class="modal-backdrop hidden">
+  <div class="modal-box" style="max-width:640px;">
+    <div style="padding:24px;">
+      <div class="flex items-center justify-between mb-5">
+        <h2 style="font-weight:700;font-size:17px;">Создать опрос</h2>
+        <button onclick="closeSurveyBuilder()" style="background:none;border:none;cursor:pointer;color:#9ca3af;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div>
+          <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Название опроса *</label>
+          <input id="sb-title" type="text" placeholder="Например: Оцените качество нашей продукции"
+            style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Описание</label>
+          <textarea id="sb-description" rows="2" placeholder="Краткое описание для участников"
+            style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;resize:none;"></textarea>
+        </div>
+
+        <div class="grid gap-3" style="grid-template-columns:1fr 1fr;">
+          <div>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Награда (баллы)</label>
+            <input id="sb-points" type="number" value="25" min="5" max="200"
+              style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
           </div>
-          <span class="text-sm font-medium text-gray-700">${r.author_name}</span>
-          ${r.is_verified ? '<span class="text-xs text-green-500">✓</span>' : ""}
+          <div>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Примерное время (мин)</label>
+            <input id="sb-minutes" type="number" value="5" min="1" max="60"
+              style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
+          </div>
         </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
-          <span class="text-sm font-bold ${r.rating>=4?"text-green-600":r.rating<=2?"text-red-500":"text-yellow-500"}">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span>
-          <span class="text-xs text-gray-400">${formatDate(r.created_at)}</span>
+
+        <div>
+          <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:8px;">Целевая аудитория (по категориям товаров)</label>
+          <div id="sb-audience-grid" class="grid gap-2" style="grid-template-columns:repeat(3,1fr);"></div>
+          <p style="font-size:12px;color:#9ca3af;margin-top:6px;">Оставьте пустым — опрос увидят все пользователи</p>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <label style="font-size:13px;font-weight:500;color:#374151;">Вопросы *</label>
+            <button onclick="addQuestion()" class="btn-outline" style="padding:5px 12px;font-size:12px;">+ Добавить вопрос</button>
+          </div>
+          <div id="sb-questions" class="flex flex-col gap-3"></div>
         </div>
       </div>
-      <p class="text-sm text-gray-700">${r.text}</p>
-      ${topics ? `<div class="mt-2 flex gap-1 flex-wrap">${topics}</div>` : ""}
-      ${responseBlock}
+
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeSurveyBuilder()" class="btn-outline" style="flex:1;">Отмена</button>
+        <button onclick="submitSurvey()" class="btn-primary" style="flex:1;">Создать опрос</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_TABS=["dashboard","reviews","competitors","ranking","analysis","surveys","messages"];
+let currentTab="dashboard";
+let allReviews=[];
+let currentRespondId=null;
+let currentB2bConvId=null;
+let ratingChartInst=null,sentimentChartInst=null,rankingChartInst=null,problemsChartInst=null,strengthsChartInst=null;
+let sbQuestions=[];
+let sbSelectedAudience=new Set();
+let allCategories=[];
+
+window.addEventListener("DOMContentLoaded",async()=>{
+  if(!isLoggedIn()){window.location.href="/";return;}
+  document.getElementById("header-username").textContent=localStorage.getItem("rs_username")||"";
+  await Promise.all([loadDashboard(),loadReviewsData()]);
+  await loadAudienceCategories();
+  checkUnreadMessages();
+});
+
+function logout(){clearAuth();window.location.href="/";}
+
+function switchTab(name){
+  ALL_TABS.forEach(t=>document.getElementById("tab-"+t).classList.add("hidden"));
+  document.getElementById("tab-"+name).classList.remove("hidden");
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>b.classList.toggle("active",ALL_TABS[i]===name));
+  currentTab=name;
+  if(name==="competitors")loadCompetitors();
+  if(name==="ranking")loadRanking();
+  if(name==="analysis")loadAnalysis();
+  if(name==="messages")loadB2bConversations();
+  if(name==="surveys")loadSurveysTab();
+}
+
+// DASHBOARD
+async function loadDashboard(){
+  try{
+    const data=await apiGet("/api/b2b/dashboard");
+    document.getElementById("header-brand").textContent=data.brand_name;
+
+    const platforms=Object.keys(data.platform_breakdown);
+    const positiveCount=data.sentiment_breakdown.positive||0;
+    const total=data.total_reviews;
+    const positivePct=total?Math.round(positiveCount/total*100):0;
+
+    document.getElementById("stat-cards").innerHTML=[
+      {title:"Всего отзывов",value:data.total_reviews,icon:"reviews",color:"#6366f1",bg:"#eef2ff"},
+      {title:"Средний рейтинг",value:data.avg_rating.toFixed(1),icon:"star",color:"#f59e0b",bg:"#fffbeb"},
+      {title:"Позитивных",value:positivePct+"%",icon:"up",color:"#10b981",bg:"#d1fae5"},
+      {title:"Процент ответов",value:data.response_rate+"%",icon:"reply",color:"#8b5cf6",bg:"#f3e8ff"},
+    ].map(s=>`
+      <div class="stat-card fade-in">
+        <div style="width:38px;height:38px;border-radius:10px;background:${s.bg};display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style="color:${s.color};">${statIcon(s.icon)}</svg>
+        </div>
+        <div style="font-size:24px;font-weight:800;color:${s.color};">${s.value}</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:2px;">${s.title}</div>
+      </div>`).join("");
+
+    // Rating chart
+    const months=data.monthly_ratings.map(m=>m.month);
+    const ratings=data.monthly_ratings.map(m=>m.avg_rating);
+    if(ratingChartInst)ratingChartInst.destroy();
+    ratingChartInst=new Chart(document.getElementById("rating-chart"),{
+      type:"line",
+      data:{labels:months,datasets:[{label:"Средний рейтинг",data:ratings,borderColor:"#6366f1",backgroundColor:"rgba(99,102,241,0.08)",tension:0.4,fill:true,pointBackgroundColor:"#6366f1",pointRadius:4}]},
+      options:{scales:{y:{min:0,max:5,grid:{color:"#f3f4f6"},ticks:{font:{family:"Inter",size:11}}},x:{grid:{display:false},ticks:{font:{family:"Inter",size:11}}}},plugins:{legend:{display:false}},maintainAspectRatio:false},
+    });
+
+    // Sentiment chart
+    const sentData=[data.sentiment_breakdown.positive||0,data.sentiment_breakdown.neutral||0,data.sentiment_breakdown.negative||0];
+    if(sentimentChartInst)sentimentChartInst.destroy();
+    sentimentChartInst=new Chart(document.getElementById("sentiment-chart"),{
+      type:"doughnut",
+      data:{labels:["Позитивные","Нейтральные","Негативные"],datasets:[{data:sentData,backgroundColor:["#10b981","#9ca3af","#ef4444"],borderWidth:0,hoverOffset:4}]},
+      options:{cutout:"72%",plugins:{legend:{position:"bottom",labels:{font:{family:"Inter",size:12},padding:16}}},maintainAspectRatio:false},
+    });
+
+    // Recent reviews
+    renderReviewCards(data.recent_reviews,"recent-reviews",data.brand_name);
+  }catch(e){console.error(e);}
+}
+
+function statIcon(icon){
+  const icons={
+    reviews:`<rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+    star:`<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2"/>`,
+    up:`<path d="M7 17L17 7M17 7H7M17 7v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+    reply:`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/>`,
+  };
+  return icons[icon]||"";
+}
+
+function renderReviewCards(reviews,containerId,brandName){
+  const container=document.getElementById(containerId);
+  if(!reviews||!reviews.length){container.innerHTML=`<p style="text-align:center;color:#9ca3af;padding:20px;font-size:14px;">Нет отзывов</p>`;return;}
+  container.innerHTML=reviews.map(r=>{
+    const platColors={wb:"#faf5ff,#7c3aed",ozon:"#eff6ff,#1d4ed8",ym:"#fffbeb,#b45309",gmaps:"#f0fdf4,#15803d","2gis":"#ecfdf5,#065f46",ratescan:"#eef2ff,#6366f1"};
+    const[pbg,ptc]=(platColors[r.platform]||"#f3f4f6,#374151").split(",");
+    return `<div class="review-card">
+      <div class="flex items-start justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span style="font-weight:500;font-size:13px;">${r.author_name}</span>
+          <span class="badge" style="background:${pbg};color:${ptc};">${platformLabel(r.platform)}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span style="font-size:11px;color:#9ca3af;">${formatDate(r.created_at)}</span>
+          <div class="flex gap-0.5">${[1,2,3,4,5].map(i=>`<svg width="11" height="11" fill="${i<=r.rating?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}</div>
+        </div>
+      </div>
+      <p style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:${r.response?'8px':'0'}">${r.text}</p>
+      ${r.response?`<div style="background:#f9fafb;border-radius:8px;padding:10px 12px;border-left:3px solid #6366f1;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:500;color:#6366f1;margin-bottom:3px;">Ответ бренда</div>
+        <p style="font-size:13px;color:#4b5563;">${r.response.text}</p>
+      </div>`:""}
+      <button onclick="openRespondModal(${r.id},'${r.text.replace(/'/g,"\\'")}','${brandName||"Бренд"}')" class="btn-outline" style="padding:5px 12px;font-size:12px;margin-top:4px;">
+        ${r.response?"Изменить ответ":"Ответить"}
+      </button>
     </div>`;
-}
-
-async function loadReviews() {
-  const container = document.getElementById("reviews-list");
-  container.innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
-  try {
-    allReviews = await apiGet("/api/b2b/reviews");
-    renderFilteredReviews();
-  } catch(e) {
-    container.innerHTML = `<div class="text-red-500 text-sm">${e.message}</div>`;
-  }
-}
-
-function filterReviews() { renderFilteredReviews(); }
-
-function renderFilteredReviews() {
-  const filter = document.getElementById("reviews-filter").value;
-  let filtered = allReviews;
-  if (filter === "no-response") filtered = allReviews.filter(r => !r.response);
-  else if (filter) filtered = allReviews.filter(r => r.sentiment === filter);
-  const container = document.getElementById("reviews-list");
-  if (!filtered.length) {
-    container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-3xl mb-2">💬</div>Нет отзывов по выбранному фильтру</div>`;
-    return;
-  }
-  container.innerHTML = filtered.map(r => {
-    const pname = r.product_name ? `<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full mb-2 inline-block">${r.product_name}</span>` : "";
-    return `<div>${pname}${reviewCard(r)}</div>`;
   }).join("");
 }
 
-async function loadCompetitors() {
-  document.getElementById("competitors-loading").classList.remove("hidden");
-  document.getElementById("competitors-data").classList.add("hidden");
-  try {
-    const comps = await apiGet("/api/b2b/competitors");
-    document.getElementById("competitors-loading").classList.add("hidden");
-    document.getElementById("competitors-data").classList.remove("hidden");
-    renderCompetitorChart(comps);
-    renderCompetitorTable(comps);
-  } catch(e) {
-    document.getElementById("competitors-loading").innerHTML =
-      `<div class="text-red-500 text-sm">${e.message}</div>`;
+// REVIEWS
+let reviewsCache=[];
+async function loadReviewsData(){
+  try{
+    reviewsCache=await apiGet("/api/b2b/reviews");
+    filterReviews();
+  }catch(e){}
+}
+function filterReviews(){
+  const sent=document.getElementById("sentiment-filter").value;
+  const plat=document.getElementById("platform-filter").value;
+  let filtered=reviewsCache;
+  if(sent)filtered=filtered.filter(r=>r.sentiment===sent);
+  if(plat)filtered=filtered.filter(r=>r.platform===plat);
+  if(document.getElementById("reviews-list")){
+    const brandName=(document.getElementById("header-brand")||{}).textContent||"Бренд";
+    renderReviewCards(filtered,"reviews-list",brandName);
   }
 }
 
-function renderCompetitorChart(comps) {
-  const labels = comps.map(c => c.brand);
-  const data = comps.map(c => c.avg_rating);
-  const colors = comps.map(c => c.is_mine ? "#7c3aed" : "#e2e8f0");
-  const borderColors = comps.map(c => c.is_mine ? "#5b21b6" : "#cbd5e1");
-  if (competitorChartInstance) competitorChartInstance.destroy();
-  competitorChartInstance = new Chart(document.getElementById("competitorChart"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Агрегированный рейтинг",
-        data,
-        backgroundColor: colors,
-        borderColor: borderColors,
-        borderWidth: 2,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: (ctx) => ` Рейтинг: ${ctx.raw}` }
-      }},
-      scales: {
-        x: { min: 0, max: 5, grid: { color: "#f3f4f6" } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
-}
-
-function renderCompetitorTable(comps) {
-  document.getElementById("competitors-table").innerHTML = comps.map(c => `
-    <tr class="${c.is_mine ? "bg-violet-50 font-semibold" : "hover:bg-gray-50"} transition">
-      <td class="px-5 py-3 text-sm">
-        ${c.is_mine ? "⭐ " : ""}${c.brand}
-        ${c.is_mine ? '<span class="text-xs text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full ml-1">Ваш бренд</span>' : ""}
-      </td>
-      <td class="px-4 py-3 text-center font-bold ${c.avg_rating>=4.3?"text-green-600":c.avg_rating>=3.8?"text-yellow-600":"text-red-500"}">
-        ${c.avg_rating} ★
-      </td>
-      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.total_reviews}</td>
-      <td class="px-4 py-3 text-center">
-        <div class="flex items-center justify-center gap-2">
-          <div class="w-16 bg-gray-200 rounded-full h-2">
-            <div class="bg-green-500 h-2 rounded-full" style="width:${c.positive_pct}%"></div>
-          </div>
-          <span class="text-xs text-gray-600">${c.positive_pct}%</span>
-        </div>
-      </td>
-      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_wb || "—"}</td>
-      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_ozon || "—"}</td>
-      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_ym || "—"}</td>
-    </tr>`).join("");
-}
-
-function openRespondModal(reviewId, reviewText) {
-  respondingReviewId = reviewId;
-  document.getElementById("respond-review-preview").textContent = `"${reviewText}"`;
-  document.getElementById("respond-text").value = "";
-  document.getElementById("respond-error").classList.add("hidden");
+// RESPOND MODAL
+function openRespondModal(reviewId,text,brandName){
+  currentRespondId=reviewId;
+  document.getElementById("respond-review-preview").innerHTML=`<p style="font-size:13px;color:#374151;line-height:1.5;">"${text}"</p>`;
+  document.getElementById("respond-text").value="";
   document.getElementById("respond-modal").classList.remove("hidden");
-  document.getElementById("respond-modal").classList.add("flex");
+}
+function closeRespondModal(){document.getElementById("respond-modal").classList.add("hidden");}
+async function submitResponse(){
+  const text=document.getElementById("respond-text").value.trim();
+  if(!text){showToast("Введите текст ответа","error");return;}
+  try{
+    await apiPost(`/api/b2b/reviews/${currentRespondId}/respond`,{text});
+    closeRespondModal();showToast("Ответ опубликован");
+    await loadDashboard();await loadReviewsData();
+  }catch(e){showToast(e.message,"error");}
 }
 
-function closeRespondModal() {
-  document.getElementById("respond-modal").classList.add("hidden");
-  document.getElementById("respond-modal").classList.remove("flex");
+// EXPORT
+async function exportExcel(){
+  try{
+    const token=localStorage.getItem("rs_token");
+    const res=await fetch("/api/b2b/export-reviews",{headers:{Authorization:"Bearer "+token}});
+    if(!res.ok)throw new Error("Ошибка экспорта");
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download="reviews.xlsx";a.click();
+    URL.revokeObjectURL(url);
+    showToast("Файл скачан");
+  }catch(e){showToast(e.message,"error");}
 }
 
-async function submitResponse() {
-  const text = document.getElementById("respond-text").value.trim();
-  const errEl = document.getElementById("respond-error");
-  if (!text) {
-    errEl.textContent = "Введите текст ответа";
-    errEl.classList.remove("hidden");
-    return;
+// COMPETITORS
+async function loadCompetitors(){
+  try{
+    const comps=await apiGet("/api/b2b/competitors");
+    const container=document.getElementById("competitors-table");
+    if(!comps.length){container.innerHTML=`<p style="color:#9ca3af;text-align:center;padding:40px;">Нет данных</p>`;return;}
+    container.innerHTML=`<div class="card overflow-hidden">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f9fafb;">
+            <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e8e7f5;">Бренд / Товар</th>
+            <th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e8e7f5;">Рейтинг</th>
+            <th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e8e7f5;">Отзывов</th>
+            <th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e8e7f5;">Позитивных</th>
+            <th style="padding:12px 16px;text-align:right;font-size:12px;font-weight:600;color:#6b7280;border-bottom:1px solid #e8e7f5;">Негативных</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${comps.map(c=>`
+          <tr style="border-bottom:1px solid #f3f4f6;background:${c.is_mine?"#f5f4ff":"#fff"};">
+            <td style="padding:12px 16px;">
+              <div style="font-weight:${c.is_mine?"700":"500"};font-size:14px;">${c.brand}</div>
+              <div style="font-size:12px;color:#9ca3af;">${c.name}</div>
+              ${c.is_mine?`<span style="font-size:11px;background:#eef2ff;color:#6366f1;padding:1px 7px;border-radius:10px;font-weight:600;">Вы</span>`:""}
+            </td>
+            <td style="padding:12px 16px;text-align:right;font-weight:700;font-size:15px;color:${c.avg_rating>=4?'#10b981':c.avg_rating>=3?'#f59e0b':'#ef4444'};">${c.avg_rating.toFixed(1)}</td>
+            <td style="padding:12px 16px;text-align:right;font-size:14px;color:#374151;">${c.total_reviews}</td>
+            <td style="padding:12px 16px;text-align:right;font-size:14px;color:#10b981;">${c.positive_pct}%</td>
+            <td style="padding:12px 16px;text-align:right;font-size:14px;color:#ef4444;">${c.negative_pct}%</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+  }catch(e){}
+}
+
+// RANKING
+async function loadRanking(){
+  try{
+    const data=await apiGet("/api/b2b/category-ranking");
+    const mb=data.my_brand||{};
+
+    document.getElementById("ranking-stats").innerHTML=[
+      {title:"Позиция по рейтингу",value:`#${mb.rank_avg_rating||"—"}`,color:"#6366f1",bg:"#eef2ff"},
+      {title:"Всего брендов",value:data.brands.length,color:"#374151",bg:"#f3f4f6"},
+      {title:"Средний рейтинг",value:(mb.avg_rating||0).toFixed(1),color:"#f59e0b",bg:"#fffbeb"},
+      {title:"Отзывов",value:mb.total_reviews||0,color:"#10b981",bg:"#d1fae5"},
+    ].map(s=>`<div class="stat-card"><div style="font-size:22px;font-weight:800;color:${s.color};">${s.value}</div><div style="font-size:13px;color:#6b7280;margin-top:2px;">${s.title}</div></div>`).join("");
+
+    // Leaderboard
+    document.getElementById("ranking-table").innerHTML=data.brands.slice(0,10).map((b,i)=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;${b.is_mine?"background:#f5f4ff;padding:10px;border-radius:10px;margin-bottom:2px;":""}">
+        <div style="width:28px;text-align:center;font-weight:700;font-size:14px;color:${i<3?'#6366f1':'#9ca3af'};">${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:${b.is_mine?"700":"500"};">${b.brand}</div>
+          <div style="font-size:11px;color:#9ca3af;">${b.total_reviews} отз.</div>
+        </div>
+        <div style="font-weight:700;font-size:14px;color:${b.avg_rating>=4?'#10b981':b.avg_rating>=3?'#f59e0b':'#ef4444'};">${b.avg_rating.toFixed(1)}</div>
+        ${b.is_mine?`<span style="font-size:11px;background:#6366f1;color:#fff;padding:2px 8px;border-radius:8px;">Вы</span>`:""}
+      </div>`).join("");
+
+    // Dynamics chart
+    const months=data.monthly_rank.map(m=>m.month),ranks=data.monthly_rank.map(m=>m.rank);
+    if(rankingChartInst)rankingChartInst.destroy();
+    rankingChartInst=new Chart(document.getElementById("ranking-chart"),{
+      type:"line",
+      data:{labels:months,datasets:[{label:"Позиция",data:ranks,borderColor:"#6366f1",backgroundColor:"rgba(99,102,241,0.08)",tension:0.4,fill:true,pointBackgroundColor:"#6366f1",pointRadius:5}]},
+      options:{scales:{y:{reverse:true,min:1,grid:{color:"#f3f4f6"},ticks:{stepSize:1,font:{family:"Inter",size:11}}},x:{grid:{display:false},ticks:{font:{family:"Inter",size:11}}}},plugins:{legend:{display:false}},maintainAspectRatio:false},
+    });
+  }catch(e){console.error(e);}
+}
+
+// ANALYSIS
+async function loadAnalysis(){
+  try{
+    const[problemsRaw,strengthsRaw]=await Promise.all([apiGet("/api/b2b/problems"),apiGet("/api/b2b/strengths")]);
+
+    const myProblems=Object.entries(problemsRaw.my_problems||{}).map(([topic,v])=>({topic,count:v.count||0,examples:v.examples||[]})).sort((a,b)=>b.count-a.count).slice(0,7);
+    const myStrengths=Object.entries(strengthsRaw.my_strengths||{}).map(([topic,v])=>({topic,count:v.count||0,examples:v.examples||[]})).sort((a,b)=>b.count-a.count).slice(0,7);
+
+    if(problemsChartInst)problemsChartInst.destroy();
+    if(myProblems.length){
+      problemsChartInst=new Chart(document.getElementById("problems-chart"),{
+        type:"bar",
+        data:{labels:myProblems.map(p=>p.topic),datasets:[{label:"Упоминаний",data:myProblems.map(p=>p.count),backgroundColor:"rgba(239,68,68,0.15)",borderColor:"#ef4444",borderWidth:1.5,borderRadius:6}]},
+        options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#f3f4f6"},ticks:{font:{family:"Inter",size:11}}},y:{grid:{display:false},ticks:{font:{family:"Inter",size:11}}}},maintainAspectRatio:false},
+      });
+    }
+    if(strengthsChartInst)strengthsChartInst.destroy();
+    if(myStrengths.length){
+      strengthsChartInst=new Chart(document.getElementById("strengths-chart"),{
+        type:"bar",
+        data:{labels:myStrengths.map(s=>s.topic),datasets:[{label:"Упоминаний",data:myStrengths.map(s=>s.count),backgroundColor:"rgba(16,185,129,0.15)",borderColor:"#10b981",borderWidth:1.5,borderRadius:6}]},
+        options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#f3f4f6"},ticks:{font:{family:"Inter",size:11}}},y:{grid:{display:false},ticks:{font:{family:"Inter",size:11}}}},maintainAspectRatio:false},
+      });
+    }
+
+    document.getElementById("problems-list").innerHTML=myProblems.slice(0,3).map(p=>`
+      <div style="padding:10px 12px;background:#fff5f5;border-radius:8px;margin-bottom:6px;">
+        <div style="font-weight:500;font-size:13px;color:#991b1b;margin-bottom:4px;">${p.topic} (${p.count} упом.)</div>
+        ${p.examples.map(e=>`<p style="font-size:12px;color:#6b7280;line-height:1.5;">"${e.substring(0,100)}..."</p>`).join("")}
+      </div>`).join("");
+    document.getElementById("strengths-list").innerHTML=myStrengths.slice(0,3).map(s=>`
+      <div style="padding:10px 12px;background:#f0fdf4;border-radius:8px;margin-bottom:6px;">
+        <div style="font-weight:500;font-size:13px;color:#065f46;margin-bottom:4px;">${s.topic} (${s.count} упом.)</div>
+        ${s.examples.map(e=>`<p style="font-size:12px;color:#6b7280;line-height:1.5;">"${e.substring(0,100)}..."</p>`).join("")}
+      </div>`).join("");
+
+    const adv=strengthsRaw.unique_advantages||[];
+    document.getElementById("unique-advantages-block").innerHTML=`
+      <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Уникальные преимущества</h3>
+      ${adv.length
+        ? `<div class="flex flex-wrap gap-2">${adv.map(a=>`<span style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500;">${a}</span>`).join("")}</div>`
+        : `<p style="color:#9ca3af;font-size:14px;">Данных пока недостаточно для определения уникальных преимуществ</p>`}`;
+  }catch(e){console.error(e);}
+}
+
+// SURVEYS
+async function loadAudienceCategories(){
+  try{
+    allCategories=await apiGet("/api/b2c/categories");
+  }catch(e){}
+}
+
+async function loadSurveysTab(){
+  try{
+    const surveys=await apiGet("/api/b2b/surveys");
+    const container=document.getElementById("surveys-list");
+    if(!surveys.length){
+      container.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;color:#9ca3af;">
+        <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="margin:0 auto 10px;display:block;opacity:0.35;"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p style="font-size:14px;margin-bottom:12px;">Вы ещё не создали ни одного опроса</p>
+        <button onclick="openSurveyBuilder()" class="btn-primary">Создать первый опрос</button>
+      </div>`;
+      return;
+    }
+    container.innerHTML=surveys.map(s=>`
+      <div class="card p-4">
+        <div class="flex items-start justify-between mb-3">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:3px;">${s.title}</div>
+            <p style="color:#6b7280;font-size:12px;line-height:1.5;">${s.description}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:8px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${s.is_active?"#10b981":"#d1d5db"};"></div>
+            <span style="font-size:12px;color:${s.is_active?"#10b981":"#9ca3af"};">${s.is_active?"Активен":"Пауза"}</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-3">
+          ${s.target_audience&&s.target_audience.length?s.target_audience.map(a=>`<span class="badge" style="background:#eef2ff;color:#6366f1;">${a}</span>`).join(""):`<span class="badge" style="background:#f3f4f6;color:#6b7280;">Все пользователи</span>`}
+        </div>
+        <div class="flex items-center justify-between">
+          <div style="font-size:12px;color:#9ca3af;">${s.question_count} вопр. · ${s.estimated_minutes} мин · +${s.points_reward} б · ${s.completion_count} прохождений</div>
+          <div class="flex gap-2">
+            <button onclick="toggleSurvey(${s.id},${s.is_active})" class="btn-outline" style="padding:5px 10px;font-size:11px;">${s.is_active?"Пауза":"Запустить"}</button>
+            <button onclick="deleteSurvey(${s.id})" class="btn-danger">Удалить</button>
+          </div>
+        </div>
+      </div>`).join("");
+  }catch(e){}
+}
+
+async function toggleSurvey(id,isActive){
+  try{await apiPost(`/api/b2b/surveys/${id}/toggle`,{});showToast(isActive?"Опрос приостановлен":"Опрос запущен");await loadSurveysTab();}
+  catch(e){showToast(e.message,"error");}
+}
+async function deleteSurvey(id){
+  if(!confirm("Удалить опрос?"))return;
+  try{
+    const token=localStorage.getItem("rs_token");
+    const res=await fetch(`/api/b2b/surveys/${id}`,{method:"DELETE",headers:{Authorization:"Bearer "+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.detail||"Ошибка");
+    showToast("Опрос удалён");await loadSurveysTab();
+  }catch(e){showToast(e.message,"error");}
+}
+
+// SURVEY BUILDER
+function openSurveyBuilder(){
+  sbQuestions=[];
+  sbSelectedAudience=new Set();
+  document.getElementById("sb-title").value="";
+  document.getElementById("sb-description").value="";
+  document.getElementById("sb-points").value="25";
+  document.getElementById("sb-minutes").value="5";
+  renderAudienceGrid();
+  renderSbQuestions();
+  addQuestion(); // start with one question
+  document.getElementById("survey-builder-modal").classList.remove("hidden");
+}
+function closeSurveyBuilder(){document.getElementById("survey-builder-modal").classList.add("hidden");}
+
+function renderAudienceGrid(){
+  document.getElementById("sb-audience-grid").innerHTML=allCategories.map(c=>`
+    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1.5px solid ${sbSelectedAudience.has(c)?'#6366f1':'#e8e7f5'};border-radius:8px;cursor:pointer;background:${sbSelectedAudience.has(c)?'#eef2ff':'#fff'};font-size:12px;transition:all 0.15s;">
+      <input type="checkbox" ${sbSelectedAudience.has(c)?"checked":""} onchange="toggleAudience('${c}')" style="accent-color:#6366f1;"/>
+      ${c}
+    </label>`).join("");
+}
+function toggleAudience(cat){
+  sbSelectedAudience.has(cat)?sbSelectedAudience.delete(cat):sbSelectedAudience.add(cat);
+  renderAudienceGrid();
+}
+
+function addQuestion(){
+  sbQuestions.push({question_text:"",question_type:"choice",options:["",""]});
+  renderSbQuestions();
+}
+function removeQuestion(idx){
+  sbQuestions.splice(idx,1);renderSbQuestions();
+}
+function renderSbQuestions(){
+  document.getElementById("sb-questions").innerHTML=sbQuestions.map((q,idx)=>`
+    <div style="border:1.5px solid #e8e7f5;border-radius:12px;padding:14px;">
+      <div class="flex items-center justify-between mb-3">
+        <span style="font-size:12px;font-weight:600;color:#6b7280;">Вопрос ${idx+1}</span>
+        ${sbQuestions.length>1?`<button onclick="removeQuestion(${idx})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:12px;font-weight:500;">Удалить</button>`:""}
+      </div>
+      <input type="text" value="${q.question_text}" placeholder="Текст вопроса"
+        oninput="updateQText(${idx},this.value)"
+        style="width:100%;padding:8px 12px;border:1.5px solid #e8e7f5;border-radius:8px;font-size:13px;margin-bottom:10px;"/>
+      <div class="flex gap-2 mb-3">
+        ${["choice","rating","text"].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:5px 10px;border:1.5px solid ${q.question_type===t?'#6366f1':'#e8e7f5'};border-radius:8px;background:${q.question_type===t?'#eef2ff':'#fff'};">
+          <input type="radio" name="qt${idx}" value="${t}" ${q.question_type===t?"checked":""} onchange="updateQType(${idx},'${t}')" style="accent-color:#6366f1;"/>
+          ${{choice:"Выбор",rating:"Оценка",text:"Текст"}[t]}
+        </label>`).join("")}
+      </div>
+      ${q.question_type==="choice"?`
+        <div class="flex flex-col gap-2" id="opts-${idx}">
+          ${q.options.map((opt,oi)=>`
+            <div class="flex gap-2 items-center">
+              <input type="text" value="${opt}" placeholder="Вариант ${oi+1}"
+                oninput="updateOpt(${idx},${oi},this.value)"
+                style="flex:1;padding:6px 10px;border:1.5px solid #e8e7f5;border-radius:8px;font-size:12px;"/>
+              ${q.options.length>2?`<button onclick="removeOpt(${idx},${oi})" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</button>`:""}
+            </div>`).join("")}
+          <button onclick="addOpt(${idx})" style="font-size:12px;color:#6366f1;background:none;border:none;cursor:pointer;font-weight:500;text-align:left;margin-top:2px;">+ Добавить вариант</button>
+        </div>`:q.question_type==="rating"?`<p style="font-size:12px;color:#9ca3af;">Шкала оценки от 1 до 5</p>`:`<p style="font-size:12px;color:#9ca3af;">Пользователь введёт текстовый ответ</p>`}
+    </div>`).join("");
+}
+function updateQText(idx,v){sbQuestions[idx].question_text=v;}
+function updateQType(idx,t){sbQuestions[idx].question_type=t;if(t==="choice"&&!sbQuestions[idx].options)sbQuestions[idx].options=["",""];renderSbQuestions();}
+function updateOpt(idx,oi,v){sbQuestions[idx].options[oi]=v;}
+function addOpt(idx){sbQuestions[idx].options.push("");renderSbQuestions();}
+function removeOpt(idx,oi){sbQuestions[idx].options.splice(oi,1);renderSbQuestions();}
+
+async function submitSurvey(){
+  const title=document.getElementById("sb-title").value.trim();
+  const desc=document.getElementById("sb-description").value.trim();
+  if(!title){showToast("Введите название опроса","error");return;}
+  if(!sbQuestions.length){showToast("Добавьте хотя бы один вопрос","error");return;}
+  for(const q of sbQuestions){
+    if(!q.question_text.trim()){showToast("Заполните текст всех вопросов","error");return;}
   }
-  try {
-    await apiPost(`/api/b2b/reviews/${respondingReviewId}/respond`, { text });
-    closeRespondModal();
-    showToast("Ответ опубликован! Покупатель увидит его в своём кабинете.");
-    // Refresh current tab
-    const activeTab = document.querySelector("[id^='tab-'][id$='-content']:not(.hidden)").id.replace("tab-","").replace("-content","");
-    if (activeTab === "reviews") loadReviews();
-    else loadDashboard();
-  } catch(e) {
-    errEl.textContent = e.message;
-    errEl.classList.remove("hidden");
-  }
+  const payload={
+    title,description:desc||title,
+    target_audience:sbSelectedAudience.size>0?[...sbSelectedAudience]:null,
+    points_reward:parseInt(document.getElementById("sb-points").value)||25,
+    estimated_minutes:parseInt(document.getElementById("sb-minutes").value)||5,
+    questions:sbQuestions.map(q=>({
+      question_text:q.question_text,
+      question_type:q.question_type,
+      options:q.question_type==="choice"?q.options.filter(o=>o.trim()):null,
+    })),
+  };
+  try{
+    await apiPost("/api/b2b/surveys",payload);
+    closeSurveyBuilder();showToast("Опрос создан!");await loadSurveysTab();
+  }catch(e){showToast(e.message,"error");}
 }
 
-document.getElementById("respond-modal").addEventListener("click", function(e) {
-  if (e.target === this) closeRespondModal();
-});
-
-init();
+// MESSAGES
+async function checkUnreadMessages(){
+  try{const cs=await apiGet("/api/b2b/messages/conversations");document.getElementById("msg-dot").style.display=cs.some(c=>!c.is_read_b2b)?"block":"none";}
+  catch(e){}
+}
+async function loadB2bConversations(){
+  try{
+    const cs=await apiGet("/api/b2b/messages/conversations");
+    const list=document.getElementById("b2b-conv-list");
+    if(!cs.length){list.innerHTML=`<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Нет входящих</div>`;return;}
+    list.innerHTML=cs.map(c=>`
+      <div onclick="openB2bConversation(${c.id})" style="padding:14px 16px;cursor:pointer;border-bottom:1px solid #f3f4f6;background:${currentB2bConvId===c.id?"#f5f4ff":"#fff"};">
+        <div class="flex items-center justify-between mb-1">
+          <span style="font-size:13px;font-weight:${c.is_read_b2b?"500":"700"};">${c.subject}</span>
+          ${!c.is_read_b2b?`<span style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;"></span>`:""}
+        </div>
+        <div style="font-size:11px;color:#9ca3af;">${c.b2c_username||"Пользователь"}</div>
+        ${c.product_name?`<div style="font-size:11px;color:#9ca3af;">${c.product_name}</div>`:""}
+      </div>`).join("");
+  }catch(e){}
+}
+async function openB2bConversation(id){
+  currentB2bConvId=id;
+  try{
+    const conv=await apiGet(`/api/b2b/messages/conversations/${id}`);
+    document.getElementById("b2b-chat-header").style.display="block";
+    document.getElementById("b2b-chat-title").textContent=conv.subject;
+    document.getElementById("b2b-chat-subtitle").textContent=conv.b2c_username||"Пользователь";
+    document.getElementById("b2b-chat-empty").classList.add("hidden");
+    document.getElementById("b2b-chat-messages").classList.remove("hidden");
+    document.getElementById("b2b-chat-input-area").classList.remove("hidden");
+    const msgs=document.getElementById("b2b-chat-messages");
+    msgs.innerHTML=conv.messages.map(m=>{
+      const isMe=m.sender_type==="b2b";
+      return `<div style="display:flex;justify-content:${isMe?"flex-end":"flex-start"};">
+        <div class="${isMe?"msg-bubble-b2b":"msg-bubble-b2c"}" style="max-width:70%;padding:10px 14px;">
+          <p style="font-size:14px;line-height:1.5;">${m.text}</p>
+          <div style="font-size:11px;opacity:0.65;margin-top:4px;text-align:${isMe?"right":"left"}">${formatDate(m.created_at)}</div>
+        </div>
+      </div>`;
+    }).join("");
+    msgs.scrollTop=msgs.scrollHeight;loadB2bConversations();
+  }catch(e){}
+}
+async function sendB2bReply(){
+  const text=document.getElementById("b2b-chat-input").value.trim();
+  if(!text||!currentB2bConvId)return;
+  try{await apiPost(`/api/b2b/messages/conversations/${currentB2bConvId}/reply`,{text});document.getElementById("b2b-chat-input").value="";openB2bConversation(currentB2bConvId);}
+  catch(e){showToast(e.message,"error");}
+}
 </script>
 </body>
 </html>

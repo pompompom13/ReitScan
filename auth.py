@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 import models
 from database import get_db
 
-SECRET_KEY = "ratescan-secret-key-2024-demo-platform"
+import os
+SECRET_KEY = os.getenv("SECRET_KEY", "ratescan-secret-key-2024-demo-platform")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

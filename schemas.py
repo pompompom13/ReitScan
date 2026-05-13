@@ -70,6 +70,7 @@ class ProductOut(BaseModel):
     category: str
     brand: str
     description: Optional[str] = None
+    business_id: Optional[int] = None
     rating_wb: float
     rating_ozon: float
     rating_ym: float
