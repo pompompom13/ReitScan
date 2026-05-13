@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>РейтСкан — репутационная платформа</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/js/api.js"></script>
+  <style>
+    .gradient-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1d4ed8 100%); }
+    .card-hover { transition: transform .2s, box-shadow .2s; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.15); }
+    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+<!-- HEADER -->
+<header class="gradient-bg text-white">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+        <span class="text-indigo-700 font-black text-lg">R</span>
+      </div>
+      <span class="font-bold text-xl tracking-tight">РейтСкан</span>
+    </div>
+    <div class="flex gap-3" id="header-btns">
+      <button onclick="openModal('b2c')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium transition">Войти как покупатель</button>
+      <button onclick="openModal('b2b')" class="px-4 py-2 rounded-lg bg-white text-indigo-700 hover:bg-indigo-50 text-sm font-semibold transition">Войти как бизнес</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="max-w-6xl mx-auto px-4 py-20 text-center">
+    <div class="inline-block px-3 py-1 bg-white/15 rounded-full text-xs font-medium mb-4 tracking-wide">
+      🇷🇺 Первая российская двусторонняя репутационная платформа
+    </div>
+    <h1 class="text-4xl md:text-5xl font-black leading-tight mb-5">
+      Репутация для бизнеса.<br/>Доверие для покупателей.
+    </h1>
+    <p class="text-lg text-indigo-200 max-w-2xl mx-auto mb-10">
+      РейтСкан объединяет производителей и покупателей в единой экосистеме на основе агрегированных отзывов с Wildberries, Ozon, Яндекс.Маркет, 2ГИС и других платформ.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="openModal('b2c')" class="px-7 py-3.5 bg-white text-indigo-700 font-bold rounded-xl hover:bg-indigo-50 transition text-base shadow-lg">
+        🛒 Я покупатель — найти товар
+      </button>
+      <button onclick="openModal('b2b')" class="px-7 py-3.5 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-400 transition text-base shadow-lg">
+        📊 Я бизнес — управлять репутацией
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HOW IT WORKS -->
+<section class="max-w-6xl mx-auto px-4 py-16">
+  <h2 class="text-3xl font-black text-center text-gray-800 mb-3">Как работает платформа</h2>
+  <p class="text-center text-gray-500 mb-12">Двусторонний рынок — обе стороны создают ценность друг для друга</p>
+  <div class="flex flex-col md:flex-row items-center gap-6">
+    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
+      <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🛒</div>
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Покупатели (B2C)</h3>
+      <p class="text-gray-500 text-sm">Ищут товары, видят агрегированный рейтинг с 5+ платформ, сравнивают цены и оставляют отзывы — бесплатно</p>
+    </div>
+    <div class="flex flex-col items-center gap-2 text-gray-400">
+      <div class="text-2xl">⇄</div>
+      <div class="text-xs text-center font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Сетевой эффект</div>
+    </div>
+    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
+      <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">📊</div>
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Платформа РейтСкан</h3>
+      <p class="text-gray-500 text-sm">Агрегирует отзывы, применяет AI-анализ, выявляет темы и тренды, считает динамику рейтингов</p>
+    </div>
+    <div class="flex flex-col items-center gap-2 text-gray-400">
+      <div class="text-2xl">⇄</div>
+      <div class="text-xs text-center font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Аналитика → инсайты</div>
+    </div>
+    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
+      <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🏢</div>
+      <h3 class="font-bold text-lg text-gray-800 mb-2">Бизнес (B2B)</h3>
+      <p class="text-gray-500 text-sm">Видят все отзывы в одном дашборде, анализируют проблемы, сравнивают конкурентов и отвечают на отзывы</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="bg-white py-16">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-3xl font-black text-center text-gray-800 mb-12">Что умеет РейтСкан</h2>
+    <div class="grid md:grid-cols-2 gap-8">
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-7 border border-blue-100">
+        <div class="text-2xl mb-3">🛒</div>
+        <h3 class="font-bold text-xl text-gray-800 mb-4">Для покупателей</h3>
+        <ul class="space-y-3 text-sm text-gray-600">
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Агрегированный рейтинг с 5+ площадок в один клик</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Сравнение цен на товар на Wildberries, Ozon, Яндекс.Маркет</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Защита от накрученных отзывов — агрегация из разных источников</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Баллы за отзывы → обменять на скидки от брендов</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Бесплатно навсегда</li>
+        </ul>
+        <button onclick="openModal('b2c')" class="mt-6 w-full py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-sm">
+          Попробовать как покупатель →
+        </button>
+      </div>
+      <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-7 border border-purple-100">
+        <div class="text-2xl mb-3">📊</div>
+        <h3 class="font-bold text-xl text-gray-800 mb-4">Для бизнеса</h3>
+        <ul class="space-y-3 text-sm text-gray-600">
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Единый дашборд: все отзывы со всех площадок</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>AI-анализ тем: качество, упаковка, сервис, цена — с %</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Динамика рейтинга по месяцам — виден любой тренд</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Сравнение с конкурентами по категории</li>
+          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Ответы на отзывы — публичная работа с репутацией</li>
+        </ul>
+        <button onclick="openModal('b2b')" class="mt-6 w-full py-2.5 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 transition text-sm">
+          Попробовать как бизнес →
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO ACCOUNTS BANNER -->
+<section class="max-w-6xl mx-auto px-4 py-12">
+  <div class="bg-indigo-900 text-white rounded-2xl p-8 text-center">
+    <h3 class="text-2xl font-bold mb-2">Демо-доступ — войдите прямо сейчас</h3>
+    <p class="text-indigo-300 mb-6">Готовые аккаунты с реальными данными для тестирования</p>
+    <div class="flex flex-col md:flex-row gap-4 justify-center">
+      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
+        <div class="text-xs text-indigo-300 font-medium mb-1">ПОКУПАТЕЛЬ (B2C)</div>
+        <div class="font-mono text-sm">demo_b2c@ratescan.ru</div>
+        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
+        <button onclick="quickLogin('b2c')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
+      </div>
+      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
+        <div class="text-xs text-indigo-300 font-medium mb-1">БИЗНЕС — Пломбир «Прелесть» (B2B)</div>
+        <div class="font-mono text-sm">demo_b2b@ratescan.ru</div>
+        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
+        <button onclick="quickLogin('b2b', 'demo_b2b@ratescan.ru')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
+      </div>
+      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
+        <div class="text-xs text-indigo-300 font-medium mb-1">БИЗНЕС — Ресторан «Береста» (B2B)</div>
+        <div class="font-mono text-sm">beresta_b2b@ratescan.ru</div>
+        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
+        <button onclick="quickLogin('b2b', 'beresta_b2b@ratescan.ru')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-800 text-gray-400 text-center py-8 text-sm">
+  <div class="font-semibold text-white mb-1">РейтСкан · AI Reviews</div>
+  <div>Первая российская двусторонняя репутационная платформа</div>
+  <div class="mt-2 text-xs">Студенческий стартап VI · Заявка №СтС-513077 · Грант 1 000 000 ₽</div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <!-- Tabs -->
+    <div class="flex border-b">
+      <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600">Войти</button>
+      <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">Зарегистрироваться</button>
+      <button onclick="closeModal()" class="px-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+    </div>
+
+    <div class="p-6">
+      <input type="hidden" id="modal-user-type" value="b2c"/>
+      <div id="modal-type-badge" class="mb-4 text-center"></div>
+
+      <!-- LOGIN -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="login-email" type="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="your@email.ru"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+            <input id="login-password" type="password" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="••••••••"/>
+          </div>
+          <div id="login-error" class="text-red-500 text-sm hidden"></div>
+          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">Войти</button>
+        </div>
+      </form>
+
+      <!-- REGISTER -->
+      <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Имя / Название</label>
+            <input id="reg-username" type="text" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Иван Иванов"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="reg-email" type="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="your@email.ru"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+            <input id="reg-password" type="password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Минимум 6 символов"/>
+          </div>
+          <div id="b2b-fields" class="hidden space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Название бренда / компании</label>
+              <input id="reg-company" type="text" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Бренд «Пример»"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+              <select id="reg-category" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <option>FMCG / Продукты питания</option>
+                <option>FMCG / Напитки</option>
+                <option>FMCG / Косметика</option>
+                <option>HoReCa / Ресторан</option>
+                <option>HoReCa / Кофейня</option>
+                <option>HoReCa / Отель</option>
+                <option>E-commerce</option>
+                <option>Услуги</option>
+                <option>Другое</option>
+              </select>
+            </div>
+          </div>
+          <div id="reg-error" class="text-red-500 text-sm hidden"></div>
+          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">Создать аккаунт</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentModalType = "b2c";
+
+function openModal(type) {
+  currentModalType = type;
+  document.getElementById("modal-user-type").value = type;
+  document.getElementById("auth-modal").classList.remove("hidden");
+  document.getElementById("auth-modal").classList.add("flex");
+
+  const badge = document.getElementById("modal-type-badge");
+  if (type === "b2c") {
+    badge.innerHTML = '<span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">🛒 Аккаунт покупателя</span>';
+    document.getElementById("b2b-fields").classList.add("hidden");
+  } else {
+    badge.innerHTML = '<span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">📊 Аккаунт бизнеса</span>';
+    document.getElementById("b2b-fields").classList.remove("hidden");
+  }
+  switchTab("login");
+}
+
+function closeModal() {
+  document.getElementById("auth-modal").classList.add("hidden");
+  document.getElementById("auth-modal").classList.remove("flex");
+}
+
+function switchTab(tab) {
+  const loginForm = document.getElementById("login-form");
+  const regForm = document.getElementById("register-form");
+  const tabLogin = document.getElementById("tab-login");
+  const tabReg = document.getElementById("tab-register");
+
+  if (tab === "login") {
+    loginForm.classList.remove("hidden");
+    regForm.classList.add("hidden");
+    tabLogin.className = "flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600";
+    tabReg.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700";
+  } else {
+    loginForm.classList.add("hidden");
+    regForm.classList.remove("hidden");
+    tabLogin.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700";
+    tabReg.className = "flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600";
+  }
+}
+
+document.getElementById("auth-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const errEl = document.getElementById("login-error");
+  errEl.classList.add("hidden");
+  try {
+    const data = await apiPost("/api/auth/login", {
+      email: document.getElementById("login-email").value,
+      password: document.getElementById("login-password").value,
+    });
+    setAuth(data);
+    closeModal();
+    window.location.href = data.user_type === "b2b" ? "/b2b" : "/b2c";
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const errEl = document.getElementById("reg-error");
+  errEl.classList.add("hidden");
+  const type = document.getElementById("modal-user-type").value;
+  try {
+    const data = await apiPost("/api/auth/register", {
+      email: document.getElementById("reg-email").value,
+      password: document.getElementById("reg-password").value,
+      username: document.getElementById("reg-username").value,
+      user_type: type,
+      company_name: type === "b2b" ? document.getElementById("reg-company").value : null,
+      company_category: type === "b2b" ? document.getElementById("reg-category").value : null,
+    });
+    setAuth(data);
+    closeModal();
+    window.location.href = data.user_type === "b2b" ? "/b2b" : "/b2c";
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+async function quickLogin(type, email) {
+  const emails = { b2c: "demo_b2c@ratescan.ru", b2b: email || "demo_b2b@ratescan.ru" };
+  try {
+    const data = await apiPost("/api/auth/login", { email: emails[type], password: "Demo123!" });
+    setAuth(data);
+    window.location.href = type === "b2b" ? "/b2b" : "/b2c";
+  } catch (err) {
+    showToast("Ошибка входа: " + err.message, "error");
+  }
+}
+
+// Auto-redirect if already logged in
+if (isLoggedIn()) {
+  const type = localStorage.getItem("rs_user_type");
+  window.location.href = type === "b2b" ? "/b2b" : "/b2c";
+}
+</script>
+</body>
+</html>

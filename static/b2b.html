@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>РейтСкан — Личный кабинет бизнеса</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/static/js/api.js"></script>
+  <style>
+    .tab-active { border-bottom: 2px solid #7c3aed; color: #7c3aed; font-weight: 600; }
+    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
+    .metric-card { transition: transform .2s; }
+    .metric-card:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm sticky top-0 z-30">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-violet-700 rounded-lg flex items-center justify-center">
+        <span class="text-white font-black">R</span>
+      </div>
+      <span class="font-bold text-gray-800">РейтСкан</span>
+      <span class="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-semibold ml-1">B2B</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <span id="brand-header" class="text-sm font-semibold text-gray-700 hidden"></span>
+      <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<div class="bg-white border-b">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="flex gap-6">
+      <button onclick="showTab('dashboard')" id="tab-dashboard" class="py-3 text-sm tab-active">📊 Дашборд</button>
+      <button onclick="showTab('reviews')" id="tab-reviews" class="py-3 text-sm text-gray-500 hover:text-gray-700">💬 Отзывы</button>
+      <button onclick="showTab('competitors')" id="tab-competitors" class="py-3 text-sm text-gray-500 hover:text-gray-700">🏆 Конкуренты</button>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard-content">
+    <div id="dashboard-loading" class="text-center py-16 text-gray-400">
+      <div class="text-4xl mb-3 animate-pulse">📊</div>Загрузка аналитики...
+    </div>
+    <div id="dashboard-data" class="hidden space-y-6">
+
+      <!-- Top metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="metrics-row"></div>
+
+      <!-- Charts row -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Rating dynamics -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 class="font-bold text-gray-800 mb-4">Динамика рейтинга (6 мес.)</h3>
+          <canvas id="ratingChart" height="200"></canvas>
+        </div>
+        <!-- Sentiment donut -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 class="font-bold text-gray-800 mb-4">Тональность отзывов</h3>
+          <div class="flex items-center gap-6">
+            <canvas id="sentimentChart" width="160" height="160" style="max-width:160px;max-height:160px"></canvas>
+            <div id="sentiment-legend" class="space-y-2 flex-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform breakdown + Topics -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Platform ratings -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 class="font-bold text-gray-800 mb-4">Рейтинг по площадкам</h3>
+          <div id="platform-bars" class="space-y-3"></div>
+        </div>
+        <!-- Topics -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 class="font-bold text-gray-800 mb-1">Темы отзывов (AI-анализ)</h3>
+          <p class="text-xs text-gray-400 mb-4">Что чаще всего упоминают клиенты</p>
+          <div id="topics-bars" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Recent reviews -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-gray-800">Последние отзывы</h3>
+          <button onclick="showTab('reviews')" class="text-sm text-violet-600 hover:underline">Все отзывы →</button>
+        </div>
+        <div id="recent-reviews-list" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS TAB -->
+  <div id="tab-reviews-content" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-bold text-xl text-gray-800">Все отзывы о вашем бренде</h2>
+      <div class="flex gap-2">
+        <select id="reviews-filter" onchange="filterReviews()" class="text-sm border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500">
+          <option value="">Все</option>
+          <option value="positive">Позитивные</option>
+          <option value="negative">Негативные</option>
+          <option value="neutral">Нейтральные</option>
+          <option value="no-response">Без ответа</option>
+        </select>
+      </div>
+    </div>
+    <div id="reviews-list" class="space-y-4"></div>
+  </div>
+
+  <!-- COMPETITORS TAB -->
+  <div id="tab-competitors-content" class="hidden">
+    <div class="mb-6">
+      <h2 class="font-bold text-xl text-gray-800 mb-1">Сравнение с конкурентами</h2>
+      <p class="text-sm text-gray-500">Все бренды в вашей категории — рейтинг по версии покупателей</p>
+    </div>
+    <div id="competitors-loading" class="text-center py-12 text-gray-400">Загрузка...</div>
+    <div id="competitors-data" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h3 class="font-bold text-gray-800 mb-4">Рейтинг по агрегированной оценке</h3>
+        <canvas id="competitorChart" height="120"></canvas>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+            <tr>
+              <th class="text-left px-5 py-3">Бренд</th>
+              <th class="text-center px-4 py-3">Рейтинг</th>
+              <th class="text-center px-4 py-3">Отзывов</th>
+              <th class="text-center px-4 py-3">% позитивных</th>
+              <th class="text-center px-4 py-3">WB</th>
+              <th class="text-center px-4 py-3">Ozon</th>
+              <th class="text-center px-4 py-3">ЯМ</th>
+            </tr>
+          </thead>
+          <tbody id="competitors-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- RESPOND MODAL -->
+<div id="respond-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="flex items-center justify-between p-5 border-b">
+      <h3 class="font-bold text-lg text-gray-800">Ответить на отзыв</h3>
+      <button onclick="closeRespondModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+    </div>
+    <div class="p-5">
+      <div id="respond-review-preview" class="bg-gray-50 rounded-xl p-4 mb-4 text-sm text-gray-600 italic"></div>
+      <textarea id="respond-text" rows="4" placeholder="Напишите официальный ответ от имени бренда..."
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm resize-none"></textarea>
+      <div id="respond-error" class="text-red-500 text-sm mt-2 hidden"></div>
+      <button onclick="submitResponse()" class="mt-4 w-full py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 transition">
+        Опубликовать ответ
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allReviews = [];
+let respondingReviewId = null;
+let ratingChartInstance = null;
+let sentimentChartInstance = null;
+let competitorChartInstance = null;
+
+if (!isLoggedIn()) { window.location.href = "/"; }
+
+async function init() {
+  try {
+    const user = await apiGet("/api/auth/me");
+    if (user.user_type !== "b2b") { window.location.href = "/b2c"; return; }
+    document.getElementById("brand-header").textContent = user.company_name || user.username;
+    document.getElementById("brand-header").classList.remove("hidden");
+    loadDashboard();
+  } catch(e) { logout(); }
+}
+
+function logout() { clearAuth(); window.location.href = "/"; }
+
+function showTab(name) {
+  ["dashboard","reviews","competitors"].forEach(t => {
+    document.getElementById(`tab-${t}-content`).classList.add("hidden");
+    document.getElementById(`tab-${t}`).className = "py-3 text-sm text-gray-500 hover:text-gray-700";
+  });
+  document.getElementById(`tab-${name}-content`).classList.remove("hidden");
+  document.getElementById(`tab-${name}`).className = "py-3 text-sm tab-active";
+  if (name === "reviews") loadReviews();
+  if (name === "competitors") loadCompetitors();
+}
+
+async function loadDashboard() {
+  try {
+    const d = await apiGet("/api/b2b/dashboard");
+    document.getElementById("dashboard-loading").classList.add("hidden");
+    document.getElementById("dashboard-data").classList.remove("hidden");
+    renderMetrics(d);
+    renderRatingChart(d.monthly_ratings);
+    renderSentimentChart(d.sentiment_breakdown);
+    renderPlatformBars(d.platform_breakdown);
+    renderTopicBars(d.topic_breakdown);
+    renderRecentReviews(d.recent_reviews);
+  } catch(e) {
+    document.getElementById("dashboard-loading").innerHTML =
+      `<div class="text-red-500 text-sm">${e.message}</div>`;
+  }
+}
+
+function renderMetrics(d) {
+  const items = [
+    { label: "Средний рейтинг", value: `${d.avg_rating} ★`, sub: "по всем площадкам", color: "yellow" },
+    { label: "Всего отзывов", value: d.total_reviews, sub: "накоплено", color: "blue" },
+    { label: "Процент ответов", value: `${d.response_rate}%`, sub: "из всех отзывов", color: "green" },
+    { label: "Позитивных", value: `${Math.round((d.sentiment_breakdown.positive||0)/Math.max(d.total_reviews,1)*100)}%`, sub: "отзывов", color: "violet" },
+  ];
+  const colors = { yellow:"bg-yellow-50 border-yellow-200", blue:"bg-blue-50 border-blue-200",
+                   green:"bg-green-50 border-green-200", violet:"bg-violet-50 border-violet-200" };
+  const textColors = { yellow:"text-yellow-700", blue:"text-blue-700", green:"text-green-700", violet:"text-violet-700" };
+  document.getElementById("metrics-row").innerHTML = items.map(m => `
+    <div class="metric-card ${colors[m.color]} border rounded-2xl p-5">
+      <div class="text-2xl font-black ${textColors[m.color]}">${m.value}</div>
+      <div class="text-sm font-semibold text-gray-700 mt-1">${m.label}</div>
+      <div class="text-xs text-gray-400 mt-0.5">${m.sub}</div>
+    </div>`).join("");
+}
+
+function renderRatingChart(monthly) {
+  const labels = monthly.map(m => m.month);
+  const data = monthly.map(m => m.avg_rating);
+  const counts = monthly.map(m => m.count);
+  if (ratingChartInstance) ratingChartInstance.destroy();
+  ratingChartInstance = new Chart(document.getElementById("ratingChart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Средний рейтинг",
+        data,
+        borderColor: "#7c3aed",
+        backgroundColor: "rgba(124,58,237,.1)",
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: "#7c3aed",
+        pointRadius: 5,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { afterLabel: (ctx) => `Отзывов: ${counts[ctx.dataIndex]}` }
+      }},
+      scales: {
+        y: { min: 0, max: 5, grid: { color: "#f3f4f6" }, ticks: { stepSize: 1 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderSentimentChart(s) {
+  const positive = s.positive || 0;
+  const negative = s.negative || 0;
+  const neutral = s.neutral || 0;
+  const total = positive + negative + neutral;
+  if (sentimentChartInstance) sentimentChartInstance.destroy();
+  sentimentChartInstance = new Chart(document.getElementById("sentimentChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Позитивные", "Нейтральные", "Негативные"],
+      datasets: [{ data: [positive, neutral, negative],
+        backgroundColor: ["#22c55e","#94a3b8","#ef4444"], borderWidth: 0 }]
+    },
+    options: {
+      cutout: "70%",
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/total*100)}%)` }
+      }}
+    }
+  });
+  document.getElementById("sentiment-legend").innerHTML = [
+    { label: "Позитивные", val: positive, color: "bg-green-500" },
+    { label: "Нейтральные", val: neutral, color: "bg-slate-400" },
+    { label: "Негативные", val: negative, color: "bg-red-500" },
+  ].map(x => `
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded-full ${x.color}"></div>
+        <span class="text-sm text-gray-600">${x.label}</span>
+      </div>
+      <div class="text-sm font-semibold text-gray-800">${x.val} <span class="text-gray-400 font-normal text-xs">(${Math.round(x.val/Math.max(total,1)*100)}%)</span></div>
+    </div>`).join("");
+}
+
+function renderPlatformBars(breakdown) {
+  const platformNames = { wb:"Wildberries", ozon:"Ozon", ym:"Яндекс.Маркет",
+    gmaps:"Google Maps", "2gis":"2ГИС", zoon:"Zoon", ratescan:"РейтСкан" };
+  const html = Object.entries(breakdown).map(([k, v]) => `
+    <div>
+      <div class="flex justify-between text-sm mb-1">
+        <span class="text-gray-600">${platformNames[k] || k}</span>
+        <span class="font-semibold text-gray-800">${v} ★</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2.5">
+        <div class="bg-violet-500 h-2.5 rounded-full transition-all" style="width:${v/5*100}%"></div>
+      </div>
+    </div>`).join("");
+  document.getElementById("platform-bars").innerHTML = html || '<div class="text-sm text-gray-400">Нет данных</div>';
+}
+
+function renderTopicBars(topics) {
+  const total = Object.values(topics).reduce((a,b) => a+b, 0);
+  const topicIcons = { качество:"🔬", упаковка:"📦", вкус:"😋", цена:"💰", доставка:"🚚", сервис:"🤝" };
+  const html = Object.entries(topics).slice(0,6).map(([k, v]) => `
+    <div>
+      <div class="flex justify-between text-sm mb-1">
+        <span class="text-gray-600">${topicIcons[k] || "📌"} ${k}</span>
+        <span class="text-xs text-gray-400">${v} упомин.</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2.5">
+        <div class="bg-indigo-400 h-2.5 rounded-full" style="width:${Math.min(v/Math.max(total,1)*100*2,100)}%"></div>
+      </div>
+    </div>`).join("");
+  document.getElementById("topics-bars").innerHTML = html || '<div class="text-sm text-gray-400">Нет данных</div>';
+}
+
+function renderRecentReviews(reviews) {
+  document.getElementById("recent-reviews-list").innerHTML = reviews.slice(0,5).map(r => reviewCard(r, true)).join("");
+}
+
+function reviewCard(r, compact = false) {
+  const sentiment = r.sentiment === "positive" ? "border-l-green-400" :
+                    r.sentiment === "negative" ? "border-l-red-400" : "border-l-gray-300";
+  const topics = r.topics ? r.topics.split(",").map(t =>
+    `<span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${t}</span>`).join("") : "";
+  const responseBlock = r.response
+    ? `<div class="mt-3 bg-violet-50 border-l-4 border-violet-400 pl-3 py-2 rounded-r-xl">
+        <div class="text-xs text-violet-600 font-semibold mb-1">✍️ ${r.response.author_name}</div>
+        <p class="text-xs text-violet-700">${r.response.text}</p>
+       </div>`
+    : `<button onclick="openRespondModal(${r.id}, \`${r.text.replace(/`/g,"'")}\`)"
+         class="mt-3 text-xs text-violet-600 hover:text-violet-800 font-semibold border border-violet-200 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition">
+         💬 Ответить на отзыв
+       </button>`;
+
+  return `
+    <div class="border-l-4 ${sentiment} bg-white rounded-r-xl border border-gray-100 shadow-sm p-4">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+            ${r.author_name[0]}
+          </div>
+          <span class="text-sm font-medium text-gray-700">${r.author_name}</span>
+          ${r.is_verified ? '<span class="text-xs text-green-500">✓</span>' : ""}
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
+          <span class="text-sm font-bold ${r.rating>=4?"text-green-600":r.rating<=2?"text-red-500":"text-yellow-500"}">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span>
+          <span class="text-xs text-gray-400">${formatDate(r.created_at)}</span>
+        </div>
+      </div>
+      <p class="text-sm text-gray-700">${r.text}</p>
+      ${topics ? `<div class="mt-2 flex gap-1 flex-wrap">${topics}</div>` : ""}
+      ${responseBlock}
+    </div>`;
+}
+
+async function loadReviews() {
+  const container = document.getElementById("reviews-list");
+  container.innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
+  try {
+    allReviews = await apiGet("/api/b2b/reviews");
+    renderFilteredReviews();
+  } catch(e) {
+    container.innerHTML = `<div class="text-red-500 text-sm">${e.message}</div>`;
+  }
+}
+
+function filterReviews() { renderFilteredReviews(); }
+
+function renderFilteredReviews() {
+  const filter = document.getElementById("reviews-filter").value;
+  let filtered = allReviews;
+  if (filter === "no-response") filtered = allReviews.filter(r => !r.response);
+  else if (filter) filtered = allReviews.filter(r => r.sentiment === filter);
+  const container = document.getElementById("reviews-list");
+  if (!filtered.length) {
+    container.innerHTML = `<div class="text-center py-12 text-gray-400"><div class="text-3xl mb-2">💬</div>Нет отзывов по выбранному фильтру</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(r => {
+    const pname = r.product_name ? `<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full mb-2 inline-block">${r.product_name}</span>` : "";
+    return `<div>${pname}${reviewCard(r)}</div>`;
+  }).join("");
+}
+
+async function loadCompetitors() {
+  document.getElementById("competitors-loading").classList.remove("hidden");
+  document.getElementById("competitors-data").classList.add("hidden");
+  try {
+    const comps = await apiGet("/api/b2b/competitors");
+    document.getElementById("competitors-loading").classList.add("hidden");
+    document.getElementById("competitors-data").classList.remove("hidden");
+    renderCompetitorChart(comps);
+    renderCompetitorTable(comps);
+  } catch(e) {
+    document.getElementById("competitors-loading").innerHTML =
+      `<div class="text-red-500 text-sm">${e.message}</div>`;
+  }
+}
+
+function renderCompetitorChart(comps) {
+  const labels = comps.map(c => c.brand);
+  const data = comps.map(c => c.avg_rating);
+  const colors = comps.map(c => c.is_mine ? "#7c3aed" : "#e2e8f0");
+  const borderColors = comps.map(c => c.is_mine ? "#5b21b6" : "#cbd5e1");
+  if (competitorChartInstance) competitorChartInstance.destroy();
+  competitorChartInstance = new Chart(document.getElementById("competitorChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Агрегированный рейтинг",
+        data,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: (ctx) => ` Рейтинг: ${ctx.raw}` }
+      }},
+      scales: {
+        x: { min: 0, max: 5, grid: { color: "#f3f4f6" } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderCompetitorTable(comps) {
+  document.getElementById("competitors-table").innerHTML = comps.map(c => `
+    <tr class="${c.is_mine ? "bg-violet-50 font-semibold" : "hover:bg-gray-50"} transition">
+      <td class="px-5 py-3 text-sm">
+        ${c.is_mine ? "⭐ " : ""}${c.brand}
+        ${c.is_mine ? '<span class="text-xs text-violet-600 bg-violet-100 px-2 py-0.5 rounded-full ml-1">Ваш бренд</span>' : ""}
+      </td>
+      <td class="px-4 py-3 text-center font-bold ${c.avg_rating>=4.3?"text-green-600":c.avg_rating>=3.8?"text-yellow-600":"text-red-500"}">
+        ${c.avg_rating} ★
+      </td>
+      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.total_reviews}</td>
+      <td class="px-4 py-3 text-center">
+        <div class="flex items-center justify-center gap-2">
+          <div class="w-16 bg-gray-200 rounded-full h-2">
+            <div class="bg-green-500 h-2 rounded-full" style="width:${c.positive_pct}%"></div>
+          </div>
+          <span class="text-xs text-gray-600">${c.positive_pct}%</span>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_wb || "—"}</td>
+      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_ozon || "—"}</td>
+      <td class="px-4 py-3 text-center text-sm text-gray-600">${c.rating_ym || "—"}</td>
+    </tr>`).join("");
+}
+
+function openRespondModal(reviewId, reviewText) {
+  respondingReviewId = reviewId;
+  document.getElementById("respond-review-preview").textContent = `"${reviewText}"`;
+  document.getElementById("respond-text").value = "";
+  document.getElementById("respond-error").classList.add("hidden");
+  document.getElementById("respond-modal").classList.remove("hidden");
+  document.getElementById("respond-modal").classList.add("flex");
+}
+
+function closeRespondModal() {
+  document.getElementById("respond-modal").classList.add("hidden");
+  document.getElementById("respond-modal").classList.remove("flex");
+}
+
+async function submitResponse() {
+  const text = document.getElementById("respond-text").value.trim();
+  const errEl = document.getElementById("respond-error");
+  if (!text) {
+    errEl.textContent = "Введите текст ответа";
+    errEl.classList.remove("hidden");
+    return;
+  }
+  try {
+    await apiPost(`/api/b2b/reviews/${respondingReviewId}/respond`, { text });
+    closeRespondModal();
+    showToast("Ответ опубликован! Покупатель увидит его в своём кабинете.");
+    // Refresh current tab
+    const activeTab = document.querySelector("[id^='tab-'][id$='-content']:not(.hidden)").id.replace("tab-","").replace("-content","");
+    if (activeTab === "reviews") loadReviews();
+    else loadDashboard();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+document.getElementById("respond-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeRespondModal();
+});
+
+init();
+</script>
+</body>
+</html>

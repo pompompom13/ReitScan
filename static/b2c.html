@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>РейтСкан — Личный кабинет покупателя</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/js/api.js"></script>
+  <style>
+    .tab-active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: 600; }
+    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
+    .star-btn { cursor: pointer; font-size: 1.6rem; transition: color .1s; }
+    .star-btn:hover, .star-btn.active { color: #fbbf24; }
+    .star-btn { color: #d1d5db; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white border-b shadow-sm sticky top-0 z-30">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-indigo-700 rounded-lg flex items-center justify-center">
+        <span class="text-white font-black">R</span>
+      </div>
+      <span class="font-bold text-gray-800">РейтСкан</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-full text-sm">
+        <span class="text-yellow-500">⭐</span>
+        <span id="points-badge" class="font-semibold text-yellow-700">0 баллов</span>
+      </div>
+      <div id="user-name-badge" class="text-sm text-gray-600 font-medium hidden"></div>
+      <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 transition">Выйти</button>
+    </div>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<div class="bg-white border-b">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="flex gap-6">
+      <button onclick="showTab('search')" id="tab-search" class="py-3 text-sm tab-active">🔍 Поиск товаров</button>
+      <button onclick="showTab('myreviews')" id="tab-myreviews" class="py-3 text-sm text-gray-500 hover:text-gray-700">📝 Мои отзывы</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- SEARCH TAB -->
+  <div id="tab-search-content">
+    <!-- Search bar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+      <h2 class="font-bold text-lg text-gray-800 mb-3">Найти товар или заведение</h2>
+      <div class="flex gap-3">
+        <input id="search-input" type="text" placeholder="Например: мороженое, ресторан, кофейня..."
+          class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"/>
+        <button onclick="doSearch()" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition text-sm">
+          Найти
+        </button>
+      </div>
+      <div id="category-chips" class="flex gap-2 mt-3 flex-wrap"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="search-results" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <div id="search-empty" class="hidden text-center py-12 text-gray-400">
+      <div class="text-4xl mb-3">🔍</div>
+      <div>Ничего не найдено. Попробуйте другой запрос.</div>
+    </div>
+  </div>
+
+  <!-- MY REVIEWS TAB -->
+  <div id="tab-myreviews-content" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-bold text-xl text-gray-800">Мои отзывы</h2>
+      <div class="text-sm text-gray-500">За каждый отзыв +10–15 баллов</div>
+    </div>
+    <div id="my-reviews-list" class="space-y-4"></div>
+    <div id="my-reviews-empty" class="hidden text-center py-12 text-gray-400">
+      <div class="text-4xl mb-3">📝</div>
+      <div class="mb-4">Вы ещё не оставили ни одного отзыва</div>
+      <button onclick="showTab('search')" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold">Найти товар →</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div id="product-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-start justify-center p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-6">
+    <div class="flex items-center justify-between p-5 border-b">
+      <h3 id="modal-product-name" class="font-bold text-lg text-gray-800"></h3>
+      <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
+    </div>
+    <div class="p-5 space-y-5" id="modal-content">
+      <!-- filled by JS -->
+    </div>
+    <div class="p-5 border-t">
+      <button onclick="openReviewModal()" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">
+        ✍️ Написать отзыв (+10–15 баллов)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW WRITE MODAL -->
+<div id="review-modal" class="fixed inset-0 z-60 hidden modal-bg flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="flex items-center justify-between p-5 border-b">
+      <h3 class="font-bold text-lg text-gray-800">Написать отзыв</h3>
+      <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+    </div>
+    <form onsubmit="submitReview(event)" class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Оценка</label>
+        <div class="flex gap-1" id="star-rating">
+          <span class="star-btn" data-val="1" onclick="setRating(1)">★</span>
+          <span class="star-btn" data-val="2" onclick="setRating(2)">★</span>
+          <span class="star-btn" data-val="3" onclick="setRating(3)">★</span>
+          <span class="star-btn" data-val="4" onclick="setRating(4)">★</span>
+          <span class="star-btn" data-val="5" onclick="setRating(5)">★</span>
+        </div>
+        <input type="hidden" id="selected-rating" value="0"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Ваш отзыв</label>
+        <textarea id="review-text" rows="4" required minlength="10"
+          placeholder="Расскажите о вашем опыте..."
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
+        <div class="text-xs text-gray-400 mt-1">Отзыв длиннее 50 символов даёт +5 доп. баллов</div>
+      </div>
+      <div id="review-error" class="text-red-500 text-sm hidden"></div>
+      <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">
+        Отправить отзыв
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+let currentProductId = null;
+let currentUser = null;
+
+// Auth guard
+if (!isLoggedIn()) { window.location.href = "/"; }
+
+async function loadUser() {
+  try {
+    currentUser = await apiGet("/api/auth/me");
+    document.getElementById("points-badge").textContent = `${currentUser.points} баллов`;
+    document.getElementById("user-name-badge").textContent = currentUser.username;
+    document.getElementById("user-name-badge").classList.remove("hidden");
+  } catch(e) { logout(); }
+}
+
+function logout() {
+  clearAuth();
+  window.location.href = "/";
+}
+
+async function loadCategories() {
+  try {
+    const cats = await apiGet("/api/b2c/categories");
+    const el = document.getElementById("category-chips");
+    el.innerHTML = cats.map(c =>
+      `<button onclick="doSearch('${c}')" class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium hover:bg-indigo-100 transition">${c}</button>`
+    ).join("");
+  } catch(e) {}
+}
+
+function showTab(name) {
+  ["search","myreviews"].forEach(t => {
+    document.getElementById(`tab-${t}-content`).classList.add("hidden");
+    document.getElementById(`tab-${t}`).className = "py-3 text-sm text-gray-500 hover:text-gray-700";
+  });
+  document.getElementById(`tab-${name}-content`).classList.remove("hidden");
+  document.getElementById(`tab-${name}`).className = "py-3 text-sm tab-active";
+  if (name === "myreviews") loadMyReviews();
+}
+
+async function doSearch(category) {
+  const q = category || document.getElementById("search-input").value.trim();
+  const url = category ? `/api/b2c/products?category=${encodeURIComponent(category)}`
+                       : `/api/b2c/products${q ? `?q=${encodeURIComponent(q)}` : ""}`;
+  const container = document.getElementById("search-results");
+  const empty = document.getElementById("search-empty");
+  container.innerHTML = `<div class="col-span-3 text-center py-8 text-gray-400">Загрузка...</div>`;
+  empty.classList.add("hidden");
+  try {
+    const products = await apiGet(url);
+    if (!products.length) {
+      container.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    container.innerHTML = products.map(p => productCard(p)).join("");
+  } catch(e) {
+    container.innerHTML = `<div class="col-span-3 text-red-500 text-sm">${e.message}</div>`;
+  }
+}
+
+function productCard(p) {
+  const stars = starsHtml(Math.round(p.avg_rating));
+  const platforms = [
+    p.rating_wb ? `WB: ${p.rating_wb}` : null,
+    p.rating_ozon ? `Ozon: ${p.rating_ozon}` : null,
+    p.rating_ym ? `ЯМ: ${p.rating_ym}` : null,
+    p.rating_gmaps ? `GMaps: ${p.rating_gmaps}` : null,
+    p.rating_2gis ? `2ГИС: ${p.rating_2gis}` : null,
+  ].filter(Boolean).slice(0,3).join(" · ");
+
+  const prices = [
+    p.price_wb ? `WB ${p.price_wb}₽` : null,
+    p.price_ozon ? `Ozon ${p.price_ozon}₽` : null,
+    p.price_ym ? `ЯМ ${p.price_ym}₽` : null,
+  ].filter(Boolean);
+  const minPrice = prices.length ? prices[0] : null;
+
+  return `
+  <div onclick="openProduct(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition cursor-pointer p-5">
+    <div class="flex items-start justify-between mb-3">
+      <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+        ${p.category === 'мороженое' ? '🍦' : p.category === 'ресторан' ? '🍽️' : p.category === 'кофейня' ? '☕' : '📦'}
+      </div>
+      <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${p.category}</span>
+    </div>
+    <h3 class="font-bold text-gray-800 text-sm mb-1 leading-snug">${p.name}</h3>
+    <div class="text-xs text-gray-400 mb-3">${p.brand}</div>
+    <div class="flex items-center gap-2 mb-2">
+      <div class="text-lg font-black text-gray-800">${p.avg_rating}</div>
+      <div class="text-sm">${stars}</div>
+    </div>
+    <div class="text-xs text-gray-400 mb-3">${platforms}</div>
+    ${minPrice ? `<div class="text-xs text-green-600 font-semibold">от ${minPrice}</div>` : ""}
+    <div class="text-xs text-gray-400 mt-2">${p.review_count} отзывов</div>
+  </div>`;
+}
+
+async function openProduct(id) {
+  currentProductId = id;
+  document.getElementById("modal-content").innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
+  document.getElementById("product-modal").classList.remove("hidden");
+  document.getElementById("product-modal").classList.add("flex");
+
+  try {
+    const p = await apiGet(`/api/b2c/products/${id}`);
+    document.getElementById("modal-product-name").textContent = p.name;
+    document.getElementById("modal-content").innerHTML = renderProductDetail(p);
+  } catch(e) {
+    document.getElementById("modal-content").innerHTML = `<div class="text-red-500">${e.message}</div>`;
+  }
+}
+
+function renderProductDetail(p) {
+  const platformRatings = [
+    { key: "wb", label: "Wildberries", val: p.rating_wb, price: p.price_wb },
+    { key: "ozon", label: "Ozon", val: p.rating_ozon, price: p.price_ozon },
+    { key: "ym", label: "Яндекс.Маркет", val: p.rating_ym, price: p.price_ym },
+    { key: "gmaps", label: "Google Maps", val: p.rating_gmaps },
+    { key: "2gis", label: "2ГИС", val: p.rating_2gis },
+    { key: "zoon", label: "Zoon", val: p.rating_zoon },
+  ].filter(x => x.val > 0);
+
+  const platformHtml = platformRatings.map(pl => `
+    <div class="flex items-center justify-between">
+      <span class="text-sm text-gray-600">${pl.label}</span>
+      <div class="flex items-center gap-3">
+        ${pl.price ? `<span class="text-xs text-green-600 font-semibold">${pl.price}₽</span>` : ""}
+        <div class="flex items-center gap-1">
+          <span class="text-yellow-400 text-sm">★</span>
+          <span class="text-sm font-semibold text-gray-800">${pl.val}</span>
+        </div>
+        <div class="w-24 bg-gray-100 rounded-full h-2">
+          <div class="bg-indigo-500 h-2 rounded-full" style="width:${(pl.val/5*100)}%"></div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  const recentReviews = p.reviews.slice(0, 5).map(r => `
+    <div class="border border-gray-100 rounded-xl p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700">
+            ${r.author_name[0]}
+          </div>
+          <span class="text-sm font-medium text-gray-700">${r.author_name}</span>
+          ${r.is_verified ? '<span class="text-xs text-green-500">✓ проверен</span>' : ""}
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
+          <span class="text-yellow-400 text-sm">${starsHtml(r.rating)}</span>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600">${r.text}</p>
+      ${r.response ? `
+        <div class="mt-3 bg-blue-50 border-l-4 border-blue-400 pl-3 py-2 rounded-r-xl">
+          <div class="text-xs text-blue-600 font-semibold mb-1">💬 ${r.response.author_name}</div>
+          <p class="text-xs text-blue-700">${r.response.text}</p>
+        </div>` : ""}
+    </div>
+  `).join("");
+
+  return `
+    <div>
+      <div class="text-2xl font-black text-gray-800 mb-1">${p.avg_rating} <span class="text-yellow-400">★</span></div>
+      <div class="text-sm text-gray-500">Агрегированная оценка · ${p.review_count} отзывов</div>
+    </div>
+    <div>
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">Рейтинг по платформам</h4>
+      <div class="space-y-2">${platformHtml}</div>
+    </div>
+    ${p.description ? `<p class="text-sm text-gray-500 italic">${p.description}</p>` : ""}
+    ${recentReviews ? `
+    <div>
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">Последние отзывы</h4>
+      <div class="space-y-3">${recentReviews}</div>
+    </div>` : ""}
+  `;
+}
+
+function closeProductModal() {
+  document.getElementById("product-modal").classList.add("hidden");
+  document.getElementById("product-modal").classList.remove("flex");
+}
+
+let selectedRating = 0;
+function openReviewModal() {
+  selectedRating = 0;
+  document.querySelectorAll(".star-btn").forEach(s => s.classList.remove("active"));
+  document.getElementById("review-text").value = "";
+  document.getElementById("review-modal").classList.remove("hidden");
+  document.getElementById("review-modal").classList.add("flex");
+}
+
+function closeReviewModal() {
+  document.getElementById("review-modal").classList.add("hidden");
+  document.getElementById("review-modal").classList.remove("flex");
+}
+
+function setRating(val) {
+  selectedRating = val;
+  document.querySelectorAll(".star-btn").forEach(s => {
+    s.classList.toggle("active", parseInt(s.dataset.val) <= val);
+  });
+  document.getElementById("selected-rating").value = val;
+}
+
+async function submitReview(e) {
+  e.preventDefault();
+  const errEl = document.getElementById("review-error");
+  errEl.classList.add("hidden");
+  if (!selectedRating) {
+    errEl.textContent = "Выберите оценку";
+    errEl.classList.remove("hidden");
+    return;
+  }
+  try {
+    await apiPost("/api/b2c/reviews", {
+      product_id: currentProductId,
+      rating: selectedRating,
+      text: document.getElementById("review-text").value,
+    });
+    closeReviewModal();
+    closeProductModal();
+    showToast("Отзыв опубликован! Баллы начислены ⭐");
+    await loadUser();
+    doSearch();
+  } catch(err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+async function loadMyReviews() {
+  const list = document.getElementById("my-reviews-list");
+  const empty = document.getElementById("my-reviews-empty");
+  list.innerHTML = `<div class="text-center py-8 text-gray-400">Загрузка...</div>`;
+  try {
+    const reviews = await apiGet("/api/b2c/my-reviews");
+    if (!reviews.length) {
+      list.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+    list.innerHTML = reviews.map(r => `
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-semibold text-gray-800">${starsHtml(r.rating)} ${r.rating}/5</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs ${platformColor(r.platform)} px-2 py-0.5 rounded-full">${platformLabel(r.platform)}</span>
+            <span class="text-xs text-gray-400">${formatDate(r.created_at)}</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700">${r.text}</p>
+        ${r.topics ? `<div class="mt-2 flex gap-1 flex-wrap">${r.topics.split(",").map(t => `<span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">${t}</span>`).join("")}</div>` : ""}
+        ${r.response ? `
+          <div class="mt-3 bg-blue-50 border-l-4 border-blue-400 pl-3 py-2 rounded-r-xl">
+            <div class="text-xs text-blue-600 font-semibold mb-1">💬 ${r.response.author_name} ответил:</div>
+            <p class="text-xs text-blue-700">${r.response.text}</p>
+          </div>` : `<div class="mt-2 text-xs text-gray-400">Ответ от бренда не получен</div>`}
+      </div>
+    `).join("");
+  } catch(e) {
+    list.innerHTML = `<div class="text-red-500 text-sm">${e.message}</div>`;
+  }
+}
+
+// Close modals on backdrop click
+document.getElementById("product-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeProductModal();
+});
+document.getElementById("review-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeReviewModal();
+});
+
+document.getElementById("search-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") doSearch();
+});
+
+// Init
+loadUser();
+loadCategories();
+doSearch();
+</script>
+</body>
+</html>
