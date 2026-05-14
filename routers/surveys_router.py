@@ -162,7 +162,7 @@ def game_reward(
         already = 0
         current_user.game_points_today = 0
 
-    pts = max(0, min(body.points, MAX_DAILY - already, 50))
+    pts = max(0, min(body.points, MAX_DAILY - already))
     if pts <= 0:
         return {"status": "ok", "points_earned": 0, "total_points": current_user.points, "message": "Дневной лимит игры исчерпан"}
 

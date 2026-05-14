@@ -6,6 +6,7 @@
   <title>РейтСкан — Бизнес-кабинет</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/static/js/api.js"></script>
@@ -135,7 +136,7 @@
       <div style="font-size:13px;font-weight:600;color:#374151;">Единица анализа</div>
       <span style="font-size:11px;color:#9ca3af;">Выберите уровень для конкурентного анализа и рейтинга</span>
     </div>
-    <div id="ctx-tree" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    <div id="ctx-tree"></div>
   </div>
 
   <!-- BUDGET ALLOCATION -->
@@ -1582,9 +1583,9 @@ function loadBrandsTab(){
   const spend=calcSpend();
   const fmt=n=>n.toLocaleString("ru")+" ₽";
   const ACTS=[
-    {key:"game",label:"Игра",color:"#f59e0b",icon:"🎮",desc:"SKU появляются как бренды в мини-игре B2C"},
-    {key:"surveys",label:"Опросы",color:"#10b981",icon:"📋",desc:"SKU продвигаются через опросы покупателей"},
-    {key:"battles",label:"Батлы",color:"#ec4899",icon:"⚔️",desc:"SKU участвуют в голосованиях «Кто лучше?»"},
+    {key:"game",label:"Игра",color:"#f59e0b",icon:"sports_esports",desc:"SKU появляются как бренды в мини-игре B2C"},
+    {key:"surveys",label:"Опросы",color:"#10b981",icon:"assignment",desc:"SKU продвигаются через опросы покупателей"},
+    {key:"battles",label:"Батлы",color:"#ec4899",icon:"bolt",desc:"SKU участвуют в голосованиях «Кто лучше?»"},
   ];
 
   // Budget sliders
@@ -1592,7 +1593,7 @@ function loadBrandsTab(){
   if(sl){
     sl.innerHTML=ACTS.map(it=>`
       <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;">
-        <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:1px;">${it.icon} ${it.label}</div>
+        <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:1px;display:flex;align-items:center;gap:5px;"><span class="material-icons-round" style="font-size:15px;">${it.icon}</span>${it.label}</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:8px;">${it.desc}</div>
         <input id="budget-${it.key}" type="number" min="0" max="${b.total}" value="${b[it.key]}"
           style="width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;"
@@ -1612,7 +1613,7 @@ function loadBrandsTab(){
   if(!list)return;
   if(!brands.length){
     list.innerHTML=`<div class="card p-8" style="text-align:center;color:#9ca3af;">
-      <div style="font-size:40px;margin-bottom:10px;">🏷</div>
+      <div style="margin-bottom:10px;"><span class="material-icons-round" style="font-size:40px;color:#d1d5db;">label</span></div>
       <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Брендов пока нет</div>
       <div style="font-size:13px;margin-bottom:16px;">Добавьте первый бренд и SKU для участия в активностях</div>
       <button onclick="openAddBrandModal()" class="btn-primary" style="padding:9px 24px;">Добавить бренд</button>
@@ -1637,9 +1638,9 @@ function loadBrandsTab(){
           <button onclick="deleteSku(${br.id},${s.id})" style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:15px;line-height:1;padding:0 2px;" title="Удалить">×</button>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-          ${b.game>0?`<span style="background:#fef3c7;color:#b45309;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">🎮 Игра</span>`:""}
-          ${b.surveys>0?`<span style="background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">📋 Опросы</span>`:""}
-          ${b.battles>0?`<span style="background:#fce7f3;color:#9d174d;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">⚔️ Батлы</span>`:""}
+          ${b.game>0?`<span style="background:#fef3c7;color:#b45309;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><span class="material-icons-round" style="font-size:11px;">sports_esports</span>Игра</span>`:""}
+          ${b.surveys>0?`<span style="background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><span class="material-icons-round" style="font-size:11px;">assignment</span>Опросы</span>`:""}
+          ${b.battles>0?`<span style="background:#fce7f3;color:#9d174d;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:3px;"><span class="material-icons-round" style="font-size:11px;">bolt</span>Батлы</span>`:""}
           ${(!b.game&&!b.surveys&&!b.battles)?`<span style="background:#f3f4f6;color:#9ca3af;border-radius:6px;padding:2px 7px;font-size:10px;">Не активен — пополните бюджет</span>`:""}
         </div>
         ${skus.length&&(b.game||b.surveys||b.battles)?`
@@ -1681,25 +1682,29 @@ function loadBrandsTab(){
 function getCtx(){return JSON.parse(localStorage.getItem("ratescan_b2b_ctx")||'{"type":"company","id":null,"label":"Вся компания","category":""}');}
 function setCtx(type,id,label,category){localStorage.setItem("ratescan_b2b_ctx",JSON.stringify({type,id,label,category}));renderCtxTree();renderCtxBanners();}
 
+function onCtxChange(val){
+  const sep="|~|";
+  const parts=val.split(sep);
+  const type=parts[0],id=parts[1]==="null"?null:parts[1],label=parts[2],cat=parts[3]||"";
+  setCtx(type,id,label,cat);
+}
+
 function renderCtxTree(){
   const tree=document.getElementById("ctx-tree");
   if(!tree)return;
   const brands=getBrands();
   const cur=getCtx();
-  const pill=(type,id,label,cat,indent)=>{
-    const active=cur.type===type&&String(cur.id)===String(id);
-    return `<button onclick="setCtx('${type}',${id?`'${id}'`:'null'},'${label.replace(/'/g,"\\'")}','${(cat||"").replace(/'/g,"\\'")}')
-      style="margin-left:${indent}px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:${active?700:500};
-      background:${active?"#6366f1":"#f3f4f6"};color:${active?"#fff":"#374151"};border:none;cursor:pointer;transition:all 0.15s;">${label}</button>`;
-  };
-  let html=pill("company",null,"Вся компания","",0);
+  const sep="|~|";
+  const val=(type,id,label,cat)=>[type,id==null?"null":id,label,cat||""].join(sep);
+  const selVal=(type,id)=>cur.type===type&&String(cur.id)===String(id==null?"null":id);
+  let opts=`<option value="${val("company",null,"Вся компания","")}"${selVal("company",null)?" selected":""}>Вся компания</option>`;
   brands.forEach(br=>{
-    html+=pill("brand",br.id,`${br.name}`,br.category||"",0);
+    opts+=`<option value="${val("brand",br.id,br.name,br.category||"")}"${selVal("brand",br.id)?" selected":""}>${br.name}${br.category?" ("+br.category+")":""}</option>`;
     (br.skus||[]).forEach(s=>{
-      html+=pill("sku",s.id,`${s.name}`,s.category||br.category||"",16);
+      opts+=`<option value="${val("sku",s.id,s.name,s.category||br.category||"")}"${selVal("sku",s.id)?" selected":""}>  ↳ ${s.name}</option>`;
     });
   });
-  tree.innerHTML=html;
+  tree.innerHTML=`<select onchange="onCtxChange(this.value)" style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;color:#374151;background:#f9fafb;cursor:pointer;appearance:auto;">${opts}</select>`;
 }
 
 function renderCtxBanners(){
