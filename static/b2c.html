@@ -94,11 +94,7 @@
     /* Vote flash overlay */
     @keyframes voteFlash { 0%{opacity:0;transform:scale(0.8)} 25%{opacity:1;transform:scale(1.05)} 80%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1)} }
     .vote-flash { animation:voteFlash 0.9s ease forwards; }
-    /* Game canvas wrapper */
-    #game-modal { display:none;position:fixed;inset:0;z-index:200;background:rgba(8,8,20,0.97);flex-direction:column;align-items:center;justify-content:center;gap:12px; }
     #game-canvas { display:block;border-radius:16px;touch-action:none;cursor:none; }
-    .game-hud-btn { background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif; }
-    .game-hud-btn:hover { background:rgba(255,255,255,0.2); }
     input,textarea,select { outline:none; font-family:'Inter',sans-serif; }
     input:focus,textarea:focus,select:focus { border-color:#6366f1!important; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
   </style>
@@ -315,7 +311,7 @@
       <button onclick="openAccModal()" class="btn-outline" style="width:100%;">Сменить аксессуар</button>
     </div>
 
-    <!-- RIGHT: Lore + Stages -->
+    <!-- RIGHT: Lore + Stages + Game -->
     <div class="flex flex-col gap-4">
       <div class="card p-5">
         <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">О Рейтике</h3>
@@ -325,26 +321,35 @@
         <h3 style="font-weight:600;font-size:15px;margin-bottom:14px;">Стадии развития</h3>
         <div class="flex flex-col gap-2" id="stages-list"></div>
       </div>
-    </div>
-  </div>
-
-  <!-- GAME CARD -->
-  <div class="card p-5 mt-5" id="game-card-section">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-      <div style="width:46px;height:46px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z" stroke="#fff" stroke-width="2"/><path d="M7 12h2M8 11v2M15 12h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="12" r="0.5" fill="#fff"/></svg>
+      <!-- INLINE GAME -->
+      <div class="card p-4" id="game-inline-card">
+        <div id="game-start-area">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:38px;height:38px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z" stroke="#fff" stroke-width="2"/><path d="M7 12h2M8 11v2M15 12h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:14px;">Рейтик-собиратель</div>
+              <div style="font-size:11px;color:#9ca3af;">Ловите бренды платформы — до 100 баллов в день</div>
+            </div>
+            <span id="game-daily-badge" style="display:none;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;">✓ 100 пт</span>
+          </div>
+          <button onclick="openGame()" class="btn-primary" style="width:100%;padding:9px;font-size:14px;">Играть</button>
+          <div id="game-score-today" style="font-size:11px;color:#9ca3af;margin-top:6px;text-align:center;"></div>
+          <div style="font-size:10px;color:#d1d5db;margin-top:4px;text-align:center;">← → или тап · Спонсорские бренды ×2 очков</div>
+        </div>
+        <canvas id="game-canvas" style="display:none;border-radius:10px;touch-action:none;"></canvas>
+        <div id="game-result" style="display:none;text-align:center;padding:16px 8px;">
+          <div style="font-size:34px;font-weight:800;color:#6366f1;margin-bottom:2px;" id="gr-score">0</div>
+          <div style="font-size:13px;color:#9ca3af;margin-bottom:8px;">брендов поймано</div>
+          <div id="gr-pts" style="font-size:16px;font-weight:700;color:#10b981;margin-bottom:14px;"></div>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button onclick="restartGame()" class="btn-primary" style="padding:8px 18px;font-size:13px;">Ещё раз</button>
+            <button onclick="closeGame()" class="btn-outline" style="padding:8px 18px;font-size:13px;">Закрыть</button>
+          </div>
+        </div>
       </div>
-      <div style="flex:1;">
-        <div style="font-weight:700;font-size:15px;">Рейтик-собиратель</div>
-        <div style="font-size:12px;color:#9ca3af;">Собирайте бренды — зарабатывайте баллы. До 100 баллов в день.</div>
-      </div>
-      <span id="game-daily-badge" style="display:none;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">Лимит исчерпан</span>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <button onclick="openGame()" class="btn-primary" style="padding:10px 28px;">Играть</button>
-      <div id="game-score-today" style="font-size:13px;color:#6b7280;"></div>
-    </div>
-    <div style="margin-top:10px;font-size:11px;color:#9ca3af;">Управление: ← → или мышь/тап &nbsp;·&nbsp; Спонсированные бренды дают ×2 баллов</div>
   </div>
 
   <!-- RIDDLE OF THE DAY -->
@@ -1786,6 +1791,13 @@ function startBattle(){
   // Group products by category and only allow same-category battles
   const cats={};
   for(const p of allProducts){if(!cats[p.category])cats[p.category]=[];cats[p.category].push(p);}
+  // Inject sponsored B2B SKUs when battles budget > 0
+  const spBrands=JSON.parse(localStorage.getItem("ratescan_b2b_game_brands")||"[]").filter(s=>s.sponsored);
+  spBrands.forEach(s=>{
+    const cat=s.category||"Прочее";
+    if(!cats[cat])cats[cat]=[];
+    cats[cat].push({id:"sp_"+(s.skuId||s.name),name:s.name,brand:s.brand||s.name,category:cat,avg_rating:+(4.1+Math.random()*0.8).toFixed(1),review_count:Math.floor(Math.random()*80)+15,sponsored:true});
+  });
   const validCats=Object.entries(cats).filter(([,ps])=>ps.length>=2);
   if(!validCats.length){showToast("Недостаточно товаров в одной категории для баттла","error");return;}
   const [chosenCat,catProducts]=validCats[Math.floor(Math.random()*validCats.length)];
@@ -1840,6 +1852,7 @@ function renderBattleRound(){
       style="flex:1;border:2.5px solid #e8e7f5;border-radius:16px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.2s;min-width:0;position:relative;"
       onmouseover="this.style.borderColor='#6366f1';this.style.background='#f5f4ff';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(99,102,241,0.15)'"
       onmouseout="this.style.borderColor='#e8e7f5';this.style.background='#fff';this.style.transform='';this.style.boxShadow=''">
+      ${p.sponsored?`<div style="display:inline-block;background:#fef3c7;color:#b45309;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:5px;">★ Спонсор</div>`:""}
       <div style="font-size:13px;font-weight:500;color:#9ca3af;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">${p.brand}</div>
       <div style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:10px;line-height:1.35;">${p.name}</div>
       <div style="display:inline-flex;flex-direction:column;align-items:center;background:#f9fafb;border-radius:12px;padding:10px 16px;margin-bottom:10px;">
@@ -2104,19 +2117,15 @@ async function sendReply(){
 
 // ═══ BRAND CATCHER GAME ══════════════════════════════════════════════
 const GM_W=360,GM_H=500,C_W=88,C_H=34,C_Y=GM_H-56,BRAND_H=28,PSPD=6,BSPD_BASE=2.4;
-const GAME_BRANDS=[
-  {name:"Starbucks",color:"#00704A"},{name:"Nike",color:"#111111"},
-  {name:"Apple",color:"#555555"},{name:"Samsung",color:"#1428A0"},
-  {name:"L'Oréal",color:"#CF2929"},{name:"Garnier",color:"#1a7a2a"},
-  {name:"Myprotein",color:"#0052cc"},{name:"Costa",color:"#6B1F1F"},
-  {name:"Vichy",color:"#005fa3"},{name:"Optimum",color:"#e65c00"},
-  {name:"Nestle",color:"#0075c9"},{name:"Danone",color:"#007ACC"},
-  {name:"Adidas",color:"#000000"},{name:"H&M",color:"#e40000"},
-  {name:"Zara",color:"#2c2c2c"},{name:"Ikea",color:"#0058A3"},
-];
+const CAT_COLORS={'мороженое':'#5B9BD5','кофе':'#6B3A2A','кофейн':'#6B3A2A','косметик':'#c026d3','спорт':'#2563eb','протеин':'#ea580c','ресторан':'#dc2626','еда':'#d97706','напит':'#0891b2','уход':'#7c3aed','витамин':'#16a34a','шоколад':'#78350f','сладост':'#db2777'};
+function _catColor(cat){const cl=(cat||'').toLowerCase();for(const[k,v]of Object.entries(CAT_COLORS)){if(cl.includes(k))return v;}return'#6366f1';}
 function getGameBrands(){
-  const sp=JSON.parse(localStorage.getItem("ratescan_b2b_game_brands")||"[]");
-  return [...GAME_BRANDS,...sp.map(b=>({...b,sponsored:true}))];
+  const seen=new Set();
+  const platform=allProducts.filter(p=>{const k=(p.brand||p.name||'').trim();if(!k||seen.has(k))return false;seen.add(k);return true;})
+    .map(p=>{const nm=(p.brand||p.name);return{name:nm.length>14?nm.slice(0,13)+'…':nm,color:_catColor(p.category),category:p.category,sponsored:false};});
+  const sp=JSON.parse(localStorage.getItem("ratescan_b2b_game_brands")||"[]").map(b=>({...b,sponsored:true}));
+  const all=[...platform,...sp];
+  return all.length?all:[{name:"Рейтик",color:"#6366f1"}];
 }
 let gm={active:false};
 function _gmRaf(ts){
@@ -2240,6 +2249,7 @@ function _gmEnd(){
   gm.active=false;
   cancelAnimationFrame(gm.raf);
   clearInterval(gm.ti);
+  document.onkeydown=null;document.onkeyup=null;
   const cv=document.getElementById("game-canvas");
   if(cv)cv.style.display="none";
   const res=document.getElementById("game-result");
@@ -2258,32 +2268,36 @@ function _gmEnd(){
 function openGame(){
   const cv=document.getElementById("game-canvas");
   const res=document.getElementById("game-result");
-  const modal=document.getElementById("game-modal");
-  if(!cv||!modal)return;
-  const W=Math.min(GM_W,window.innerWidth-24);
+  const sa=document.getElementById("game-start-area");
+  if(!cv)return;
+  const card=document.getElementById("game-inline-card");
+  const W=card?Math.min(GM_W,card.clientWidth-28):GM_W;
   const scale=W/GM_W;
   cv.width=GM_W;cv.height=GM_H;
-  cv.style.width=W+"px";cv.style.height=(GM_H*scale)+"px";
-  cv.style.display="block";
+  cv.style.width=W+"px";cv.style.height=Math.round(GM_H*scale)+"px";
+  cv.style.display="block";cv.style.margin="0 auto";
   if(res)res.style.display="none";
-  modal.style.display="flex";
+  if(sa)sa.style.display="none";
   gm={active:true,px:GM_W/2,score:0,lives:3,tl:60,brands:[],spd:0,st:30,combo:0,catchFX:[],missFX:[],lk:false,rk:false,lt:0,raf:null,ti:null};
   gm.ti=setInterval(_gmTimer,1000);
-  // Input
-  const onKey=(e,down)=>{if(e.key==="ArrowLeft"||e.key==="a")gm.lk=down;if(e.key==="ArrowRight"||e.key==="d")gm.rk=down;};
+  const onKey=(e,dn)=>{if(e.key==="ArrowLeft"||e.key==="a")gm.lk=dn;if(e.key==="ArrowRight"||e.key==="d")gm.rk=dn;};
   document.onkeydown=e=>onKey(e,true);
   document.onkeyup=e=>onKey(e,false);
   cv.onmousemove=e=>{const r=cv.getBoundingClientRect();gm.px=Math.round((e.clientX-r.left)/scale);};
-  cv.ontouchmove=e=>{e.preventDefault();const r=cv.getBoundingClientRect();const t=e.touches[0];gm.px=Math.round((t.clientX-r.left)/scale);};
-  cv.ontouchstart=e=>{e.preventDefault();const r=cv.getBoundingClientRect();const t=e.touches[0];gm.px=Math.round((t.clientX-r.left)/scale);};
+  cv.ontouchmove=e=>{e.preventDefault();const r=cv.getBoundingClientRect();gm.px=Math.round((e.touches[0].clientX-r.left)/scale);};
+  cv.ontouchstart=e=>{e.preventDefault();const r=cv.getBoundingClientRect();gm.px=Math.round((e.touches[0].clientX-r.left)/scale);};
   gm.raf=requestAnimationFrame(_gmRaf);
 }
 function restartGame(){openGame();}
 function closeGame(){
   gm.active=false;
-  cancelAnimationFrame(gm.raf);
-  clearInterval(gm.ti);
-  document.getElementById("game-modal").style.display="none";
+  cancelAnimationFrame(gm.raf);clearInterval(gm.ti);
+  const cv=document.getElementById("game-canvas");
+  const sa=document.getElementById("game-start-area");
+  const res=document.getElementById("game-result");
+  if(cv)cv.style.display="none";
+  if(res)res.style.display="none";
+  if(sa)sa.style.display="block";
   document.onkeydown=null;document.onkeyup=null;
 }
 function updateGameDailyBadge(){
@@ -2297,19 +2311,5 @@ function updateGameDailyBadge(){
 }
 </script>
 
-<!-- GAME MODAL -->
-<div id="game-modal">
-  <canvas id="game-canvas"></canvas>
-  <div id="game-result" style="display:none;background:#1e1e3f;border-radius:20px;padding:28px 32px;text-align:center;max-width:320px;width:90%;">
-    <div style="font-size:36px;font-weight:800;color:#fff;margin-bottom:4px;" id="gr-score">0</div>
-    <div style="font-size:14px;color:#a5b4fc;margin-bottom:14px;">брендов поймано</div>
-    <div id="gr-pts" style="font-size:18px;font-weight:700;color:#10b981;margin-bottom:20px;"></div>
-    <div style="display:flex;gap:10px;justify-content:center;">
-      <button onclick="restartGame()" class="game-hud-btn">Ещё раз</button>
-      <button onclick="closeGame()" class="game-hud-btn">Закрыть</button>
-    </div>
-  </div>
-  <button onclick="closeGame()" style="position:fixed;top:16px;right:16px;background:rgba(255,255,255,0.12);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</button>
-</div>
 </body>
 </html>

@@ -1363,12 +1363,15 @@ function saveBudget(){
   let total=0;
   keys.forEach(k=>{const v=parseInt(document.getElementById("budget-"+k)?.value||"0");b[k]=Math.max(0,v);total+=b[k];});
   if(total>b.total){showToast("Сумма распределения превышает баланс","error");return;}
+  b.setDate=Date.now();
   setBalance(b);updateBalanceDisplay();showToast("Бюджет сохранён");
-  // publish game brands to localStorage for B2C
+  // Publish all SKUs to B2C game
   const brands=getBrands();
   if(b.game>0){
-    const gameBrands=brands.map(br=>({name:br.name,color:br.color||"#6366f1",sponsored:true}));
-    localStorage.setItem("ratescan_b2b_game_brands",JSON.stringify(gameBrands));
+    const gameBrands=brands.flatMap(br=>(br.skus||[]).map(s=>({name:s.name,color:br.color||"#6366f1",brand:br.name,skuId:s.id,sponsored:true})));
+    // If no SKUs, fall back to brand names
+    const out=gameBrands.length?gameBrands:brands.map(br=>({name:br.name,color:br.color||"#6366f1",sponsored:true}));
+    localStorage.setItem("ratescan_b2b_game_brands",JSON.stringify(out));
   }else{localStorage.removeItem("ratescan_b2b_game_brands");}
 }
 
@@ -1416,61 +1419,114 @@ function deleteSku(brandId,skuId){
   if(b&&b.skus)b.skus=b.skus.filter(s=>s.id!==skuId);
   setBrands(brands);loadBrandsTab();
 }
+// Returns estimated spend per activity based on time elapsed since budget was set
+function calcSpend(){
+  const b=getBalance();
+  if(!b.setDate)return{game:0,surveys:0,battles:0,days:0};
+  const days=Math.min(30,(Date.now()-b.setDate)/86400000);
+  const rate=k=>Math.round(b[k]/30*days);
+  return{game:Math.min(b.game,rate("game")),surveys:Math.min(b.surveys,rate("surveys")),battles:Math.min(b.battles,rate("battles")),days:Math.round(days*10)/10};
+}
 function loadBrandsTab(){
   updateBalanceDisplay();
   const b=getBalance();
+  const brands=getBrands();
+  const spend=calcSpend();
+  const fmt=n=>n.toLocaleString("ru")+" ₽";
+  const ACTS=[
+    {key:"game",label:"Игра",color:"#f59e0b",icon:"🎮",desc:"SKU появляются как бренды в мини-игре B2C"},
+    {key:"surveys",label:"Опросы",color:"#10b981",icon:"📋",desc:"SKU продвигаются через опросы покупателей"},
+    {key:"battles",label:"Батлы",color:"#ec4899",icon:"⚔️",desc:"SKU участвуют в голосованиях «Кто лучше?»"},
+  ];
+
   // Budget sliders
   const sl=document.getElementById("budget-sliders");
   if(sl){
-    const items=[{label:"Опросы",key:"surveys",color:"#10b981",desc:"Покупатели проходят ваши опросы"},{label:"Игра (бренд в Рейтик-собирателе)",key:"game",color:"#f59e0b",desc:"Ваш бренд появляется в мини-игре B2C"},{label:"Батлы",key:"battles",color:"#ec4899",desc:"Продвижение в разделе «Кто лучше?»"}];
-    sl.innerHTML=items.map(it=>`<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;">
-      <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;">${it.label}</div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:8px;">${it.desc}</div>
-      <input id="budget-${it.key}" type="number" min="0" max="${b.total}" value="${b[it.key]}"
-        style="width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;"
-        placeholder="0" oninput="this.style.borderColor='#fbbf24'"/>
-      <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px;">руб.</div>
-    </div>`).join("")+`<div style="grid-column:1/-1;text-align:right;"><button onclick="saveBudget()" style="background:#fff;color:#6366f1;border:none;border-radius:10px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;">Сохранить бюджет</button></div>`;
+    sl.innerHTML=ACTS.map(it=>`
+      <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;">
+        <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:1px;">${it.icon} ${it.label}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:8px;">${it.desc}</div>
+        <input id="budget-${it.key}" type="number" min="0" max="${b.total}" value="${b[it.key]}"
+          style="width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;"
+          placeholder="0" oninput="this.style.borderColor='#fbbf24'"/>
+        <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:3px;">
+          Израсходовано: <strong style="color:#fbbf24;">${fmt(spend[it.key])}</strong>
+        </div>
+      </div>`).join("")
+      +`<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px;">
+        <span style="font-size:11px;color:rgba(255,255,255,0.55);">Период: ${spend.days} дн. · Расход: ${fmt(spend.game+spend.surveys+spend.battles)}</span>
+        <button onclick="saveBudget()" style="background:#fff;color:#6366f1;border:none;border-radius:10px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;">Сохранить бюджет</button>
+      </div>`;
   }
+
   // Brands list
   const list=document.getElementById("brands-list");
   if(!list)return;
-  const brands=getBrands();
   if(!brands.length){
     list.innerHTML=`<div class="card p-8" style="text-align:center;color:#9ca3af;">
       <div style="font-size:40px;margin-bottom:10px;">🏷</div>
       <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Брендов пока нет</div>
-      <div style="font-size:13px;margin-bottom:16px;">Добавьте первый бренд для управления SKU и бюджетом</div>
+      <div style="font-size:13px;margin-bottom:16px;">Добавьте первый бренд и SKU для участия в активностях</div>
       <button onclick="openAddBrandModal()" class="btn-primary" style="padding:9px 24px;">Добавить бренд</button>
     </div>`;return;
   }
-  list.innerHTML=brands.map(br=>`
-    <div class="card p-5">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+
+  const totalAllSkus=brands.reduce((s,br)=>s+(br.skus?.length||0),0)||1;
+  list.innerHTML=brands.map(br=>{
+    const skus=br.skus||[];
+    // Per-SKU spend share distributed equally across ALL brands' SKUs
+    const skuGameShare=skus.length?Math.round(spend.game/totalAllSkus):0;
+    const skuSurveyShare=skus.length?Math.round(spend.surveys/totalAllSkus):0;
+    const skuBattleShare=skus.length?Math.round(spend.battles/totalAllSkus):0;
+
+    const actBadges=ACTS.filter(a=>b[a.key]>0)
+      .map(a=>`<span style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">${a.label}</span>`).join("");
+
+    const skuCards=skus.length?skus.map(s=>`
+      <div style="background:#fff;border:1.5px solid #e8e7f5;border-radius:12px;padding:10px 12px;position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:600;color:#374151;">${s.name}</div>
+          <button onclick="deleteSku(${br.id},${s.id})" style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:15px;line-height:1;padding:0 2px;" title="Удалить">×</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
+          ${b.game>0?`<span style="background:#fef3c7;color:#b45309;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">🎮 Игра</span>`:""}
+          ${b.surveys>0?`<span style="background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">📋 Опросы</span>`:""}
+          ${b.battles>0?`<span style="background:#fce7f3;color:#9d174d;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;">⚔️ Батлы</span>`:""}
+          ${(!b.game&&!b.surveys&&!b.battles)?`<span style="background:#f3f4f6;color:#9ca3af;border-radius:6px;padding:2px 7px;font-size:10px;">Не активен — пополните бюджет</span>`:""}
+        </div>
+        ${skus.length&&(b.game||b.surveys||b.battles)?`
+        <div style="font-size:10px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+          ${b.game>0?`<span>Игра: <strong style="color:#374151;">${fmt(skuGameShare)}</strong></span>`:""}
+          ${b.surveys>0?`<span>Опросы: <strong style="color:#374151;">${fmt(skuSurveyShare)}</strong></span>`:""}
+          ${b.battles>0?`<span>Батлы: <strong style="color:#374151;">${fmt(skuBattleShare)}</strong></span>`:""}
+        </div>`:""}
+      </div>`).join("")
+      :`<div style="font-size:12px;color:#9ca3af;text-align:center;padding:8px 0;">Нет SKU — нажмите «+ Добавить»</div>`;
+
+    return `<div class="card p-5">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:38px;height:38px;border-radius:10px;background:${br.color||"#6366f1"};flex-shrink:0;"></div>
+          <div style="width:40px;height:40px;border-radius:12px;background:${br.color||"#6366f1"};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <span style="color:#fff;font-size:14px;font-weight:700;">${br.name.charAt(0)}</span>
+          </div>
           <div>
             <div style="font-weight:700;font-size:15px;">${br.name}</div>
-            <div style="font-size:12px;color:#9ca3af;">${br.category||"Категория не указана"} · ${(br.skus||[]).length} SKU</div>
+            <div style="font-size:12px;color:#9ca3af;margin-bottom:4px;">${br.category||"Категория не указана"}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">${actBadges}</div>
           </div>
         </div>
         <div style="display:flex;gap:6px;">
-          <button onclick="openAddBrandModal(${br.id})" class="btn-outline" style="padding:6px 12px;font-size:12px;">Изменить</button>
-          <button onclick="deleteBrand(${br.id})" class="btn-danger" style="padding:6px 12px;font-size:12px;">Удалить</button>
+          <button onclick="openAddBrandModal(${br.id})" class="btn-outline" style="padding:5px 12px;font-size:12px;">Изменить</button>
+          <button onclick="deleteBrand(${br.id})" class="btn-danger" style="padding:5px 12px;font-size:12px;">Удалить</button>
         </div>
       </div>
-      <div style="background:#f9fafb;border-radius:10px;padding:10px 12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:12px;font-weight:600;color:#374151;">SKU / Товары</span>
-          <button onclick="addSku(${br.id})" style="background:#eef2ff;color:#6366f1;border:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;">+ Добавить</button>
-        </div>
-        ${(br.skus||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;">${(br.skus||[]).map(s=>`
-          <span style="background:#fff;border:1.5px solid #e8e7f5;border-radius:8px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px;">
-            ${s.name}
-            <span onclick="deleteSku(${br.id},${s.id})" style="color:#9ca3af;cursor:pointer;font-size:13px;line-height:1;">×</span>
-          </span>`).join("")}</div>`:`<div style="font-size:12px;color:#9ca3af;">Нет товаров — нажмите «+ Добавить»</div>`}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:600;color:#374151;">SKU / Товары (${skus.length})</span>
+        <button onclick="addSku(${br.id})" style="background:#eef2ff;color:#6366f1;border:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;">+ Добавить SKU</button>
       </div>
-    </div>`).join("");
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">${skuCards}</div>
+    </div>`;
+  }).join("");
 }
 </script>
 </body>
