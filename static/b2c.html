@@ -154,8 +154,23 @@
         style="padding:10px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;background:#fafafa;color:#374151;min-width:140px;">
         <option value="">Все категории</option>
       </select>
+      <button onclick="openScanner()" title="Сканировать штрихкод"
+        style="padding:10px 12px;background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:10px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#6366f1;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M3 5v4M3 5h4M21 5h-4M21 5v4M3 19v-4M3 19h4M21 19h-4M21 19v-4M8 8v.01M12 8v.01M16 8v.01M8 12v.01M12 12v.01M16 12v.01M8 16v.01M12 16v.01M16 16v.01" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="hidden sm:inline">Сканер</span>
+      </button>
     </div>
   </div>
+
+  <!-- TOP OF THE WEEK -->
+  <div id="top-week-section" class="mb-5">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 style="font-weight:700;font-size:16px;">🔥 Топ недели по категориям</h3>
+      <span style="font-size:12px;color:#9ca3af;">по рейтингу платформы</span>
+    </div>
+    <div id="top-week-grid"></div>
+  </div>
+
   <div id="products-grid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));"></div>
 </div>
 
@@ -997,6 +1012,8 @@ async function loadCategories(){
 async function searchProducts(){
   const q=document.getElementById("search-input").value;
   const cat=document.getElementById("category-filter").value;
+  const tw=document.getElementById("top-week-section");
+  if(tw)tw.style.display=(!q&&!cat)?"":"none";
   try{
     let url="/api/b2c/products?";
     if(q)url+=`q=${encodeURIComponent(q)}&`;
@@ -1004,6 +1021,7 @@ async function searchProducts(){
     const prods=await apiGet(url);
     allProducts=prods;
     renderProducts(prods);
+    if(!q&&!cat)renderTopWeek();
   }catch(e){}
 }
 
@@ -2309,7 +2327,152 @@ function updateGameDailyBadge(){
   if(badge)badge.style.display=earned>=100?"inline-block":"none";
   if(scoreEl)scoreEl.textContent=earned>0?`Заработано сегодня: ${earned}/100 баллов`:"";
 }
+
+// ═══ TOP OF THE WEEK ══════════════════════════════════════════════════════
+const CAT_EMOJI={'мороженое':'🍦','кофе':'☕','косметик':'💄','спорт':'🏃','протеин':'💪','ресторан':'🍽','еда':'🥗','напит':'🥤','уход':'✨','витамин':'💊','шоколад':'🍫','сладост':'🍬'};
+function _catEmoji(cat){const cl=(cat||'').toLowerCase();for(const[k,v]of Object.entries(CAT_EMOJI)){if(cl.includes(k))return v;}return'🛍';}
+function renderTopWeek(){
+  const el=document.getElementById("top-week-grid");
+  if(!el||!allProducts.length)return;
+  const cats={};
+  allProducts.forEach(p=>{if(!cats[p.category])cats[p.category]=[];cats[p.category].push(p);});
+  const topCats=Object.entries(cats)
+    .map(([cat,prods])=>({cat,prods:[...prods].sort((a,b)=>b.avg_rating-a.avg_rating).slice(0,3)}))
+    .filter(({prods})=>prods[0]?.avg_rating>0)
+    .sort((a,b)=>b.prods[0].avg_rating-a.prods[0].avg_rating)
+    .slice(0,6);
+  if(!topCats.length){el.innerHTML="";return;}
+  el.innerHTML=topCats.map(({cat,prods})=>`
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;">${_catEmoji(cat)} ${cat}</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+        ${prods.map((p,i)=>`
+          <div onclick="openProductModal(${p.id})" style="flex-shrink:0;width:155px;background:#fff;border:1.5px solid #e8e7f5;border-radius:12px;padding:12px;cursor:pointer;transition:all 0.15s;"
+            onmouseover="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 12px rgba(99,102,241,0.1)'"
+            onmouseout="this.style.borderColor='#e8e7f5';this.style.boxShadow=''">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
+              <span style="width:20px;height:20px;background:${['#fbbf24','#9ca3af','#cd7c2f'][i]||'#e8e7f5'};color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">${i+1}</span>
+              <span style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.brand||''}</span>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:#1a1a2e;margin-bottom:6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.name}</div>
+            <div style="display:flex;align-items:center;gap:3px;">
+              <span style="font-size:15px;font-weight:800;color:#f59e0b;">${p.avg_rating.toFixed(1)}</span>
+              <span style="font-size:11px;color:#f59e0b;">★</span>
+              <span style="font-size:10px;color:#9ca3af;margin-left:2px;">${p.review_count} отз.</span>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ═══ BARCODE SCANNER ══════════════════════════════════════════════════════
+let scanRaf=null,scanStream=null;
+async function openScanner(){
+  const modal=document.getElementById("scanner-modal");
+  if(!modal)return;
+  modal.classList.remove("hidden");
+  document.getElementById("scan-state-cam").style.display="";
+  document.getElementById("scan-state-result").style.display="none";
+  document.getElementById("scan-state-nosupport").style.display="none";
+  document.getElementById("scan-status").textContent="Идёт сканирование...";
+  if(!("BarcodeDetector" in window)){
+    document.getElementById("scan-state-cam").style.display="none";
+    document.getElementById("scan-state-nosupport").style.display="";
+    return;
+  }
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}}});
+    const video=document.getElementById("scan-video");
+    video.srcObject=scanStream;
+    await video.play();
+    const det=new BarcodeDetector({formats:["ean_13","ean_8","qr_code","code_128","code_39","upc_a","upc_e"]});
+    async function tick(){
+      if(!scanStream)return;
+      try{const bs=await det.detect(video);if(bs.length){handleBarcode(bs[0].rawValue);return;}}catch(_){}
+      scanRaf=requestAnimationFrame(tick);
+    }
+    tick();
+  }catch(e){document.getElementById("scan-status").textContent="Нет доступа к камере — разрешите в настройках браузера.";}
+}
+function closeScanner(){
+  const modal=document.getElementById("scanner-modal");
+  if(modal)modal.classList.add("hidden");
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  if(scanRaf){cancelAnimationFrame(scanRaf);scanRaf=null;}
+}
+function handleBarcode(code){
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  if(scanRaf){cancelAnimationFrame(scanRaf);scanRaf=null;}
+  document.getElementById("scan-state-cam").style.display="none";
+  document.getElementById("scan-state-result").style.display="";
+  const q=code.toLowerCase();
+  const match=allProducts.find(p=>(p.name||"").toLowerCase().includes(q)||(p.brand||"").toLowerCase().includes(q));
+  const card=document.getElementById("scan-found-card");
+  if(match){
+    card.innerHTML=`
+      <div style="background:#f9fafb;border-radius:12px;padding:14px;">
+        <div style="font-size:11px;color:#10b981;font-weight:600;margin-bottom:4px;">✓ Найдено на платформе</div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:2px;">${match.name}</div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:10px;">${match.brand||''} · ${match.category||''}</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
+          ${match.avg_rating>0?`<div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#f59e0b;">${match.avg_rating.toFixed(1)}★</div><div style="font-size:10px;color:#9ca3af;">Рейтинг</div></div>`:""}
+          ${match.review_count>0?`<div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#6366f1;">${match.review_count}</div><div style="font-size:10px;color:#9ca3af;">Отзывов</div></div>`:""}
+          ${match.price_wb?`<div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#10b981;">${match.price_wb}₽</div><div style="font-size:10px;color:#9ca3af;">WB</div></div>`:""}
+          ${match.price_ozon?`<div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#3b82f6;">${match.price_ozon}₽</div><div style="font-size:10px;color:#9ca3af;">Ozon</div></div>`:""}
+        </div>
+        <button onclick="openProductModal(${match.id});closeScanner();" class="btn-primary" style="width:100%;padding:9px;font-size:13px;">Открыть карточку товара</button>
+      </div>`;
+  }else{
+    card.innerHTML=`
+      <div style="background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:8px;">🔍</div>
+        <div style="font-weight:600;margin-bottom:4px;">Товар не найден на платформе</div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;">Код: <code style="background:#e8e7f5;padding:2px 6px;border-radius:4px;font-size:11px;">${code}</code></div>
+        <button onclick="document.getElementById('search-input').value='${code.replace(/'/g,"\\'")}';searchProducts();closeScanner();" class="btn-outline" style="padding:8px 18px;font-size:13px;">Поиск по коду</button>
+      </div>`;
+  }
+}
+function scanAgain(){openScanner();}
 </script>
+
+<!-- SCANNER MODAL -->
+<div id="scanner-modal" class="modal-backdrop hidden" onclick="if(event.target===this)closeScanner()">
+  <div class="modal-box p-5" style="max-width:380px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <h3 style="font-weight:700;font-size:17px;">Сканер товара</h3>
+        <div style="font-size:12px;color:#9ca3af;margin-top:1px;">Наведите камеру на штрихкод или QR-код</div>
+      </div>
+      <button onclick="closeScanner()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:22px;line-height:1;">✕</button>
+    </div>
+    <div id="scan-state-cam">
+      <div style="position:relative;border-radius:14px;overflow:hidden;background:#0d0d1f;aspect-ratio:4/3;margin-bottom:12px;">
+        <video id="scan-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
+        <!-- Scan frame overlay -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <div style="width:60%;height:55%;position:relative;">
+            <div style="position:absolute;top:0;left:0;width:20px;height:20px;border-top:3px solid #6366f1;border-left:3px solid #6366f1;border-radius:2px 0 0 0;"></div>
+            <div style="position:absolute;top:0;right:0;width:20px;height:20px;border-top:3px solid #6366f1;border-right:3px solid #6366f1;border-radius:0 2px 0 0;"></div>
+            <div style="position:absolute;bottom:0;left:0;width:20px;height:20px;border-bottom:3px solid #6366f1;border-left:3px solid #6366f1;border-radius:0 0 0 2px;"></div>
+            <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;border-bottom:3px solid #6366f1;border-right:3px solid #6366f1;border-radius:0 0 2px 0;"></div>
+          </div>
+        </div>
+      </div>
+      <div id="scan-status" style="text-align:center;font-size:13px;color:#6b7280;margin-bottom:8px;"></div>
+      <button onclick="closeScanner()" class="btn-outline" style="width:100%;padding:9px;">Отмена</button>
+    </div>
+    <div id="scan-state-result" style="display:none;">
+      <div id="scan-found-card"></div>
+      <button onclick="scanAgain()" class="btn-outline" style="width:100%;margin-top:10px;padding:9px;font-size:13px;">Сканировать ещё</button>
+    </div>
+    <div id="scan-state-nosupport" style="display:none;text-align:center;padding:16px 0;">
+      <div style="font-size:44px;margin-bottom:10px;">📷</div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:6px;">Нужен Chrome или Edge</div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Сканер штрихкодов работает в Chrome/Edge на Android и Desktop</div>
+      <button onclick="closeScanner()" class="btn-primary" style="padding:9px 24px;">Понятно</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -107,6 +107,9 @@
     </div>
     <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;" id="balance-alloc-row"></div>
   </div>
+  <!-- INDUSTRY BENCHMARK -->
+  <div id="benchmark-card" class="card p-5 mt-4"></div>
+
   <div class="card p-5 mt-4">
     <div class="flex items-center justify-between mb-4">
       <h3 style="font-weight:600;font-size:15px;">Последние отзывы</h3>
@@ -648,7 +651,74 @@ async function loadDashboard(){
     // Recent reviews
     renderReviewCards(data.recent_reviews,"recent-reviews",data.brand_name);
     updateBalanceDisplay();
+    loadBenchmark(data.avg_rating, data.brand_name, data.category||"");
   }catch(e){console.error(e);}
+}
+
+async function loadBenchmark(myRating, myBrand, myCategory){
+  const card=document.getElementById("benchmark-card");
+  if(!card)return;
+  try{
+    const data=await apiGet("/api/b2b/category-ranking");
+    const others=data.brands.filter(b=>!b.is_mine&&b.avg_rating>0);
+    if(!others.length){card.innerHTML="";return;}
+    const avgAll=others.reduce((s,b)=>s+b.avg_rating,0)/others.length;
+    const diff=+(myRating-avgAll).toFixed(2);
+    const absDiff=Math.abs(diff).toFixed(2);
+    const better=diff>=0;
+    const pct=Math.round(Math.abs(diff)/avgAll*100);
+
+    // Category-specific average from allCompetitors if available
+    let catAvg=null, catCount=0;
+    if(myCategory&&allCompetitors.length){
+      const cl=myCategory.toLowerCase();
+      const catOthers=allCompetitors.filter(c=>(c.category||"").toLowerCase().includes(cl)&&!c.is_mine&&c.avg_rating>0);
+      if(catOthers.length){catAvg=+(catOthers.reduce((s,c)=>s+c.avg_rating,0)/catOthers.length).toFixed(2);catCount=catOthers.length;}
+    }
+
+    const bar=(val,max,color)=>{
+      const pct=Math.min(100,Math.round(val/max*100));
+      return `<div style="height:8px;background:#e8e7f5;border-radius:6px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:${pct}%;background:${color};border-radius:6px;transition:width 0.6s ease;"></div></div>`;
+    };
+    const maxR=5;
+
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="width:40px;height:40px;background:#f0fdf4;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke="#15803d" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:15px;">Бенчмарк по отрасли</div>
+          <div style="font-size:12px;color:#9ca3af;">Сравнение с ${others.length} брендами платформы</div>
+        </div>
+        <div style="margin-left:auto;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;background:${better?"#d1fae5":"#fee2e2"};color:${better?"#065f46":"#991b1b"};">
+          ${better?"▲":"▼"} ${pct}% ${better?"выше":"ниже"} среднего
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr${catAvg!==null?" 1fr":""};gap:12px;">
+        <div style="background:#f9fafb;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Ваш рейтинг</div>
+          <div style="font-size:22px;font-weight:800;color:#6366f1;">${myRating.toFixed(1)}</div>
+          ${bar(myRating,maxR,"#6366f1")}
+        </div>
+        <div style="background:#f9fafb;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Среднее по платформе</div>
+          <div style="font-size:22px;font-weight:800;color:#9ca3af;">${avgAll.toFixed(2)}</div>
+          ${bar(avgAll,maxR,"#9ca3af")}
+        </div>
+        ${catAvg!==null?`<div style="background:#f9fafb;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">Среднее по категории (${catCount})</div>
+          <div style="font-size:22px;font-weight:800;color:#f59e0b;">${catAvg.toFixed(2)}</div>
+          ${bar(catAvg,maxR,"#f59e0b")}
+        </div>`:""}
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:${better?"#065f46":"#991b1b"};background:${better?"#f0fdf4":"#fef2f2"};border-radius:8px;padding:8px 12px;">
+        ${better
+          ? `Ваш рейтинг <strong>${myRating.toFixed(1)}</strong> выше среднего по платформе на <strong>${absDiff}</strong> — хороший результат. Продолжайте отвечать на отзывы.`
+          : `Ваш рейтинг <strong>${myRating.toFixed(1)}</strong> ниже среднего по платформе на <strong>${absDiff}</strong>. Проработайте негативные отзывы во вкладке «Анализ».`
+        }
+      </div>`;
+  }catch(e){if(card)card.innerHTML="";}
 }
 
 function statIcon(icon){
@@ -760,6 +830,12 @@ function applyCompFilters(){
   let filtered=[...allCompetitors];
   const seg=document.getElementById("comp-segment-filter").value;
   const sort=document.getElementById("comp-sort").value;
+  // Context category filter
+  const ctx=getCtx();
+  if(ctx.type!=="company"&&ctx.category){
+    const cl=ctx.category.toLowerCase();
+    filtered=filtered.filter(c=>(c.category||"").toLowerCase().includes(cl)||(c.brand||"").toLowerCase().includes(cl));
+  }
   if(seg){
     filtered=filtered.filter(c=>{
       const r=c.avg_rating;
@@ -878,15 +954,24 @@ async function loadRanking(){
     const data=await apiGet("/api/b2b/category-ranking");
     const mb=data.my_brand||{};
 
+    // Context category filter
+    const ctx=getCtx();
+    let visibleBrands=data.brands;
+    if(ctx.type!=="company"&&ctx.category&&allCompetitors.length){
+      const cl=ctx.category.toLowerCase();
+      const brandsInCat=new Set(allCompetitors.filter(c=>(c.category||"").toLowerCase().includes(cl)).map(c=>c.brand));
+      visibleBrands=data.brands.filter(b=>b.is_mine||brandsInCat.has(b.brand));
+    }
+
     document.getElementById("ranking-stats").innerHTML=[
       {title:"Позиция по рейтингу",value:`#${mb.rank_avg_rating||"—"}`,color:"#6366f1",bg:"#eef2ff"},
-      {title:"Всего брендов",value:data.brands.length,color:"#374151",bg:"#f3f4f6"},
+      {title:"Брендов в выборке",value:visibleBrands.length,color:"#374151",bg:"#f3f4f6"},
       {title:"Средний рейтинг",value:(mb.avg_rating||0).toFixed(1),color:"#f59e0b",bg:"#fffbeb"},
       {title:"Отзывов",value:mb.total_reviews||0,color:"#10b981",bg:"#d1fae5"},
     ].map(s=>`<div class="stat-card"><div style="font-size:22px;font-weight:800;color:${s.color};">${s.value}</div><div style="font-size:13px;color:#6b7280;margin-top:2px;">${s.title}</div></div>`).join("");
 
     // Leaderboard
-    document.getElementById("ranking-table").innerHTML=data.brands.slice(0,10).map((b,i)=>`
+    document.getElementById("ranking-table").innerHTML=visibleBrands.slice(0,10).map((b,i)=>`
       <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;${b.is_mine?"background:#f5f4ff;padding:10px;border-radius:10px;margin-bottom:2px;":""}">
         <div style="width:28px;text-align:center;font-weight:700;font-size:14px;color:${i<3?'#6366f1':'#9ca3af'};">${i+1}</div>
         <div style="flex:1;min-width:0;">
