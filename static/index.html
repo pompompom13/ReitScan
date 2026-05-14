@@ -4,210 +4,268 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>РейтСкан — репутационная платформа</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/static/js/api.js"></script>
   <style>
-    .gradient-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1d4ed8 100%); }
-    .card-hover { transition: transform .2s, box-shadow .2s; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.15); }
-    .modal-bg { background: rgba(0,0,0,.5); backdrop-filter: blur(4px); }
+    *,*::before,*::after{box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:#f8f7ff;color:#1a1a2e;}
+    .hero-bg{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 45%,#1d4ed8 100%);}
+    .card-hover{transition:transform .2s,box-shadow .2s;}
+    .card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.12);}
+    .modal-bg{background:rgba(0,0,0,.5);backdrop-filter:blur(4px);}
+    .gradient-text{background:linear-gradient(135deg,#a5b4fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .feature-card{background:#fff;border:1px solid #e8e7f5;border-radius:16px;padding:28px;transition:all .2s;}
+    .feature-card:hover{box-shadow:0 8px 32px rgba(99,102,241,.12);transform:translateY(-2px);}
+    .check-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+    .check-icon{width:18px;height:18px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    @keyframes floatUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:floatUp .6s ease forwards;}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:500;}
   </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body>
 
 <!-- HEADER -->
-<header class="gradient-bg text-white">
+<header class="hero-bg text-white">
   <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-        <span class="text-indigo-700 font-black text-lg">R</span>
+    <div class="flex items-center gap-2.5">
+      <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="white"/>
+        </svg>
       </div>
-      <span class="font-bold text-xl tracking-tight">РейтСкан</span>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-0.3px;">РейтСкан</span>
     </div>
     <div class="flex gap-3" id="header-btns">
-      <button onclick="openModal('b2c')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium transition">Войти как покупатель</button>
-      <button onclick="openModal('b2b')" class="px-4 py-2 rounded-lg bg-white text-indigo-700 hover:bg-indigo-50 text-sm font-semibold transition">Войти как бизнес</button>
+      <button onclick="openModal('b2c')" style="padding:9px 18px;border-radius:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:background .18s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Войти как покупатель</button>
+      <button onclick="openModal('b2b')" style="padding:9px 18px;border-radius:10px;background:#fff;color:#312e81;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .18s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Войти как бизнес</button>
     </div>
   </div>
 
   <!-- HERO -->
-  <div class="max-w-6xl mx-auto px-4 py-20 text-center">
-    <div class="inline-block px-3 py-1 bg-white/15 rounded-full text-xs font-medium mb-4 tracking-wide">
-      🇷🇺 Первая российская двусторонняя репутационная платформа
+  <div class="max-w-6xl mx-auto px-4 py-24 text-center fade-up">
+    <div class="pill" style="background:rgba(255,255,255,0.12);color:#c7d2fe;margin-bottom:24px;border:1px solid rgba(255,255,255,0.15);">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>
+      Первая российская двусторонняя репутационная платформа
     </div>
-    <h1 class="text-4xl md:text-5xl font-black leading-tight mb-5">
-      Репутация для бизнеса.<br/>Доверие для покупателей.
+    <h1 style="font-size:clamp(36px,5vw,58px);font-weight:900;line-height:1.1;letter-spacing:-1px;margin-bottom:20px;">
+      Репутация для бизнеса.<br/>
+      <span class="gradient-text">Доверие для покупателей.</span>
     </h1>
-    <p class="text-lg text-indigo-200 max-w-2xl mx-auto mb-10">
-      РейтСкан объединяет производителей и покупателей в единой экосистеме на основе агрегированных отзывов с Wildberries, Ozon, Яндекс.Маркет, 2ГИС и других платформ.
+    <p style="font-size:18px;color:#c7d2fe;max-width:600px;margin:0 auto 40px;line-height:1.6;font-weight:400;">
+      РейтСкан агрегирует отзывы с Wildberries, Ozon, Яндекс.Маркет, 2ГИС и других платформ — давая покупателям честную картину, а бизнесу — реальную аналитику.
     </p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <button onclick="openModal('b2c')" class="px-7 py-3.5 bg-white text-indigo-700 font-bold rounded-xl hover:bg-indigo-50 transition text-base shadow-lg">
-        🛒 Я покупатель — найти товар
+      <button onclick="openModal('b2c')" style="padding:15px 32px;background:#fff;color:#312e81;font-size:15px;font-weight:700;border-radius:12px;border:none;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);transition:transform .18s,box-shadow .18s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 32px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 24px rgba(0,0,0,0.15)'">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1" fill="#312e81"/><circle cx="20" cy="21" r="1" fill="#312e81"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke="#312e81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Я покупатель — найти товар
       </button>
-      <button onclick="openModal('b2b')" class="px-7 py-3.5 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-400 transition text-base shadow-lg">
-        📊 Я бизнес — управлять репутацией
+      <button onclick="openModal('b2b')" style="padding:15px 32px;background:rgba(255,255,255,0.12);color:#fff;font-size:15px;font-weight:700;border-radius:12px;border:1px solid rgba(255,255,255,0.25);cursor:pointer;transition:background .18s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        Я бизнес — управлять репутацией
       </button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="flex flex-wrap justify-center gap-8 mt-16" style="color:rgba(255,255,255,0.7);font-size:14px;">
+      <div class="text-center">
+        <div style="font-size:28px;font-weight:800;color:#fff;">29+</div>
+        <div>товаров и заведений</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.15);"></div>
+      <div class="text-center">
+        <div style="font-size:28px;font-weight:800;color:#fff;">5+</div>
+        <div>площадок агрегировано</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.15);"></div>
+      <div class="text-center">
+        <div style="font-size:28px;font-weight:800;color:#fff;">6</div>
+        <div>категорий товаров</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.15);"></div>
+      <div class="text-center">
+        <div style="font-size:28px;font-weight:800;color:#fff;">AI</div>
+        <div>анализ тематик</div>
+      </div>
     </div>
   </div>
 </header>
 
 <!-- HOW IT WORKS -->
-<section class="max-w-6xl mx-auto px-4 py-16">
-  <h2 class="text-3xl font-black text-center text-gray-800 mb-3">Как работает платформа</h2>
-  <p class="text-center text-gray-500 mb-12">Двусторонний рынок — обе стороны создают ценность друг для друга</p>
-  <div class="flex flex-col md:flex-row items-center gap-6">
-    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
-      <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🛒</div>
-      <h3 class="font-bold text-lg text-gray-800 mb-2">Покупатели (B2C)</h3>
-      <p class="text-gray-500 text-sm">Ищут товары, видят агрегированный рейтинг с 5+ платформ, сравнивают цены и оставляют отзывы — бесплатно</p>
+<section class="max-w-6xl mx-auto px-4 py-20">
+  <div class="text-center mb-14">
+    <div class="pill" style="background:#eef2ff;color:#6366f1;margin-bottom:12px;">Как это работает</div>
+    <h2 style="font-size:34px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px;">Двусторонняя экосистема</h2>
+    <p style="color:#6b7280;margin-top:10px;font-size:16px;">Покупатели и бизнес создают ценность друг для друга</p>
+  </div>
+  <div class="flex flex-col md:flex-row items-stretch gap-4">
+    <div class="flex-1 feature-card text-center card-hover">
+      <div style="width:56px;height:56px;background:#eff6ff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1" fill="#1d4ed8"/><circle cx="20" cy="21" r="1" fill="#1d4ed8"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 style="font-weight:700;font-size:17px;color:#1a1a2e;margin-bottom:10px;">Покупатели (B2C)</h3>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6;">Ищут товары, видят агрегированный рейтинг с 5+ платформ, сравнивают цены, оставляют отзывы и получают баллы — бесплатно</p>
     </div>
-    <div class="flex flex-col items-center gap-2 text-gray-400">
-      <div class="text-2xl">⇄</div>
-      <div class="text-xs text-center font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Сетевой эффект</div>
+    <div class="flex flex-col items-center justify-center gap-3 px-4" style="color:#9ca3af;">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 16l4-4-4-4M17 16l-4-4 4-4" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-size:11px;text-align:center;font-weight:600;color:#6366f1;background:#eef2ff;padding:4px 10px;border-radius:20px;">Сетевой эффект</div>
     </div>
-    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
-      <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">📊</div>
-      <h3 class="font-bold text-lg text-gray-800 mb-2">Платформа РейтСкан</h3>
-      <p class="text-gray-500 text-sm">Агрегирует отзывы, применяет AI-анализ, выявляет темы и тренды, считает динамику рейтингов</p>
+    <div class="flex-1 feature-card text-center card-hover">
+      <div style="width:56px;height:56px;background:#faf5ff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 style="font-weight:700;font-size:17px;color:#1a1a2e;margin-bottom:10px;">Платформа РейтСкан</h3>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6;">Агрегирует отзывы со всех источников, применяет AI-анализ, выявляет темы и тренды, считает динамику рейтингов</p>
     </div>
-    <div class="flex flex-col items-center gap-2 text-gray-400">
-      <div class="text-2xl">⇄</div>
-      <div class="text-xs text-center font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Аналитика → инсайты</div>
+    <div class="flex flex-col items-center justify-center gap-3 px-4" style="color:#9ca3af;">
+      <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 16l4-4-4-4M17 16l-4-4 4-4" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-size:11px;text-align:center;font-weight:600;color:#6366f1;background:#eef2ff;padding:4px 10px;border-radius:20px;">Аналитика → инсайты</div>
     </div>
-    <div class="flex-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover text-center">
-      <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🏢</div>
-      <h3 class="font-bold text-lg text-gray-800 mb-2">Бизнес (B2B)</h3>
-      <p class="text-gray-500 text-sm">Видят все отзывы в одном дашборде, анализируют проблемы, сравнивают конкурентов и отвечают на отзывы</p>
+    <div class="flex-1 feature-card text-center card-hover">
+      <div style="width:56px;height:56px;background:#f0fdf4;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#15803d" stroke-width="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="#15803d" stroke-width="2"/><path d="M12 12v4M10 14h4" stroke="#15803d" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 style="font-weight:700;font-size:17px;color:#1a1a2e;margin-bottom:10px;">Бизнес (B2B)</h3>
+      <p style="color:#6b7280;font-size:14px;line-height:1.6;">Видят все отзывы в едином дашборде, анализируют проблемы, сравнивают конкурентов и отвечают клиентам</p>
     </div>
   </div>
 </section>
 
 <!-- FEATURES -->
-<section class="bg-white py-16">
+<section style="background:#fff;padding:80px 0;">
   <div class="max-w-6xl mx-auto px-4">
-    <h2 class="text-3xl font-black text-center text-gray-800 mb-12">Что умеет РейтСкан</h2>
+    <div class="text-center mb-14">
+      <div class="pill" style="background:#eef2ff;color:#6366f1;margin-bottom:12px;">Возможности</div>
+      <h2 style="font-size:34px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px;">Что умеет РейтСкан</h2>
+    </div>
     <div class="grid md:grid-cols-2 gap-8">
-      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-7 border border-blue-100">
-        <div class="text-2xl mb-3">🛒</div>
-        <h3 class="font-bold text-xl text-gray-800 mb-4">Для покупателей</h3>
-        <ul class="space-y-3 text-sm text-gray-600">
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Агрегированный рейтинг с 5+ площадок в один клик</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Сравнение цен на товар на Wildberries, Ozon, Яндекс.Маркет</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Защита от накрученных отзывов — агрегация из разных источников</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Баллы за отзывы → обменять на скидки от брендов</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Бесплатно навсегда</li>
-        </ul>
-        <button onclick="openModal('b2c')" class="mt-6 w-full py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-sm">
-          Попробовать как покупатель →
-        </button>
+      <!-- B2C -->
+      <div style="background:linear-gradient(135deg,#eff6ff,#eef2ff);border-radius:20px;padding:32px;border:1px solid #dde1f8;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <div style="width:44px;height:44px;background:#1d4ed8;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1" fill="white"/><circle cx="20" cy="21" r="1" fill="white"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3 style="font-weight:700;font-size:19px;color:#1e1b4b;">Для покупателей</h3>
+        </div>
+        <div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Агрегированный рейтинг с 5+ площадок в один клик</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Сравнение цен на Wildberries, Ozon, Яндекс.Маркет</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Защита от накрученных отзывов через мультиплатформенность</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Баллы за отзывы — обменять на скидки от брендов</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Рейтик — ваш виртуальный помощник и гамификация</span></div>
+        </div>
+        <button onclick="openModal('b2c')" style="margin-top:24px;width:100%;padding:13px;background:#1d4ed8;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:opacity .18s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Попробовать как покупатель →</button>
       </div>
-      <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-7 border border-purple-100">
-        <div class="text-2xl mb-3">📊</div>
-        <h3 class="font-bold text-xl text-gray-800 mb-4">Для бизнеса</h3>
-        <ul class="space-y-3 text-sm text-gray-600">
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Единый дашборд: все отзывы со всех площадок</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>AI-анализ тем: качество, упаковка, сервис, цена — с %</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Динамика рейтинга по месяцам — виден любой тренд</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Сравнение с конкурентами по категории</li>
-          <li class="flex gap-2"><span class="text-green-500 mt-0.5">✓</span>Ответы на отзывы — публичная работа с репутацией</li>
-        </ul>
-        <button onclick="openModal('b2b')" class="mt-6 w-full py-2.5 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 transition text-sm">
-          Попробовать как бизнес →
-        </button>
+
+      <!-- B2B -->
+      <div style="background:linear-gradient(135deg,#faf5ff,#f0fdf4);border-radius:20px;padding:32px;border:1px solid #e4d4f8;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <div style="width:44px;height:44px;background:#7c3aed;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 style="font-weight:700;font-size:19px;color:#1e1b4b;">Для бизнеса</h3>
+        </div>
+        <div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Единый дашборд: все отзывы со всех площадок</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">AI-анализ тем: качество, упаковка, сервис, цена</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Динамика рейтинга по месяцам — виден любой тренд</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Сравнение с 4+ конкурентами по категории</span></div>
+          <div class="check-item"><div class="check-icon"><svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#15803d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span style="font-size:14px;color:#374151;line-height:1.5;">Публичные ответы на отзывы — управление репутацией</span></div>
+        </div>
+        <button onclick="openModal('b2b')" style="margin-top:24px;width:100%;padding:13px;background:#7c3aed;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:opacity .18s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Попробовать как бизнес →</button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- DEMO ACCOUNTS BANNER -->
-<section class="max-w-6xl mx-auto px-4 py-12">
-  <div class="bg-indigo-900 text-white rounded-2xl p-8 text-center">
-    <h3 class="text-2xl font-bold mb-2">Демо-доступ — войдите прямо сейчас</h3>
-    <p class="text-indigo-300 mb-6">Готовые аккаунты с реальными данными для тестирования</p>
-    <div class="flex flex-col md:flex-row gap-4 justify-center">
-      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
-        <div class="text-xs text-indigo-300 font-medium mb-1">ПОКУПАТЕЛЬ (B2C)</div>
-        <div class="font-mono text-sm">demo_b2c@ratescan.ru</div>
-        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
-        <button onclick="quickLogin('b2c')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
+<!-- DEMO CTA (no credentials visible) -->
+<section class="max-w-6xl mx-auto px-4 py-16">
+  <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:24px;padding:48px;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,0.03);border-radius:50%;"></div>
+    <div style="position:absolute;bottom:-60px;left:-20px;width:150px;height:150px;background:rgba(255,255,255,0.03);border-radius:50%;"></div>
+    <div style="position:relative;z-index:1;">
+      <div class="pill" style="background:rgba(255,255,255,0.1);color:#c7d2fe;margin-bottom:16px;border:1px solid rgba(255,255,255,0.15);">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        Демо-версия
       </div>
-      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
-        <div class="text-xs text-indigo-300 font-medium mb-1">БИЗНЕС — Пломбир «Прелесть» (B2B)</div>
-        <div class="font-mono text-sm">demo_b2b@ratescan.ru</div>
-        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
-        <button onclick="quickLogin('b2b', 'demo_b2b@ratescan.ru')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
-      </div>
-      <div class="bg-white/10 rounded-xl px-6 py-4 text-left">
-        <div class="text-xs text-indigo-300 font-medium mb-1">БИЗНЕС — Ресторан «Береста» (B2B)</div>
-        <div class="font-mono text-sm">beresta_b2b@ratescan.ru</div>
-        <div class="font-mono text-sm text-indigo-300">Demo123!</div>
-        <button onclick="quickLogin('b2b', 'beresta_b2b@ratescan.ru')" class="mt-3 text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition font-medium">Войти →</button>
+      <h3 style="font-size:28px;font-weight:800;color:#fff;margin-bottom:12px;letter-spacing:-0.3px;">Попробуйте прямо сейчас</h3>
+      <p style="color:#a5b4fc;margin-bottom:32px;font-size:15px;">Готовые аккаунты с реальными данными. Никакой регистрации.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button onclick="quickLogin('b2c')" style="padding:14px 28px;background:#fff;color:#312e81;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:transform .18s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1" fill="#312e81"/><circle cx="20" cy="21" r="1" fill="#312e81"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke="#312e81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Демо покупателя
+        </button>
+        <button onclick="quickLogin('b2b','demo_b2b@ratescan.ru')" style="padding:14px 28px;background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;border:1px solid rgba(255,255,255,0.25);border-radius:12px;cursor:pointer;transition:background .18s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          Демо производителя
+        </button>
+        <button onclick="quickLogin('b2b','beresta_b2b@ratescan.ru')" style="padding:14px 28px;background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;border:1px solid rgba(255,255,255,0.25);border-radius:12px;cursor:pointer;transition:background .18s;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
+          Демо ресторана
+        </button>
       </div>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
-<footer class="bg-gray-800 text-gray-400 text-center py-8 text-sm">
-  <div class="font-semibold text-white mb-1">РейтСкан · AI Reviews</div>
+<footer style="background:#1a1a2e;color:#6b7280;text-align:center;padding:32px;font-size:13px;">
+  <div style="font-weight:700;color:#fff;margin-bottom:6px;font-size:15px;">РейтСкан</div>
   <div>Первая российская двусторонняя репутационная платформа</div>
-  <div class="mt-2 text-xs">Студенческий стартап VI · Заявка №СтС-513077 · Грант 1 000 000 ₽</div>
+  <div style="margin-top:8px;font-size:12px;">Студенческий стартап VI · Заявка №СтС-513077 · Грант 1 000 000 ₽</div>
 </footer>
 
 <!-- AUTH MODAL -->
 <div id="auth-modal" class="fixed inset-0 z-50 hidden modal-bg flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-    <!-- Tabs -->
-    <div class="flex border-b">
-      <button id="tab-login" onclick="switchTab('login')" class="flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600">Войти</button>
-      <button id="tab-register" onclick="switchTab('register')" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">Зарегистрироваться</button>
-      <button onclick="closeModal()" class="px-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
+  <div style="background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.2);width:100%;max-width:420px;">
+    <div class="flex border-b" style="border-color:#e8e7f5;">
+      <button id="tab-login" onclick="switchTab('login')" style="flex:1;padding:16px;font-size:14px;font-weight:600;color:#6366f1;border-bottom:2px solid #6366f1;background:transparent;border-left:none;border-right:none;border-top:none;cursor:pointer;font-family:'Inter',sans-serif;">Войти</button>
+      <button id="tab-register" onclick="switchTab('register')" style="flex:1;padding:16px;font-size:14px;font-weight:500;color:#6b7280;border:none;background:transparent;cursor:pointer;font-family:'Inter',sans-serif;">Зарегистрироваться</button>
+      <button onclick="closeModal()" style="padding:0 16px;border:none;background:transparent;cursor:pointer;color:#9ca3af;font-size:20px;">✕</button>
     </div>
-
-    <div class="p-6">
+    <div style="padding:24px;">
       <input type="hidden" id="modal-user-type" value="b2c"/>
-      <div id="modal-type-badge" class="mb-4 text-center"></div>
+      <div id="modal-type-badge" style="margin-bottom:16px;text-align:center;"></div>
 
-      <!-- LOGIN -->
       <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="space-y-4">
+        <div style="display:flex;flex-direction:column;gap:14px;">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input id="login-email" type="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="your@email.ru"/>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Email</label>
+            <input id="login-email" type="email" required style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="your@email.ru"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
-            <input id="login-password" type="password" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="••••••••"/>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Пароль</label>
+            <input id="login-password" type="password" required style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="••••••••"/>
           </div>
-          <div id="login-error" class="text-red-500 text-sm hidden"></div>
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">Войти</button>
+          <div id="login-error" style="color:#ef4444;font-size:13px;display:none;"></div>
+          <button type="submit" style="width:100%;padding:13px;background:#6366f1;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:10px;cursor:pointer;font-family:'Inter',sans-serif;">Войти</button>
         </div>
       </form>
 
-      <!-- REGISTER -->
-      <form id="register-form" class="hidden" onsubmit="handleRegister(event)">
-        <div class="space-y-4">
+      <form id="register-form" style="display:none;" onsubmit="handleRegister(event)">
+        <div style="display:flex;flex-direction:column;gap:14px;">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Имя / Название</label>
-            <input id="reg-username" type="text" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Иван Иванов"/>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Имя / Название</label>
+            <input id="reg-username" type="text" required style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="Иван Иванов"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input id="reg-email" type="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="your@email.ru"/>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Email</label>
+            <input id="reg-email" type="email" required style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="your@email.ru"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
-            <input id="reg-password" type="password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Минимум 6 символов"/>
+            <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Пароль</label>
+            <input id="reg-password" type="password" required minlength="6" style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="Минимум 6 символов"/>
           </div>
-          <div id="b2b-fields" class="hidden space-y-4">
+          <div id="b2b-fields" style="display:none;flex-direction:column;gap:14px;">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Название бренда / компании</label>
-              <input id="reg-company" type="text" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Бренд «Пример»"/>
+              <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Название бренда / компании</label>
+              <input id="reg-company" type="text" style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;" placeholder="Бренд «Пример»"/>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
-              <select id="reg-category" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+              <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Категория</label>
+              <select id="reg-category" style="width:100%;padding:11px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;color:#374151;background:#fff;">
                 <option>FMCG / Продукты питания</option>
                 <option>FMCG / Напитки</option>
                 <option>FMCG / Косметика</option>
@@ -220,8 +278,8 @@
               </select>
             </div>
           </div>
-          <div id="reg-error" class="text-red-500 text-sm hidden"></div>
-          <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">Создать аккаунт</button>
+          <div id="reg-error" style="color:#ef4444;font-size:13px;display:none;"></div>
+          <button type="submit" style="width:100%;padding:13px;background:#6366f1;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:10px;cursor:pointer;font-family:'Inter',sans-serif;">Создать аккаунт</button>
         </div>
       </form>
     </div>
@@ -236,14 +294,13 @@ function openModal(type) {
   document.getElementById("modal-user-type").value = type;
   document.getElementById("auth-modal").classList.remove("hidden");
   document.getElementById("auth-modal").classList.add("flex");
-
   const badge = document.getElementById("modal-type-badge");
   if (type === "b2c") {
-    badge.innerHTML = '<span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">🛒 Аккаунт покупателя</span>';
-    document.getElementById("b2b-fields").classList.add("hidden");
+    badge.innerHTML = '<span style="display:inline-block;padding:5px 12px;background:#eff6ff;color:#1d4ed8;border-radius:20px;font-size:12px;font-weight:600;">Аккаунт покупателя</span>';
+    document.getElementById("b2b-fields").style.display = "none";
   } else {
-    badge.innerHTML = '<span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">📊 Аккаунт бизнеса</span>';
-    document.getElementById("b2b-fields").classList.remove("hidden");
+    badge.innerHTML = '<span style="display:inline-block;padding:5px 12px;background:#faf5ff;color:#7c3aed;border-radius:20px;font-size:12px;font-weight:600;">Аккаунт бизнеса</span>';
+    document.getElementById("b2b-fields").style.display = "flex";
   }
   switchTab("login");
 }
@@ -254,21 +311,18 @@ function closeModal() {
 }
 
 function switchTab(tab) {
-  const loginForm = document.getElementById("login-form");
-  const regForm = document.getElementById("register-form");
-  const tabLogin = document.getElementById("tab-login");
-  const tabReg = document.getElementById("tab-register");
-
+  const lf = document.getElementById("login-form");
+  const rf = document.getElementById("register-form");
+  const tl = document.getElementById("tab-login");
+  const tr = document.getElementById("tab-register");
   if (tab === "login") {
-    loginForm.classList.remove("hidden");
-    regForm.classList.add("hidden");
-    tabLogin.className = "flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600";
-    tabReg.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700";
+    lf.style.display = "block"; rf.style.display = "none";
+    tl.style.cssText += ";color:#6366f1;border-bottom:2px solid #6366f1;";
+    tr.style.cssText += ";color:#6b7280;border-bottom:none;";
   } else {
-    loginForm.classList.add("hidden");
-    regForm.classList.remove("hidden");
-    tabLogin.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700";
-    tabReg.className = "flex-1 py-4 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600";
+    lf.style.display = "none"; rf.style.display = "block";
+    tl.style.cssText += ";color:#6b7280;border-bottom:none;";
+    tr.style.cssText += ";color:#6366f1;border-bottom:2px solid #6366f1;";
   }
 }
 
@@ -279,7 +333,7 @@ document.getElementById("auth-modal").addEventListener("click", function(e) {
 async function handleLogin(e) {
   e.preventDefault();
   const errEl = document.getElementById("login-error");
-  errEl.classList.add("hidden");
+  errEl.style.display = "none";
   try {
     const data = await apiPost("/api/auth/login", {
       email: document.getElementById("login-email").value,
@@ -290,14 +344,14 @@ async function handleLogin(e) {
     window.location.href = data.user_type === "b2b" ? "/b2b" : "/b2c";
   } catch (err) {
     errEl.textContent = err.message;
-    errEl.classList.remove("hidden");
+    errEl.style.display = "block";
   }
 }
 
 async function handleRegister(e) {
   e.preventDefault();
   const errEl = document.getElementById("reg-error");
-  errEl.classList.add("hidden");
+  errEl.style.display = "none";
   const type = document.getElementById("modal-user-type").value;
   try {
     const data = await apiPost("/api/auth/register", {
@@ -313,7 +367,7 @@ async function handleRegister(e) {
     window.location.href = data.user_type === "b2b" ? "/b2b" : "/b2c";
   } catch (err) {
     errEl.textContent = err.message;
-    errEl.classList.remove("hidden");
+    errEl.style.display = "block";
   }
 }
 
@@ -324,11 +378,10 @@ async function quickLogin(type, email) {
     setAuth(data);
     window.location.href = type === "b2b" ? "/b2b" : "/b2c";
   } catch (err) {
-    showToast("Ошибка входа: " + err.message, "error");
+    alert("Ошибка входа: " + err.message);
   }
 }
 
-// Auto-redirect if already logged in
 if (isLoggedIn()) {
   const type = localStorage.getItem("rs_user_type");
   window.location.href = type === "b2b" ? "/b2b" : "/b2c";
