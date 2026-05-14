@@ -166,7 +166,7 @@
   <!-- TOP OF THE WEEK -->
   <div id="top-week-section" class="mb-5">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <h3 style="font-weight:700;font-size:16px;">🔥 Топ недели по категориям</h3>
+      <h3 style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="color:#f59e0b;font-size:20px;">local_fire_department</span>Топ недели по категориям</h3>
       <span style="font-size:12px;color:#9ca3af;">по рейтингу платформы</span>
     </div>
     <div id="top-week-grid"></div>
@@ -661,6 +661,7 @@ let pendingAcc = selectedAcc;
 let allProducts = [];
 let modalChartInst = null;
 let battleState = {products:[], round:0, wins:{}, total:5, active:false};
+let _battleAdvance=null;
 // ═══ FOOD / HUNGER SYSTEM ═══════════════════════════════════════════
 // Hunger is value 0-100 stored as {v, t}. Decays 8 pts/hr while not fed.
 function getFoodTokens(){return parseInt(localStorage.getItem("ratescan_food")||"3");}
@@ -1238,7 +1239,7 @@ async function spinWheel(){
   const ptsLabels=[5,10,15,20,25,50,0];
   let segIdx=ptsLabels.indexOf(result.points_earned);if(segIdx<0)segIdx=0;
   const n=WHEEL_PRIZES.length,arc=(Math.PI*2)/n;
-  const targetAngle=-(segIdx*arc+arc/2);
+  const targetAngle=Math.PI/2-(segIdx*arc+arc/2);
   const spins=5*Math.PI*2,finalAngle=targetAngle+spins;
   const startAngle=wheelAngle,startTime=performance.now(),duration=3200;
   function easeOut(t){return 1-Math.pow(1-t,3);}
@@ -1831,8 +1832,7 @@ function _battleStars(r){
   return s;
 }
 function awardBattleReward(){
-  const food=parseInt(localStorage.getItem("ratescan_food")||"0")+1;
-  localStorage.setItem("ratescan_food",food);
+  addFoodTokens(1);
   const banner=document.getElementById("battle-reward-banner");
   if(!banner)return;
   banner.innerHTML=`<div style="display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:8px 12px;margin-bottom:10px;">
@@ -1943,18 +1943,19 @@ function battleVote(winnerId,side){
       const REASONS=["Цена","Качество","Состав","Вкус","Бренд","Упаковка","Дизайн","Доступность"];
       const r3=[...REASONS].sort(()=>Math.random()-0.5).slice(0,3);
       let battleTimer=null;
-      const advance=()=>{if(battleTimer)clearTimeout(battleTimer);renderBattleRound();};
+      const advance=()=>{if(battleTimer)clearTimeout(battleTimer);_battleAdvance=null;renderBattleRound();};
+      _battleAdvance=advance;
       cont.innerHTML=`<div class="vote-flash" style="text-align:center;padding:24px 16px;">
         <div style="font-size:12px;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Ваш выбор</div>
         <div style="font-size:19px;font-weight:700;color:#6366f1;margin-bottom:4px;">${winner?winner.name:"—"}</div>
         <div style="font-size:12px;color:#9ca3af;margin-bottom:16px;">${winner?winner.brand:""}</div>
         <div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:8px;">Почему выбрали?</div>
         <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;">
-          ${r3.map(t=>`<span onclick="this.style.background='#6366f1';this.style.color='#fff';this.style.transform='scale(1.06)';" style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:inline-block;">${t}</span>`).join("")}
+          ${r3.map(t=>`<span onclick="this.style.background='#6366f1';this.style.color='#fff';this.style.transform='scale(1.06)';setTimeout(function(){if(_battleAdvance)_battleAdvance();},800);" style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:inline-block;">${t}</span>`).join("")}
         </div>
-        <button onclick="renderBattleRound()" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;">Пропустить →</button>
+        <button onclick="if(_battleAdvance)_battleAdvance()" style="background:none;border:none;color:#9ca3af;font-size:12px;cursor:pointer;">Пропустить →</button>
       </div>`;
-      battleTimer=setTimeout(advance,3000);
+      battleTimer=setTimeout(advance,8000);
     }
   },120);
 }
@@ -2379,30 +2380,29 @@ function renderTopWeek(){
     .slice(0,6);
   if(!topCats.length){el.innerHTML="";return;}
   const medalColors=['#f59e0b','#9ca3af','#cd7c2f'];
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+  el.innerHTML=`<div style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
     ${topCats.map(({cat,prods})=>`
-    <div class="card p-4">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f3f4f6;">
-        <div style="width:32px;height:32px;background:#eef2ff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <span class="material-icons-round" style="color:#6366f1;font-size:18px;">${_catIcon(cat)}</span>
+    <div class="card p-4" style="min-width:240px;max-width:240px;scroll-snap-align:start;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f3f4f6;">
+        <div style="width:28px;height:28px;background:#eef2ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span class="material-icons-round" style="color:#6366f1;font-size:16px;">${_catIcon(cat)}</span>
         </div>
-        <div style="font-size:14px;font-weight:700;color:#1a1a2e;">${cat}</div>
-        <div style="margin-left:auto;font-size:11px;color:#9ca3af;font-weight:500;">Топ ${prods.length}</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cat}</div>
       </div>
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-1">
         ${prods.map((p,i)=>`
-        <div onclick="openProductModal(${p.id})" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:background 0.15s;"
+        <div onclick="openProductModal(${p.id})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background 0.15s;"
           onmouseover="this.style.background='#f5f4ff'" onmouseout="this.style.background=''">
-          <div style="width:26px;height:26px;background:${medalColors[i]||'#e8e7f5'};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <span style="color:#fff;font-size:11px;font-weight:800;">${i+1}</span>
+          <div style="width:22px;height:22px;background:${medalColors[i]||'#e8e7f5'};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="color:#fff;font-size:10px;font-weight:800;">${i+1}</span>
           </div>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
-            <div style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.brand||''}</div>
+            <div style="font-size:12px;font-weight:600;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+            <div style="font-size:10px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.brand||''}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
-            <span style="font-size:14px;font-weight:800;color:#f59e0b;">${p.avg_rating.toFixed(1)}</span>
-            <span class="material-icons-round" style="color:#f59e0b;font-size:14px;">star</span>
+          <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+            <span style="font-size:13px;font-weight:800;color:#f59e0b;">${p.avg_rating.toFixed(1)}</span>
+            <span class="material-icons-round" style="color:#f59e0b;font-size:13px;">star</span>
           </div>
         </div>`).join('')}
       </div>
