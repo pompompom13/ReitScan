@@ -206,6 +206,33 @@
     <h2 style="font-weight:700;font-size:20px;">Магазин наград</h2>
     <div style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:600;">Баллы: <span id="rewards-points">0</span></div>
   </div>
+
+  <!-- CATEGORY EXPERTISE -->
+  <div class="card p-5 mb-5">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:#fef3c7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="#b45309" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Категорийная экспертиза</div>
+        <div style="font-size:12px;color:#9ca3af;">Прокачивайте категории отзывами — растёт скидка у партнёров</div>
+      </div>
+    </div>
+    <div id="cat-expertise-grid">
+      <div style="font-size:13px;color:#9ca3af;">Напишите отзыв в любой категории — здесь появится ваш уровень эксперта</div>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid #f3f4f6;padding-top:12px;">
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:6px;">Уровни экспертизы:</div>
+      <div class="flex flex-wrap gap-2">
+        <span style="font-size:11px;background:#f9fafb;color:#6b7280;padding:3px 10px;border-radius:20px;border:1px solid #e8e7f5;">1 отзыв &rarr; Начинающий &minus;3%</span>
+        <span style="font-size:11px;background:#f9fafb;color:#6b7280;padding:3px 10px;border-radius:20px;border:1px solid #e8e7f5;">3 отзыва &rarr; Любитель &minus;5%</span>
+        <span style="font-size:11px;background:#f9fafb;color:#6b7280;padding:3px 10px;border-radius:20px;border:1px solid #e8e7f5;">6 отзывов &rarr; Опытный &minus;7%</span>
+        <span style="font-size:11px;background:#f9fafb;color:#6b7280;padding:3px 10px;border-radius:20px;border:1px solid #e8e7f5;">11 отзывов &rarr; Знаток &minus;10%</span>
+        <span style="font-size:11px;background:#f9fafb;color:#6b7280;padding:3px 10px;border-radius:20px;border:1px solid #e8e7f5;">21+ &rarr; Эксперт &minus;15%</span>
+      </div>
+    </div>
+  </div>
+
   <div id="rewards-grid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
 </div>
 
@@ -289,8 +316,8 @@
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#7c3aed" stroke-width="2"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="#7c3aed"/></svg>
       </div>
       <div>
-        <div style="font-weight:600;font-size:15px;">Загадка дня</div>
-        <div style="font-size:12px;color:#9ca3af;">Правильный ответ — +15 баллов к прогрессу Рейтика</div>
+        <div style="font-weight:600;font-size:15px;">Загадка бренда</div>
+        <div style="font-size:12px;color:#9ca3af;">Узнавайте бренды — правильный ответ даёт +15 баллов Рейтику</div>
       </div>
       <span id="riddle-badge" style="margin-left:auto;display:none;background:#d1fae5;color:#065f46;font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;">Разгадана!</span>
     </div>
@@ -870,6 +897,7 @@ function switchTab(name){
   currentTab=name;
   if(name==="messages")loadConversations();
   if(name==="character")renderCharacterTab();
+  if(name==="rewards")renderCatExpertise();
 }
 
 async function loadCategories(){
@@ -1047,11 +1075,12 @@ async function submitReview(){
     if(currentProductData&&currentProductData.brand){
       addBrandCard(currentProductData.brand,currentProductData.category||"");
     }
-    // Track category visit for category morphs
+    // Track category visit for morphs + expertise
     if(currentProductData&&currentProductData.category){
       const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
       const catLow=currentProductData.category.toLowerCase();
       if(!cats.includes(catLow)){cats.push(catLow);localStorage.setItem("ratescan_cats_visited",JSON.stringify(cats));}
+      addCatReview(catLow);
     }
     await Promise.all([updatePointsDisplay(),loadMyReviews()]);
   }catch(e){showToast(e.message,"error");}
@@ -1381,52 +1410,68 @@ function getMoodState(pts,streak,reviewCount){
   return PET_MOODS[0];
 }
 
-// ═══ DAILY RIDDLE (multiple-choice) ══════════════════════════════════════════════
+// ═══ DAILY RIDDLE (brand-focused, multiple-choice) ══════════════════════════════════════════════
 const RIDDLES=[
-  {q:"Какой ингредиент в косметике удерживает влагу в 1000 раз больше своего веса?",
-   options:["Гиалуроновая кислота","Ретинол","Коллаген","Витамин E"],answerIdx:0,
-   explanation:"Гиалуронат натрия — молекула-губка, удерживающая воду в 1000× своего веса.",category:"косметика"},
-  {q:"Как называется метод заваривания, при котором вода под давлением проходит через молотый кофе?",
-   options:["Эспрессо","Пуровер","Холодная заварка","Аэропресс"],answerIdx:0,
-   explanation:"Эспрессо — основа капучино и латте, давление 9 бар.",category:"кофе и чай"},
-  {q:"Какой вид мороженого сделан исключительно из фруктового сока без молока?",
-   options:["Сорбет","Пломбир","Парфе","Семифредо"],answerIdx:0,
-   explanation:"Сорбет не содержит молочных продуктов — чистый фруктовый лёд.",category:"мороженое"},
-  {q:"Как называется белок молочной сыворотки, который спортсмены пьют после тренировки?",
-   options:["Сывороточный протеин","Казеин","Гейнер","Креатин"],answerIdx:0,
-   explanation:"Whey protein быстро усваивается — идеален в первые 30 минут после нагрузки.",category:"спортивное питание"},
-  {q:"Какой витамин осветляет кожу и борется с пигментацией?",
-   options:["Витамин С","Витамин D","Витамин A","Витамин B12"],answerIdx:0,
-   explanation:"Аскорбиновая кислота (витамин С) блокирует выработку меланина.",category:"косметика"},
-  {q:"Из чего готовят традиционный японский мисо-суп?",
-   options:["Ферментированная соевая паста","Рисовый уксус","Водоросли нори","Соевый соус"],answerIdx:0,
-   explanation:"Мисо — паста из ферментированных соевых бобов, основа японской кухни.",category:"ресторан"},
-  {q:"Сколько граммов протеина в среднем в одной порции сывороточного протеина?",
-   options:["25–30 г","5–10 г","50–60 г","15–20 г"],answerIdx:0,
-   explanation:"Стандартная порция (30 г порошка) содержит 22–27 г белка.",category:"спортивное питание"},
-  {q:"Какая степень обжарки кофе используется для эспрессо?",
-   options:["Тёмная","Светлая","Средняя","Ультра-светлая"],answerIdx:0,
-   explanation:"Тёмная обжарка даёт горький вкус и меньше кислотности — классика эспрессо.",category:"кофе и чай"},
-  {q:"Что такое гейнер в спортивном питании?",
-   options:["Смесь белков и углеводов","Чистый протеин","Витаминный комплекс","Жиросжигатель"],answerIdx:0,
-   explanation:"Гейнер — высококалорийная смесь для набора мышечной массы.",category:"спортивное питание"},
-  {q:"Какой натуральный компонент косметики получают из лепестков розы?",
-   options:["Розовая вода","Гиалуроновая кислота","Ретинол","Ниацинамид"],answerIdx:0,
-   explanation:"Розовая вода успокаивает, тонизирует и увлажняет кожу.",category:"косметика"},
-  {q:"В какой стране придумали пиццу маргарита?",
-   options:["Италия","Греция","Испания","Франция"],answerIdx:0,
-   explanation:"Пицца маргарита создана в Неаполе в 1889 году для королевы Маргариты.",category:"ресторан"},
-  {q:"Из каких листьев делают чёрный и зелёный чай?",
-   options:["Одного куста — Camellia sinensis","Разных растений","Мяты и полыни","Чёрной смородины"],answerIdx:0,
-   explanation:"Разница — в степени окисления. Чёрный чай ферментируют полностью, зелёный — нет.",category:"кофе и чай"},
-  {q:"Какое мороженое не содержит молочного жира по ГОСТу?",
-   options:["Фруктовый лёд","Пломбир","Крем-брюле","Молочное"],answerIdx:0,
-   explanation:"Фруктовый лёд делают только из сока и сахара без молочных компонентов.",category:"мороженое"},
-  {q:"Что означает аббревиатура BCAA в спортпите?",
-   options:["Аминокислоты с разветвлённой цепью","Быстрые углеводы и аминокислоты","Белково-углеводный антиоксидант","Биологически активная аминокислота"],answerIdx:0,
-   explanation:"Branched-Chain Amino Acids — лейцин, изолейцин, валин. Главные строители мышц.",category:"спортивное питание"},
+  {q:"В каком году Starbucks открыл свою первую кофейню в Сиэтле?",
+   brand:"Starbucks",brandColor:"#00704A",
+   options:["1971","1985","1992","2003"],answerIdx:0,
+   explanation:"Первая кофейня Starbucks открылась в 1971 году на рынке Pike Place в Сиэтле."},
+  {q:"Как называется фирменный сезонный напиток Starbucks с тыквой и специями?",
+   brand:"Starbucks",brandColor:"#00704A",
+   options:["Pumpkin Spice Latte","Caramel Macchiato","Chai Latte","Flat White"],answerIdx:0,
+   explanation:"Pumpkin Spice Latte — самый популярный сезонный напиток Starbucks, запущен в 2003 году."},
+  {q:"Что означает название бренда косметики L'Oréal?",
+   brand:"L'Oréal",brandColor:"#b5121b",
+   options:["Производное от слова «aureole» — ореол, сияние","Имя основателя Лео Реала","Французское слово «золото»","Аббревиатура лаборатории"],answerIdx:0,
+   explanation:"Eugène Schueller образовал название от «Auréale» — его первого формульного красителя для волос."},
+  {q:"Какой бренд спортпита выпускает линейку протеинов Gold Standard?",
+   brand:"Optimum Nutrition",brandColor:"#d4ac0d",
+   options:["Optimum Nutrition","Myprotein","MuscleTech","BSN"],answerIdx:0,
+   explanation:"Gold Standard 100% Whey от ON — один из самых продаваемых протеинов в мире с 1986 года."},
+  {q:"В каком городе был основан бренд спортивного питания Myprotein?",
+   brand:"Myprotein",brandColor:"#1d4ed8",
+   options:["Манчестер","Лондон","Эдинбург","Бирмингем"],answerIdx:0,
+   explanation:"Myprotein основан в Манчестере в 2004 году и стал крупнейшим европейским онлайн-ритейлером спортпита."},
+  {q:"Какой ингредиент является фирменным во всех продуктах Vichy?",
+   brand:"Vichy",brandColor:"#1a5276",
+   options:["Термальная вулканическая вода","Гиалуроновая кислота","Ретинол","Пробиотики"],answerIdx:0,
+   explanation:"Термальная вода Vichy из вулканических источников богата 15 минералами — основа всей линейки."},
+  {q:"Как называется база данных рецептур, которую Garnier использует для натуральных ингредиентов?",
+   brand:"Garnier",brandColor:"#27ae60",
+   options:["Green Beauty","Green Science","Bio Collection","Eco Formula"],answerIdx:0,
+   explanation:"Garnier Green Beauty — платформа устойчивого развития, включающая источники натуральных ингредиентов."},
+  {q:"Сколько стран охватывает сеть Costa Coffee?",
+   brand:"Costa Coffee",brandColor:"#6f1a07",
+   options:["Более 40","Около 10","Более 100","Около 25"],answerIdx:0,
+   explanation:"Costa Coffee присутствует в более чем 40 странах и является второй крупнейшей кофейной сетью в мире."},
+  {q:"Какой бренд первым в России запустил формат кофейни «третье место»?",
+   brand:"Starbucks",brandColor:"#00704A",
+   options:["Starbucks","Costa Coffee","Cofix","Шоколадница"],answerIdx:0,
+   explanation:"Starbucks принёс концепцию «третьего места» (между домом и работой) в Россию в 2007 году."},
+  {q:"Что означает аббревиатура BCAA — линейки продуктов Optimum Nutrition?",
+   brand:"Optimum Nutrition",brandColor:"#d4ac0d",
+   options:["Аминокислоты с разветвлённой цепью","Биологически активный комплекс","Быстрые углеводы и аминокислоты","Белково-углеводный антиоксидант"],answerIdx:0,
+   explanation:"Branched-Chain Amino Acids (лейцин, изолейцин, валин) — строительный материал мышц."},
+  {q:"Продуктом какого бренда является помада «Color Riche»?",
+   brand:"L'Oréal",brandColor:"#b5121b",
+   options:["L'Oréal Paris","Maybelline","NYX","Lancôme"],answerIdx:0,
+   explanation:"Color Riche — флагманская линейка губной помады L'Oréal Paris, выпускается с 1981 года."},
+  {q:"Где располагается штаб-квартира Garnier?",
+   brand:"Garnier",brandColor:"#27ae60",
+   options:["Париж","Лондон","Нью-Йорк","Женева"],answerIdx:0,
+   explanation:"Garnier — французский бренд, основан в 1904 году в Париже. Входит в группу L'Oréal с 1965 года."},
+  {q:"Какой размер порции (г) считается стандартным для протеина Myprotein Impact Whey?",
+   brand:"Myprotein",brandColor:"#1d4ed8",
+   options:["25 г","50 г","10 г","40 г"],answerIdx:0,
+   explanation:"Стандартная мерная ложка Impact Whey — 25 г, содержит около 21 г белка."},
+  {q:"В каком году Costa Coffee была приобретена компанией Coca-Cola?",
+   brand:"Costa Coffee",brandColor:"#6f1a07",
+   options:["2018","2010","2022","2015"],answerIdx:0,
+   explanation:"В 2018 году Coca-Cola купила Costa Coffee у Whitbread за 3,9 млрд фунтов стерлингов."},
 ];
 function getRiddleForToday(){
+  const sr=JSON.parse(localStorage.getItem("ratescan_sponsored_riddle")||"null");
+  if(sr&&sr.date===new Date().toDateString()){return {riddle:sr,idx:-1,sponsored:true};}
   const d=new Date();
   const idx=(d.getDate()+d.getMonth()*31)%RIDDLES.length;
   return {riddle:RIDDLES[idx],idx};
@@ -1454,8 +1499,8 @@ function checkRiddle(chosenIdx){
   if(chosenIdx===riddle.answerIdx){
     localStorage.setItem("ratescan_riddle_date",new Date().toDateString());
     const rStats=JSON.parse(localStorage.getItem("ratescan_riddle_stats")||"{}");
-    const rCat=riddle.category||"general";
-    rStats[rCat]=(rStats[rCat]||0)+1;
+    const rBrand=riddle.brand||"general";
+    rStats[rBrand]=(rStats[rBrand]||0)+1;
     localStorage.setItem("ratescan_riddle_stats",JSON.stringify(rStats));
     markQuestDone("riddle_daily");
     fb.style.background="#d1fae5";fb.style.color="#065f46";
@@ -1558,8 +1603,13 @@ function renderCharacterTab(){
   const {riddle}=getRiddleForToday();
   document.getElementById("riddle-question").textContent=riddle.q;
   const ridCatEl=document.getElementById("riddle-category-tag");
-  if(ridCatEl&&riddle.category){ridCatEl.style.display="inline-block";ridCatEl.textContent=riddle.category;}
-  else if(ridCatEl){ridCatEl.style.display="none";}
+  if(ridCatEl&&riddle.brand){
+    ridCatEl.style.display="inline-block";
+    ridCatEl.textContent=riddle.brand;
+    ridCatEl.style.background=(riddle.brandColor||"#7c3aed")+"22";
+    ridCatEl.style.color=riddle.brandColor||"#7c3aed";
+    ridCatEl.style.border="1px solid "+(riddle.brandColor||"#7c3aed")+"44";
+  }else if(ridCatEl){ridCatEl.style.display="none";}
   const optEl=document.getElementById("riddle-options");
   const doneFailed=localStorage.getItem("ratescan_riddle_date")===(new Date().toDateString()+"_failed");
   if(isRiddleDoneToday()){
@@ -1714,6 +1764,50 @@ function battleVote(winnerId,side){
   battleState.round++;
   if(battleState.round===1)markQuestDone("battle_1");
   renderBattleRound();
+}
+
+// ═══ CATEGORY EXPERTISE ══════════════════════════════════════════════
+function getCatReviews(){return JSON.parse(localStorage.getItem("ratescan_cat_reviews")||"{}");}
+function addCatReview(category){
+  if(!category)return;
+  const cr=getCatReviews();
+  const key=category.toLowerCase();
+  cr[key]=(cr[key]||0)+1;
+  localStorage.setItem("ratescan_cat_reviews",JSON.stringify(cr));
+}
+function getCatLevel(count){
+  if(count>=21)return{level:5,pct:15,next:null,label:"Эксперт",color:"#6366f1"};
+  if(count>=11)return{level:4,pct:10,next:21,label:"Знаток",color:"#8b5cf6"};
+  if(count>=6) return{level:3,pct:7, next:11,label:"Опытный",color:"#10b981"};
+  if(count>=3) return{level:2,pct:5, next:6, label:"Любитель",color:"#f59e0b"};
+  return        {level:1,pct:3, next:3, label:"Начинающий",color:"#9ca3af"};
+}
+function renderCatExpertise(){
+  const el=document.getElementById("cat-expertise-grid");
+  if(!el)return;
+  const cr=getCatReviews();
+  const cats=Object.entries(cr).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+  if(!cats.length){
+    el.innerHTML=`<div style="font-size:13px;color:#9ca3af;">Напишите отзыв в любой категории — здесь появится ваш уровень эксперта</div>`;
+    return;
+  }
+  el.innerHTML=cats.map(([cat,count])=>{
+    const lv=getCatLevel(count);
+    const bar=lv.next?Math.min(100,Math.round(count/lv.next*100)):100;
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span style="font-size:13px;font-weight:500;color:#374151;text-transform:capitalize;">${cat}</span>
+          <span style="font-size:11px;font-weight:600;background:${lv.color}18;color:${lv.color};padding:1px 9px;border-radius:10px;">${lv.label}</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:${lv.color};">−${lv.pct}%</span>
+      </div>
+      <div style="height:7px;background:#e8e7f5;border-radius:10px;overflow:hidden;">
+        <div style="height:100%;background:${lv.color};border-radius:10px;width:${bar}%;transition:width 0.6s ease;"></div>
+      </div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:3px;">${count} отзыв${count===1?"":"а"}${lv.next?` · ещё ${lv.next-count} до уровня ${getCatLevel(lv.next).label}`:" · максимальный уровень"}</div>
+    </div>`;
+  }).join("");
 }
 
 // ═══ TIME-OF-DAY PET STATE ══════════════════════════════════════════════

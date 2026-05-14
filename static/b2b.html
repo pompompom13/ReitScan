@@ -197,11 +197,36 @@
     </div>
   </div>
   <div class="card p-5 mt-4" id="unique-advantages-block"></div>
+
+  <!-- WORD CLOUD -->
+  <div class="card p-5 mt-4">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h3 style="font-weight:600;font-size:15px;">Карта упоминаний</h3>
+      <span style="font-size:12px;color:#9ca3af;">Частота слов во всех отзывах</span>
+    </div>
+    <p style="font-size:12px;color:#9ca3af;margin-bottom:14px;">Чем крупнее слово — тем чаще покупатели его упоминают</p>
+    <div id="word-cloud" style="min-height:80px;"></div>
+  </div>
 </div>
 
 <!-- PORTRAIT -->
 <div id="tab-portrait" class="hidden">
   <h2 style="font-weight:700;font-size:20px;margin-bottom:20px;">Портрет покупателя</h2>
+
+  <!-- BATTLE REPORT -->
+  <div class="card p-5 mb-5">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <div style="width:40px;height:40px;background:#fef3c7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M8 6v6m0 0v6m0-6h12M4 6h4M4 18h4" stroke="#b45309" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Отчёт по баттлам «Кто лучше?»</div>
+        <div style="font-size:12px;color:#9ca3af;">Данные из голосований покупателей в B2C-разделе</div>
+      </div>
+    </div>
+    <div id="battle-report-content" style="margin-top:14px;"></div>
+  </div>
+
   <div id="portrait-content">
     <div class="grid gap-4 mb-4" style="grid-template-columns:repeat(4,1fr);" id="portrait-stats"></div>
     <div class="grid gap-4 mb-4" style="grid-template-columns:1fr 1fr;">
@@ -237,6 +262,61 @@
     </button>
   </div>
   <div id="surveys-list" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></div>
+
+  <!-- SPONSORED RIDDLE -->
+  <div class="card p-5 mt-6">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:#faf5ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#7c3aed" stroke-width="2"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="#7c3aed"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Спонсированная загадка дня</div>
+        <div style="font-size:12px;color:#9ca3af;">Ваша загадка появится в разделе «Рейтик» у всех пользователей</div>
+      </div>
+      <div id="sponsored-riddle-status" style="margin-left:auto;font-size:12px;font-weight:500;padding:3px 12px;border-radius:20px;display:none;"></div>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:6px;">Вопрос о вашем бренде</label>
+        <input id="sr-question" type="text" placeholder="Например: В каком году основан наш бренд?"
+          style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
+      </div>
+      <div class="grid gap-2" style="grid-template-columns:1fr 1fr;">
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Вариант А</label>
+          <input id="sr-opt0" type="text" placeholder="Вариант А" style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Вариант Б</label>
+          <input id="sr-opt1" type="text" placeholder="Вариант Б" style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Вариант В</label>
+          <input id="sr-opt2" type="text" placeholder="Вариант В" style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Вариант Г</label>
+          <input id="sr-opt3" type="text" placeholder="Вариант Г" style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;"/>
+        </div>
+      </div>
+      <div class="grid gap-3" style="grid-template-columns:1fr 1fr;">
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Правильный ответ</label>
+          <select id="sr-answer" style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;background:#fff;">
+            <option value="0">Вариант А</option>
+            <option value="1">Вариант Б</option>
+            <option value="2">Вариант В</option>
+            <option value="3">Вариант Г</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Пояснение (показывается после ответа)</label>
+          <input id="sr-explanation" type="text" placeholder="Интересный факт о бренде..." style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;"/>
+        </div>
+      </div>
+      <button onclick="saveSponsoredRiddle()" class="btn-primary" style="align-self:flex-start;padding:10px 24px;">Опубликовать загадку</button>
+    </div>
+  </div>
 </div>
 
 <!-- MESSAGES -->
@@ -383,7 +463,7 @@ function switchTab(name){
   if(name==="ranking")loadRanking();
   if(name==="analysis")loadAnalysis();
   if(name==="messages")loadB2bConversations();
-  if(name==="surveys")loadSurveysTab();
+  if(name==="surveys"){loadSurveysTab();loadSponsoredRiddleStatus();}
   if(name==="portrait")loadPortrait();
 }
 
@@ -735,7 +815,32 @@ async function loadAnalysis(){
       ${adv.length
         ? `<div class="flex flex-wrap gap-2">${adv.map(a=>`<span style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:500;">${a}</span>`).join("")}</div>`
         : `<p style="color:#9ca3af;font-size:14px;">Данных пока недостаточно для определения уникальных преимуществ</p>`}`;
+    buildWordCloud();
   }catch(e){console.error(e);}
+}
+
+// WORD CLOUD
+function buildWordCloud(){
+  const el=document.getElementById("word-cloud");
+  if(!el)return;
+  const STOP=new Set(["это","так","все","как","для","при","что","или","есть","был","была","были","очень","тоже","ещё","уже","там","здесь","когда","если","чем","мне","они","вас","нас","ему","её","его","тут","где","кто","без","под","над","про","нет","да","не","же","но","а","и","в","на","по","из","за","от","до","со","то","те","об","во","ни","вы","мы","он","она","они","своих","своё","свои","своего","этот","этой","этого","эти","такой","такая","такие","таких","самый","самого","одного","одной","одни","только","также","вот","быть","чтобы","этого","него","нем","них","ней"]);
+  const freq={};
+  reviewsCache.forEach(r=>{
+    (r.text||"").toLowerCase().replace(/[^а-яёa-z\s]/g," ").split(/\s+/).forEach(w=>{
+      if(w.length>3&&!STOP.has(w)){freq[w]=(freq[w]||0)+1;}
+    });
+  });
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,35);
+  if(!top.length){el.innerHTML=`<p style="color:#9ca3af;font-size:13px;">Недостаточно отзывов для построения карты</p>`;return;}
+  const maxC=top[0][1];
+  const COLORS=["#6366f1","#8b5cf6","#ec4899","#10b981","#f59e0b","#06b6d4","#ef4444","#3b82f6"];
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;">` +
+    top.map(([word,count],i)=>{
+      const size=12+Math.round((count/maxC)*18);
+      const col=COLORS[i%COLORS.length];
+      const opacity=0.4+0.6*(count/maxC);
+      return `<span title="${count} упоминаний" style="font-size:${size}px;font-weight:${size>22?700:500};color:${col};opacity:${opacity.toFixed(2)};background:${col}12;padding:3px 9px;border-radius:20px;cursor:default;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='${opacity.toFixed(2)}'">${word}</span>`;
+    }).join("") + `</div>`;
 }
 
 // CONSUMER PORTRAIT
@@ -838,6 +943,7 @@ async function loadPortrait(){
       ${myStrengths.length?`<div style="font-size:12px;font-weight:500;color:#6b7280;margin-bottom:6px;">Ценит в вас:</div>
       ${myStrengths.map(s=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><div style="width:5px;height:5px;border-radius:50%;background:#6366f1;flex-shrink:0;"></div><span style="font-size:12px;color:#374151;">${s}</span></div>`).join("")}`:""}`;
 
+    renderBattleReport();
   }catch(e){console.error(e);}
 }
 
@@ -1044,6 +1150,74 @@ async function sendB2bReply(){
   if(!text||!currentB2bConvId)return;
   try{await apiPost(`/api/b2b/messages/conversations/${currentB2bConvId}/reply`,{text});document.getElementById("b2b-chat-input").value="";openB2bConversation(currentB2bConvId);}
   catch(e){showToast(e.message,"error");}
+}
+
+// ═══ SPONSORED RIDDLE ═══════════════════════════════════════════
+function saveSponsoredRiddle(){
+  const q=(document.getElementById("sr-question")||{}).value||"";
+  const opts=[0,1,2,3].map(i=>(document.getElementById("sr-opt"+i)||{}).value||"");
+  const answerIdx=parseInt((document.getElementById("sr-answer")||{}).value||"0");
+  const explanation=(document.getElementById("sr-explanation")||{}).value||"";
+  const brandEl=document.getElementById("header-brand");
+  const brand=brandEl?brandEl.textContent.trim():"Бренд";
+  if(!q.trim()||opts.some(o=>!o.trim())){showToast("Заполните вопрос и все 4 варианта ответа","error");return;}
+  const riddle={q:q.trim(),options:opts.map(o=>o.trim()),answerIdx,explanation:explanation.trim(),brand,brandColor:"#6366f1",sponsored:true,date:new Date().toDateString()};
+  localStorage.setItem("ratescan_sponsored_riddle",JSON.stringify(riddle));
+  const status=document.getElementById("sponsored-riddle-status");
+  if(status){status.style.display="inline-block";status.style.background="#d1fae5";status.style.color="#065f46";status.textContent="Опубликовано";}
+  showToast("Загадка опубликована — покупатели увидят её сегодня в разделе Рейтик");
+}
+function loadSponsoredRiddleStatus(){
+  const sr=JSON.parse(localStorage.getItem("ratescan_sponsored_riddle")||"null");
+  const status=document.getElementById("sponsored-riddle-status");
+  if(!status)return;
+  if(sr&&sr.date===new Date().toDateString()){
+    status.style.display="inline-block";status.style.background="#d1fae5";status.style.color="#065f46";status.textContent="Активна сегодня";
+    const qEl=document.getElementById("sr-question");if(qEl)qEl.value=sr.q||"";
+    [0,1,2,3].forEach(i=>{const el=document.getElementById("sr-opt"+i);if(el)el.value=(sr.options||[])[i]||"";});
+    const aEl=document.getElementById("sr-answer");if(aEl)aEl.value=sr.answerIdx||0;
+    const eEl=document.getElementById("sr-explanation");if(eEl)eEl.value=sr.explanation||"";
+  }else{
+    status.style.display="none";
+  }
+}
+
+// ═══ BATTLE REPORT ═══════════════════════════════════════════
+function renderBattleReport(){
+  const el=document.getElementById("battle-report-content");
+  if(!el)return;
+  const votes=JSON.parse(localStorage.getItem("ratescan_battle_votes")||"{}");
+  const allVotes=Object.values(votes).flat();
+  if(!allVotes.length){
+    el.innerHTML=`<div style="color:#9ca3af;font-size:13px;text-align:center;padding:12px;">Данных о батлах пока нет — они появятся, когда покупатели проголосуют в разделе «Батл брендов» на B2C.</div>`;
+    return;
+  }
+  // Count wins per brand/product
+  const brandWins={};
+  allVotes.forEach(v=>{
+    const key=v.brand||v.winner||"Неизвестно";
+    brandWins[key]=(brandWins[key]||0)+1;
+  });
+  const total=allVotes.length;
+  const sorted=Object.entries(brandWins).sort((a,b)=>b[1]-a[1]);
+  const myBrandEl=document.getElementById("header-brand");
+  const myBrand=myBrandEl?myBrandEl.textContent.trim():"";
+  el.innerHTML=`
+    <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">Всего голосований: <strong>${total}</strong></div>
+    ${sorted.map(([brand,wins])=>{
+      const pct=Math.round(wins/total*100);
+      const isMe=myBrand&&brand.toLowerCase().includes(myBrand.toLowerCase());
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:13px;font-weight:${isMe?"700":"500"};color:${isMe?"#6366f1":"#374151"};">${brand}${isMe?" (вы)":""}</span>
+          <span style="font-size:13px;font-weight:600;color:${isMe?"#6366f1":"#374151"};">${pct}%</span>
+        </div>
+        <div style="height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${isMe?"#6366f1":"#a5b4fc"};border-radius:4px;transition:width 0.5s;"></div>
+        </div>
+      </div>`;
+    }).join("")}
+  `;
 }
 </script>
 </body>
