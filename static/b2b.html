@@ -126,6 +126,15 @@
     <button onclick="openAddBrandModal()" class="btn-primary" style="padding:9px 20px;">+ Добавить бренд</button>
   </div>
 
+  <!-- ANALYSIS CONTEXT SELECTOR -->
+  <div class="card p-4 mb-4" id="ctx-selector-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;color:#374151;">Единица анализа</div>
+      <span style="font-size:11px;color:#9ca3af;">Выберите уровень для конкурентного анализа и рейтинга</span>
+    </div>
+    <div id="ctx-tree" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+  </div>
+
   <!-- BUDGET ALLOCATION -->
   <div class="card p-5 mb-5" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
@@ -187,6 +196,41 @@
   </div>
 </div>
 
+<!-- ADD SKU MODAL -->
+<div id="sku-modal" class="modal-backdrop hidden">
+  <div class="modal-box p-6" style="max-width:420px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h3 style="font-weight:700;font-size:17px;" id="sku-modal-title">Новый SKU</h3>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;" id="sku-modal-brand"></div>
+      </div>
+      <button onclick="closeSkuModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:20px;">✕</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Название товара / SKU</label>
+        <input id="sku-name" type="text" placeholder="Например: Латте 250мл, Крем для лица SPF50..."
+          style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"
+          onkeydown="if(event.key==='Enter')saveSkuFromModal()"/>
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Категория (необязательно)</label>
+        <input id="sku-category" type="text" placeholder="Кофе, Косметика, Мороженое..."
+          style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/>
+      </div>
+      <div>
+        <label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Описание (необязательно)</label>
+        <textarea id="sku-desc" rows="2" placeholder="Краткое описание товара..."
+          style="width:100%;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:13px;resize:none;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+      <button onclick="closeSkuModal()" class="btn-outline" style="padding:9px 20px;">Отмена</button>
+      <button onclick="saveSkuFromModal()" class="btn-primary" style="padding:9px 20px;">Добавить SKU</button>
+    </div>
+  </div>
+</div>
+
 <!-- REVIEWS -->
 <div id="tab-reviews" class="hidden">
   <div class="flex items-center justify-between mb-5">
@@ -214,6 +258,7 @@
 
 <!-- COMPETITORS -->
 <div id="tab-competitors" class="hidden">
+  <div id="ctx-banner-comp" class="mb-3"></div>
   <div class="flex items-center justify-between mb-4" style="flex-wrap:wrap;gap:12px;">
     <h2 style="font-weight:700;font-size:20px;">Конкурентный анализ</h2>
     <div class="flex gap-2" style="flex-wrap:wrap;">
@@ -243,6 +288,7 @@
 
 <!-- RANKING -->
 <div id="tab-ranking" class="hidden">
+  <div id="ctx-banner-rank" class="mb-3"></div>
   <div class="grid gap-4 mb-5" style="grid-template-columns:repeat(4,1fr);" id="ranking-stats"></div>
   <div class="grid gap-4" style="grid-template-columns:1fr 1.2fr;">
     <div class="card p-5">
@@ -1406,12 +1452,29 @@ function deleteBrand(id){
   if(!confirm("Удалить бренд?"))return;
   setBrands(getBrands().filter(b=>b.id!==id));loadBrandsTab();
 }
+let _skuBrandId=null;
 function addSku(brandId){
-  const n=prompt("Название SKU (товара):");if(!n||!n.trim())return;
+  _skuBrandId=brandId;
+  const brand=getBrands().find(b=>b.id===brandId);
+  document.getElementById("sku-modal-brand").textContent=brand?`Бренд: ${brand.name}`:"";
+  document.getElementById("sku-modal-title").textContent="Новый SKU";
+  document.getElementById("sku-name").value="";
+  document.getElementById("sku-category").value=brand?.category||"";
+  document.getElementById("sku-desc").value="";
+  document.getElementById("sku-modal").classList.remove("hidden");
+  setTimeout(()=>document.getElementById("sku-name").focus(),80);
+}
+function closeSkuModal(){document.getElementById("sku-modal").classList.add("hidden");_skuBrandId=null;}
+function saveSkuFromModal(){
+  const name=document.getElementById("sku-name").value.trim();
+  if(!name){showToast("Введите название SKU","error");return;}
+  const cat=document.getElementById("sku-category").value.trim();
+  const desc=document.getElementById("sku-desc").value.trim();
   const brands=getBrands();
-  const b=brands.find(b=>b.id===brandId);
-  if(b){if(!b.skus)b.skus=[];b.skus.push({id:Date.now(),name:n.trim()});}
-  setBrands(brands);loadBrandsTab();
+  const b=brands.find(b=>b.id===_skuBrandId);
+  if(b){if(!b.skus)b.skus=[];b.skus.push({id:Date.now(),name,category:cat||b.category||"",description:desc});}
+  setBrands(brands);closeSkuModal();loadBrandsTab();
+  showToast("SKU добавлен");
 }
 function deleteSku(brandId,skuId){
   const brands=getBrands();
@@ -1527,6 +1590,60 @@ function loadBrandsTab(){
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">${skuCards}</div>
     </div>`;
   }).join("");
+}
+
+// ═══ ANALYSIS CONTEXT (Brand / SKU level) ═══════════════════════════════
+function getCtx(){return JSON.parse(localStorage.getItem("ratescan_b2b_ctx")||'{"type":"company","id":null,"label":"Вся компания","category":""}');}
+function setCtx(type,id,label,category){localStorage.setItem("ratescan_b2b_ctx",JSON.stringify({type,id,label,category}));renderCtxTree();renderCtxBanners();}
+
+function renderCtxTree(){
+  const tree=document.getElementById("ctx-tree");
+  if(!tree)return;
+  const brands=getBrands();
+  const cur=getCtx();
+  const pill=(type,id,label,cat,indent)=>{
+    const active=cur.type===type&&String(cur.id)===String(id);
+    return `<button onclick="setCtx('${type}',${id?`'${id}'`:'null'},'${label.replace(/'/g,"\\'")}','${(cat||"").replace(/'/g,"\\'")}')
+      style="margin-left:${indent}px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:${active?700:500};
+      background:${active?"#6366f1":"#f3f4f6"};color:${active?"#fff":"#374151"};border:none;cursor:pointer;transition:all 0.15s;">${label}</button>`;
+  };
+  let html=pill("company",null,"Вся компания","",0);
+  brands.forEach(br=>{
+    html+=pill("brand",br.id,`${br.name}`,br.category||"",0);
+    (br.skus||[]).forEach(s=>{
+      html+=pill("sku",s.id,`${s.name}`,s.category||br.category||"",16);
+    });
+  });
+  tree.innerHTML=html;
+}
+
+function renderCtxBanners(){
+  const cur=getCtx();
+  if(cur.type==="company"){
+    ["ctx-banner-comp","ctx-banner-rank"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML="";});
+    return;
+  }
+  const typeLabel=cur.type==="brand"?"Бренд":"SKU";
+  const catText=cur.category?` · категория: <strong>${cur.category}</strong>`:"";
+  const html=`<div style="display:flex;align-items:center;gap:10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:10px 14px;">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/></svg>
+    <span style="font-size:13px;color:#4338ca;">${typeLabel}: <strong>${cur.label}</strong>${catText} — конкуренты и рейтинг отфильтрованы по этой категории</span>
+    <button onclick="setCtx('company',null,'Вся компания','')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#6366f1;font-size:12px;font-weight:600;">✕ Сбросить</button>
+  </div>`;
+  ["ctx-banner-comp","ctx-banner-rank"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+
+// Hook into loadBrandsTab to also render the context tree
+const _origLoadBrandsTab=loadBrandsTab;
+loadBrandsTab=function(){_origLoadBrandsTab();renderCtxTree();};
+
+// Hook into switchTab to refresh banners
+const _origSwitchTab=typeof switchTab==="function"?switchTab:null;
+if(_origSwitchTab){
+  switchTab=function(tab){
+    _origSwitchTab(tab);
+    if(["competitors","ranking"].includes(tab))renderCtxBanners();
+  };
 }
 </script>
 </body>
