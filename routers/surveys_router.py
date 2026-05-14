@@ -2,9 +2,14 @@ import json
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from database import get_db
 import models, auth
 import random
+
+
+class GameRewardIn(BaseModel):
+    points: int
 
 router = APIRouter(prefix="/api/surveys", tags=["surveys"])
 
@@ -140,3 +145,29 @@ def daily_spin(
         "points_earned": prize["points"],
         "total_points": current_user.points,
     }
+
+
+@router.post("/game-reward")
+def game_reward(
+    body: GameRewardIn,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    MAX_DAILY = 100
+    today = date.today()
+    last = current_user.last_game_play
+    if last and last.date() == today:
+        already = current_user.game_points_today or 0
+    else:
+        already = 0
+        current_user.game_points_today = 0
+
+    pts = max(0, min(body.points, MAX_DAILY - already, 50))
+    if pts <= 0:
+        return {"status": "ok", "points_earned": 0, "total_points": current_user.points, "message": "Дневной лимит игры исчерпан"}
+
+    current_user.points += pts
+    current_user.game_points_today = already + pts
+    current_user.last_game_play = datetime.utcnow()
+    db.commit()
+    return {"status": "ok", "points_earned": pts, "total_points": current_user.points}

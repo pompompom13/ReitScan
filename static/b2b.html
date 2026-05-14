@@ -67,6 +67,7 @@
       <button class="tab-btn" onclick="switchTab('ranking')">Рейтинг</button>
       <button class="tab-btn" onclick="switchTab('analysis')">Анализ</button>
       <button class="tab-btn" onclick="switchTab('surveys')">Опросы</button>
+      <button class="tab-btn" onclick="switchTab('brands')">Бренды и баланс</button>
       <button class="tab-btn" onclick="switchTab('portrait')">Портрет покупателя</button>
       <button class="tab-btn" onclick="switchTab('messages')" style="position:relative;">
         Сообщения
@@ -91,12 +92,98 @@
       <div style="position:relative;height:200px;"><canvas id="sentiment-chart"></canvas></div>
     </div>
   </div>
+  <!-- BALANCE WIDGET -->
+  <div class="card p-5 mt-4" style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);margin-bottom:4px;">Рекламный баланс</div>
+        <div style="font-size:32px;font-weight:800;color:#fff;" id="balance-display">0 ₽</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;" id="balance-alloc-hint">Распределите бюджет между активностями</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="openBalanceTopup()" style="background:rgba(255,255,255,0.2);color:#fff;border:1.5px solid rgba(255,255,255,0.35);border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Пополнить</button>
+        <button onclick="switchTab('brands')" style="background:#fff;color:#6366f1;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Распределить</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;" id="balance-alloc-row"></div>
+  </div>
   <div class="card p-5 mt-4">
     <div class="flex items-center justify-between mb-4">
       <h3 style="font-weight:600;font-size:15px;">Последние отзывы</h3>
       <button onclick="exportExcel()" class="btn-outline" style="padding:7px 14px;font-size:12px;">Экспорт в Excel</button>
     </div>
     <div id="recent-reviews" class="flex flex-col gap-3"></div>
+  </div>
+</div>
+
+<!-- BRANDS & BALANCE TAB -->
+<div id="tab-brands" class="hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-weight:700;font-size:20px;margin-bottom:2px;">Бренды и баланс</h2>
+      <div style="font-size:13px;color:#9ca3af;">Управление брендами, SKU и рекламным бюджетом</div>
+    </div>
+    <button onclick="openAddBrandModal()" class="btn-primary" style="padding:9px 20px;">+ Добавить бренд</button>
+  </div>
+
+  <!-- BUDGET ALLOCATION -->
+  <div class="card p-5 mb-5" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;">Рекламный баланс</div>
+        <div style="font-size:28px;font-weight:800;color:#fff;" id="brands-balance-display">0 ₽</div>
+      </div>
+      <button onclick="openBalanceTopup()" style="background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.35);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">+ Пополнить</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="budget-sliders"></div>
+  </div>
+
+  <!-- BRANDS LIST -->
+  <div id="brands-list" class="flex flex-col gap-4"></div>
+</div>
+
+<!-- ADD BRAND MODAL -->
+<div id="brand-modal" class="modal-backdrop hidden">
+  <div class="modal-box p-6">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 style="font-weight:700;font-size:17px;" id="brand-modal-title">Новый бренд</h3>
+      <button onclick="closeBrandModal()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:20px;">✕</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div><label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Название бренда</label>
+        <input id="bm-name" type="text" placeholder="Nike, Starbucks..." style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/></div>
+      <div><label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Категория</label>
+        <input id="bm-cat" type="text" placeholder="Спорт, Косметика, Кофе..." style="width:100%;padding:9px 12px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;"/></div>
+      <div><label style="font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Цвет бренда</label>
+        <div style="display:flex;align-items:center;gap:10px;"><input id="bm-color" type="color" value="#6366f1" style="width:44px;height:36px;border:1.5px solid #e8e7f5;border-radius:8px;cursor:pointer;padding:2px;"/>
+        <span style="font-size:12px;color:#9ca3af;">Используется для визуальной идентификации</span></div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+      <button onclick="closeBrandModal()" class="btn-outline" style="padding:9px 20px;">Отмена</button>
+      <button onclick="saveBrand()" class="btn-primary" style="padding:9px 20px;">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP-UP MODAL -->
+<div id="topup-modal" class="modal-backdrop hidden">
+  <div class="modal-box p-6" style="max-width:380px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="font-weight:700;font-size:17px;">Пополнение баланса</h3>
+      <button onclick="document.getElementById('topup-modal').classList.add('hidden')" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:20px;">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;" id="topup-amounts">
+      <button onclick="selectTopup(1000)" class="topup-btn" style="border:1.5px solid #e8e7f5;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;">1 000 ₽</button>
+      <button onclick="selectTopup(5000)" class="topup-btn" style="border:1.5px solid #6366f1;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#eef2ff;color:#6366f1;">5 000 ₽</button>
+      <button onclick="selectTopup(10000)" class="topup-btn" style="border:1.5px solid #e8e7f5;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;">10 000 ₽</button>
+      <button onclick="selectTopup(25000)" class="topup-btn" style="border:1.5px solid #e8e7f5;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;">25 000 ₽</button>
+      <button onclick="selectTopup(50000)" class="topup-btn" style="border:1.5px solid #e8e7f5;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;">50 000 ₽</button>
+      <button onclick="selectTopup(100000)" class="topup-btn" style="border:1.5px solid #e8e7f5;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;">100 000 ₽</button>
+    </div>
+    <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#6b7280;">
+      Демо-режим: баланс сохраняется локально. В продакшне будет интеграция с платёжной системой.
+    </div>
+    <button onclick="confirmTopup()" class="btn-primary" style="width:100%;padding:11px;" id="topup-confirm-btn">Пополнить 5 000 ₽</button>
   </div>
 </div>
 
@@ -431,7 +518,7 @@
 </div>
 
 <script>
-const ALL_TABS=["dashboard","reviews","competitors","ranking","analysis","surveys","portrait","messages"];
+const ALL_TABS=["dashboard","reviews","competitors","ranking","analysis","surveys","brands","portrait","messages"];
 let currentTab="dashboard";
 let allReviews=[];
 let currentRespondId=null;
@@ -464,6 +551,7 @@ function switchTab(name){
   if(name==="analysis")loadAnalysis();
   if(name==="messages")loadB2bConversations();
   if(name==="surveys"){loadSurveysTab();loadSponsoredRiddleStatus();}
+  if(name==="brands")loadBrandsTab();
   if(name==="portrait")loadPortrait();
 }
 
@@ -513,6 +601,7 @@ async function loadDashboard(){
 
     // Recent reviews
     renderReviewCards(data.recent_reviews,"recent-reviews",data.brand_name);
+    updateBalanceDisplay();
   }catch(e){console.error(e);}
 }
 
@@ -1182,42 +1271,206 @@ function loadSponsoredRiddleStatus(){
   }
 }
 
-// ═══ BATTLE REPORT ═══════════════════════════════════════════
+// ═══ BATTLE REPORT (compact, category-filtered) ══════════════════════
 function renderBattleReport(){
   const el=document.getElementById("battle-report-content");
   if(!el)return;
   const votes=JSON.parse(localStorage.getItem("ratescan_battle_votes")||"{}");
+  // filter to categories relevant to this company
+  const myBrandEl=document.getElementById("header-brand");
+  const myBrand=(myBrandEl?myBrandEl.textContent.trim():"").toLowerCase();
   const allVotes=Object.values(votes).flat();
   if(!allVotes.length){
-    el.innerHTML=`<div style="color:#9ca3af;font-size:13px;text-align:center;padding:12px;">Данных о батлах пока нет — они появятся, когда покупатели проголосуют в разделе «Батл брендов» на B2C.</div>`;
+    el.innerHTML=`<div style="color:#9ca3af;font-size:13px;text-align:center;padding:12px 0;">Данных о батлах пока нет — они появятся, когда покупатели проголосуют в разделе «Кто лучше?».</div>`;
     return;
   }
-  // Count wins per brand/product
+  // Find categories where our brand appears
+  const myCats=new Set();
+  Object.entries(votes).forEach(([cat,vs])=>{vs.forEach(v=>{if(myBrand&&(v.brand||"").toLowerCase().includes(myBrand))myCats.add(cat);});});
+  // If no matches, show all; else filter
+  const relevantVotes=myCats.size>0?Object.entries(votes).filter(([cat])=>myCats.has(cat)).flatMap(([,vs])=>vs):allVotes;
+  const total=relevantVotes.length;
   const brandWins={};
-  allVotes.forEach(v=>{
-    const key=v.brand||v.winner||"Неизвестно";
-    brandWins[key]=(brandWins[key]||0)+1;
-  });
-  const total=allVotes.length;
-  const sorted=Object.entries(brandWins).sort((a,b)=>b[1]-a[1]);
-  const myBrandEl=document.getElementById("header-brand");
-  const myBrand=myBrandEl?myBrandEl.textContent.trim():"";
+  relevantVotes.forEach(v=>{const k=v.brand||v.winner||"Прочие";brandWins[k]=(brandWins[k]||0)+1;});
+  const sorted=Object.entries(brandWins).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const myEntry=sorted.find(([b])=>myBrand&&b.toLowerCase().includes(myBrand));
+  const myPct=myEntry?Math.round(myEntry[1]/total*100):0;
+  const leader=sorted[0];
+  const leaderPct=leader?Math.round(leader[1]/total*100):0;
+  const insight=myEntry&&leader&&leader[0]!==myEntry[0]
+    ?`Лидер <strong>${leader[0]}</strong> опережает вас на ${leaderPct-myPct}%. Акцентируйте отличия в коммуникации.`
+    :myEntry?`Ваш бренд лидирует с результатом <strong>${myPct}%</strong> голосов покупателей.`
+    :`Ваш бренд пока не участвовал в батлах в этих категориях.`;
   el.innerHTML=`
-    <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">Всего голосований: <strong>${total}</strong></div>
-    ${sorted.map(([brand,wins])=>{
-      const pct=Math.round(wins/total*100);
-      const isMe=myBrand&&brand.toLowerCase().includes(myBrand.toLowerCase());
-      return `<div style="margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-size:13px;font-weight:${isMe?"700":"500"};color:${isMe?"#6366f1":"#374151"};">${brand}${isMe?" (вы)":""}</span>
-          <span style="font-size:13px;font-weight:600;color:${isMe?"#6366f1":"#374151"};">${pct}%</span>
+    <div style="background:#eef2ff;border-radius:10px;padding:10px 12px;font-size:12px;color:#374151;margin-bottom:14px;line-height:1.6;">${insight}</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Голосований: ${total}${myCats.size?" · категории: "+[...myCats].join(", "):""}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${sorted.map(([brand,wins])=>{
+        const pct=Math.round(wins/total*100);
+        const isMe=myBrand&&brand.toLowerCase().includes(myBrand);
+        return `<div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:12px;font-weight:${isMe?"700":"500"};color:${isMe?"#6366f1":"#374151"};min-width:90px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${brand}${isMe?" ★":""}</div>
+          <div style="flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${isMe?"linear-gradient(90deg,#6366f1,#8b5cf6)":"#d1d5db"};border-radius:4px;transition:width 0.6s;"></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:${isMe?"#6366f1":"#6b7280"};min-width:32px;text-align:right;">${pct}%</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
+// ═══ BRANDS & BALANCE ════════════════════════════════════════════════
+function getBalance(){return JSON.parse(localStorage.getItem("ratescan_b2b_balance")||'{"total":0,"surveys":0,"game":0,"battles":0}');}
+function setBalance(b){localStorage.setItem("ratescan_b2b_balance",JSON.stringify(b));}
+function getBrands(){return JSON.parse(localStorage.getItem("ratescan_b2b_brands")||"[]");}
+function setBrands(b){localStorage.setItem("ratescan_b2b_brands",JSON.stringify(b));}
+
+let _topupAmt=5000;
+function openBalanceTopup(){document.getElementById("topup-modal").classList.remove("hidden");}
+function selectTopup(amt){
+  _topupAmt=amt;
+  document.querySelectorAll(".topup-btn").forEach(b=>{b.style.borderColor="#e8e7f5";b.style.background="#fff";b.style.color="#374151";});
+  event.target.style.borderColor="#6366f1";event.target.style.background="#eef2ff";event.target.style.color="#6366f1";
+  document.getElementById("topup-confirm-btn").textContent=`Пополнить ${amt.toLocaleString("ru")} ₽`;
+}
+function confirmTopup(){
+  const b=getBalance();b.total+=_topupAmt;setBalance(b);
+  document.getElementById("topup-modal").classList.add("hidden");
+  updateBalanceDisplay();loadBrandsTab();
+  showToast(`Баланс пополнен на ${_topupAmt.toLocaleString("ru")} ₽`);
+}
+function updateBalanceDisplay(){
+  const b=getBalance();
+  const fmt=n=>n.toLocaleString("ru")+" ₽";
+  const d=document.getElementById("balance-display");
+  const d2=document.getElementById("brands-balance-display");
+  if(d)d.textContent=fmt(b.total);
+  if(d2)d2.textContent=fmt(b.total);
+  const hint=document.getElementById("balance-alloc-hint");
+  if(hint)hint.textContent=b.total>0?`Распределено: Опросы ${fmt(b.surveys)} · Игра ${fmt(b.game)} · Батлы ${fmt(b.battles)}`:"Пополните баланс для запуска активностей";
+  const row=document.getElementById("balance-alloc-row");
+  if(row){
+    const items=[{label:"Опросы",key:"surveys",color:"#10b981"},{label:"Игра",key:"game",color:"#f59e0b"},{label:"Батлы",key:"battles",color:"#ec4899"}];
+    row.innerHTML=items.map(it=>`<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 12px;flex:1;min-width:80px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.7);">${it.label}</div>
+      <div style="font-size:16px;font-weight:700;color:#fff;">${fmt(b[it.key])}</div>
+    </div>`).join("");
+  }
+}
+function saveBudget(){
+  const b=getBalance();
+  const keys=["surveys","game","battles"];
+  let total=0;
+  keys.forEach(k=>{const v=parseInt(document.getElementById("budget-"+k)?.value||"0");b[k]=Math.max(0,v);total+=b[k];});
+  if(total>b.total){showToast("Сумма распределения превышает баланс","error");return;}
+  setBalance(b);updateBalanceDisplay();showToast("Бюджет сохранён");
+  // publish game brands to localStorage for B2C
+  const brands=getBrands();
+  if(b.game>0){
+    const gameBrands=brands.map(br=>({name:br.name,color:br.color||"#6366f1",sponsored:true}));
+    localStorage.setItem("ratescan_b2b_game_brands",JSON.stringify(gameBrands));
+  }else{localStorage.removeItem("ratescan_b2b_game_brands");}
+}
+
+let _editBrandId=null;
+function openAddBrandModal(id){
+  _editBrandId=id||null;
+  const brands=getBrands();
+  const brand=id!=null?brands.find(b=>b.id===id):null;
+  document.getElementById("bm-name").value=brand?.name||"";
+  document.getElementById("bm-cat").value=brand?.category||"";
+  document.getElementById("bm-color").value=brand?.color||"#6366f1";
+  document.getElementById("brand-modal-title").textContent=brand?"Редактировать бренд":"Новый бренд";
+  document.getElementById("brand-modal").classList.remove("hidden");
+}
+function closeBrandModal(){document.getElementById("brand-modal").classList.add("hidden");}
+function saveBrand(){
+  const name=document.getElementById("bm-name").value.trim();
+  const cat=document.getElementById("bm-cat").value.trim();
+  const color=document.getElementById("bm-color").value;
+  if(!name){showToast("Введите название бренда","error");return;}
+  const brands=getBrands();
+  if(_editBrandId!=null){
+    const i=brands.findIndex(b=>b.id===_editBrandId);
+    if(i>=0){brands[i]={...brands[i],name,category:cat,color};}
+  }else{
+    brands.push({id:Date.now(),name,category:cat,color,skus:[]});
+  }
+  setBrands(brands);closeBrandModal();loadBrandsTab();
+  showToast(_editBrandId!=null?"Бренд обновлён":"Бренд добавлен");
+}
+function deleteBrand(id){
+  if(!confirm("Удалить бренд?"))return;
+  setBrands(getBrands().filter(b=>b.id!==id));loadBrandsTab();
+}
+function addSku(brandId){
+  const n=prompt("Название SKU (товара):");if(!n||!n.trim())return;
+  const brands=getBrands();
+  const b=brands.find(b=>b.id===brandId);
+  if(b){if(!b.skus)b.skus=[];b.skus.push({id:Date.now(),name:n.trim()});}
+  setBrands(brands);loadBrandsTab();
+}
+function deleteSku(brandId,skuId){
+  const brands=getBrands();
+  const b=brands.find(b=>b.id===brandId);
+  if(b&&b.skus)b.skus=b.skus.filter(s=>s.id!==skuId);
+  setBrands(brands);loadBrandsTab();
+}
+function loadBrandsTab(){
+  updateBalanceDisplay();
+  const b=getBalance();
+  // Budget sliders
+  const sl=document.getElementById("budget-sliders");
+  if(sl){
+    const items=[{label:"Опросы",key:"surveys",color:"#10b981",desc:"Покупатели проходят ваши опросы"},{label:"Игра (бренд в Рейтик-собирателе)",key:"game",color:"#f59e0b",desc:"Ваш бренд появляется в мини-игре B2C"},{label:"Батлы",key:"battles",color:"#ec4899",desc:"Продвижение в разделе «Кто лучше?»"}];
+    sl.innerHTML=items.map(it=>`<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px;">
+      <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;">${it.label}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:8px;">${it.desc}</div>
+      <input id="budget-${it.key}" type="number" min="0" max="${b.total}" value="${b[it.key]}"
+        style="width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;"
+        placeholder="0" oninput="this.style.borderColor='#fbbf24'"/>
+      <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px;">руб.</div>
+    </div>`).join("")+`<div style="grid-column:1/-1;text-align:right;"><button onclick="saveBudget()" style="background:#fff;color:#6366f1;border:none;border-radius:10px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;">Сохранить бюджет</button></div>`;
+  }
+  // Brands list
+  const list=document.getElementById("brands-list");
+  if(!list)return;
+  const brands=getBrands();
+  if(!brands.length){
+    list.innerHTML=`<div class="card p-8" style="text-align:center;color:#9ca3af;">
+      <div style="font-size:40px;margin-bottom:10px;">🏷</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Брендов пока нет</div>
+      <div style="font-size:13px;margin-bottom:16px;">Добавьте первый бренд для управления SKU и бюджетом</div>
+      <button onclick="openAddBrandModal()" class="btn-primary" style="padding:9px 24px;">Добавить бренд</button>
+    </div>`;return;
+  }
+  list.innerHTML=brands.map(br=>`
+    <div class="card p-5">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:38px;height:38px;border-radius:10px;background:${br.color||"#6366f1"};flex-shrink:0;"></div>
+          <div>
+            <div style="font-weight:700;font-size:15px;">${br.name}</div>
+            <div style="font-size:12px;color:#9ca3af;">${br.category||"Категория не указана"} · ${(br.skus||[]).length} SKU</div>
+          </div>
         </div>
-        <div style="height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden;">
-          <div style="height:100%;width:${pct}%;background:${isMe?"#6366f1":"#a5b4fc"};border-radius:4px;transition:width 0.5s;"></div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openAddBrandModal(${br.id})" class="btn-outline" style="padding:6px 12px;font-size:12px;">Изменить</button>
+          <button onclick="deleteBrand(${br.id})" class="btn-danger" style="padding:6px 12px;font-size:12px;">Удалить</button>
         </div>
-      </div>`;
-    }).join("")}
-  `;
+      </div>
+      <div style="background:#f9fafb;border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:600;color:#374151;">SKU / Товары</span>
+          <button onclick="addSku(${br.id})" style="background:#eef2ff;color:#6366f1;border:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;">+ Добавить</button>
+        </div>
+        ${(br.skus||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;">${(br.skus||[]).map(s=>`
+          <span style="background:#fff;border:1.5px solid #e8e7f5;border-radius:8px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px;">
+            ${s.name}
+            <span onclick="deleteSku(${br.id},${s.id})" style="color:#9ca3af;cursor:pointer;font-size:13px;line-height:1;">×</span>
+          </span>`).join("")}</div>`:`<div style="font-size:12px;color:#9ca3af;">Нет товаров — нажмите «+ Добавить»</div>`}
+      </div>
+    </div>`).join("");
 }
 </script>
 </body>

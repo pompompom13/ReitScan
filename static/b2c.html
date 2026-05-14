@@ -82,6 +82,23 @@
     .acc-item { border:2px solid #e8e7f5;border-radius:12px;padding:10px;cursor:pointer;text-align:center;transition:all 0.18s; }
     .acc-item.selected { border-color:#6366f1;background:#eef2ff; }
     .acc-item:hover:not(.selected) { border-color:#a5b4fc; }
+    /* Pet wiggle on click */
+    @keyframes petWiggleKf { 0%{transform:rotate(0deg) scale(1)} 15%{transform:rotate(-12deg) scale(1.08)} 35%{transform:rotate(10deg) scale(1.1)} 55%{transform:rotate(-7deg) scale(1.06)} 75%{transform:rotate(5deg) scale(1.03)} 90%{transform:rotate(-2deg) scale(1.01)} 100%{transform:rotate(0deg) scale(1)} }
+    .pet-wiggle-anim .pet-creature { animation:petWiggleKf 0.55s cubic-bezier(.36,.07,.19,.97) forwards !important; }
+    /* Hunger bar */
+    .hunger-bar { height:10px;background:#e8e7f5;border-radius:10px;overflow:hidden;margin:6px 0; }
+    .hunger-fill { height:100%;border-radius:10px;transition:width 0.5s ease,background 0.4s ease; }
+    /* Battle card hover pulse */
+    @keyframes battlePick { 0%{transform:scale(1)} 30%{transform:scale(1.05)} 70%{transform:scale(1.03)} 100%{transform:scale(1)} }
+    .battle-picked { animation:battlePick 0.35s ease forwards; }
+    /* Vote flash overlay */
+    @keyframes voteFlash { 0%{opacity:0;transform:scale(0.8)} 25%{opacity:1;transform:scale(1.05)} 80%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1)} }
+    .vote-flash { animation:voteFlash 0.9s ease forwards; }
+    /* Game canvas wrapper */
+    #game-modal { display:none;position:fixed;inset:0;z-index:200;background:rgba(8,8,20,0.97);flex-direction:column;align-items:center;justify-content:center;gap:12px; }
+    #game-canvas { display:block;border-radius:16px;touch-action:none;cursor:none; }
+    .game-hud-btn { background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif; }
+    .game-hud-btn:hover { background:rgba(255,255,255,0.2); }
     input,textarea,select { outline:none; font-family:'Inter',sans-serif; }
     input:focus,textarea:focus,select:focus { border-color:#6366f1!important; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
   </style>
@@ -241,7 +258,7 @@
   <div class="grid gap-5" style="grid-template-columns:1fr 1.5fr;">
     <!-- LEFT: Pet card -->
     <div class="card p-6 flex flex-col items-center gap-4">
-      <div id="pet-container" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;"></div>
+      <div id="pet-container" onclick="petWiggle()" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Нажми на Рейтика!"></div>
       <div style="text-align:center;width:100%;">
         <div id="pet-display-name" style="font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;gap:6px;">
           <span id="pet-name"></span>
@@ -276,21 +293,23 @@
       </div>
       <!-- FOOD SYSTEM -->
       <div style="width:100%;background:#f9fafb;border-radius:12px;padding:12px 14px;border:1px solid #e8e7f5;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:13px;font-weight:600;color:#374151;">Корм для Рейтика</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:600;color:#374151;">Сытость Рейтика</div>
           <div style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#ea580c;">
-            <svg width="14" height="14" fill="#ea580c" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#ea580c"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="1" x2="6" y2="4" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/><line x1="10" y1="1" x2="10" y2="4" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="1" x2="14" y2="4" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/></svg>
             <span id="food-count">0</span> порций
           </div>
         </div>
-        <!-- Hunger status badge -->
-        <div id="pet-hunger-status" style="display:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;margin-bottom:6px;"></div>
-        <!-- Multiplier badge -->
-        <div id="pet-hunger-mult" style="display:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-bottom:8px;"></div>
-        <div id="pet-hungry-notice" style="display:none;background:#fff7ed;border-radius:8px;padding:6px 10px;font-size:12px;color:#b45309;margin-bottom:8px;">
-          Рейтик голоден! Покормите его, чтобы поднять множитель корма
+        <!-- Hunger bar -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div class="hunger-bar" style="flex:1;"><div id="hunger-fill-bar" class="hunger-fill" style="width:50%;background:#10b981;"></div></div>
+          <span id="hunger-value-label" style="font-size:11px;font-weight:700;color:#374151;min-width:30px;text-align:right;">50%</span>
         </div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">Корм за задания. Множитель зависит от сытости Рейтика.</div>
+        <!-- Status + multiplier row -->
+        <div id="pet-hunger-status" style="display:none;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:500;margin-bottom:5px;"></div>
+        <div id="pet-hunger-mult" style="display:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-bottom:6px;"></div>
+        <div id="pet-hungry-notice" style="display:none;background:#fff7ed;border-radius:8px;padding:5px 10px;font-size:12px;color:#b45309;margin-bottom:6px;">Рейтик голоден! Покормите его для бонуса к баллам.</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Каждое кормление +25% сытости. Чем сытее — тем выше множитель баллов.</div>
         <button id="feed-btn" onclick="feedPet()" class="btn-primary" style="width:100%;padding:9px;font-size:14px;transition:transform 0.1s,opacity 0.18s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">Накормить Рейтика</button>
       </div>
       <button onclick="openAccModal()" class="btn-outline" style="width:100%;">Сменить аксессуар</button>
@@ -307,6 +326,25 @@
         <div class="flex flex-col gap-2" id="stages-list"></div>
       </div>
     </div>
+  </div>
+
+  <!-- GAME CARD -->
+  <div class="card p-5 mt-5" id="game-card-section">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:46px;height:46px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z" stroke="#fff" stroke-width="2"/><path d="M7 12h2M8 11v2M15 12h2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="12" r="0.5" fill="#fff"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15px;">Рейтик-собиратель</div>
+        <div style="font-size:12px;color:#9ca3af;">Собирайте бренды — зарабатывайте баллы. До 100 баллов в день.</div>
+      </div>
+      <span id="game-daily-badge" style="display:none;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;">Лимит исчерпан</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button onclick="openGame()" class="btn-primary" style="padding:10px 28px;">Играть</button>
+      <div id="game-score-today" style="font-size:13px;color:#6b7280;"></div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:#9ca3af;">Управление: ← → или мышь/тап &nbsp;·&nbsp; Спонсированные бренды дают ×2 баллов</div>
   </div>
 
   <!-- RIDDLE OF THE DAY -->
@@ -602,19 +640,26 @@ let pendingAcc = selectedAcc;
 let allProducts = [];
 let modalChartInst = null;
 let battleState = {products:[], round:0, wins:{}, total:5, active:false};
-// Food system
+// ═══ FOOD / HUNGER SYSTEM ═══════════════════════════════════════════
+// Hunger is value 0-100 stored as {v, t}. Decays 8 pts/hr while not fed.
 function getFoodTokens(){return parseInt(localStorage.getItem("ratescan_food")||"3");}
 function addFoodTokens(n){localStorage.setItem("ratescan_food",Math.min(20,getFoodTokens()+n));updateFoodDisplay();}
-function getLastFed(){return localStorage.getItem("ratescan_last_fed")||"";}
+function _hungerStore(){return JSON.parse(localStorage.getItem("ratescan_hunger")||"null");}
+function getHunger(){
+  const s=_hungerStore();
+  if(!s)return 30;
+  const decay=((Date.now()-s.t)/3600000)*8; // 8 pts per hour
+  return Math.max(0,Math.min(100,Math.round(s.v-decay)));
+}
+function setHunger(v){localStorage.setItem("ratescan_hunger",JSON.stringify({v:Math.max(0,Math.min(100,v)),t:Date.now()}));}
+function getLastFed(){const s=_hungerStore();return s?new Date(s.t).toISOString():"";}
 function getHungerLevel(){
-  const lastFed=getLastFed();
-  if(!lastFed)return{key:"starving",filter:"grayscale(70%) brightness(0.65)",ptsMult:0.5,label:"Голодающий",color:"#ef4444",bg:"#fef2f2"};
-  const h=(Date.now()-new Date(lastFed).getTime())/3600000;
-  if(h<2)  return{key:"just_fed",filter:"brightness(1.15) saturate(1.2)",ptsMult:1.5,label:"Счастливый",color:"#10b981",bg:"#d1fae5"};
-  if(h<6)  return{key:"satisfied",filter:"",ptsMult:1.0,label:"Сытый",color:"#6366f1",bg:"#eef2ff"};
-  if(h<12) return{key:"normal",filter:"",ptsMult:1.0,label:"Обычный",color:"#6b7280",bg:"#f3f4f6"};
-  if(h<24) return{key:"hungry",filter:"grayscale(40%) brightness(0.85)",ptsMult:0.75,label:"Голодный",color:"#f59e0b",bg:"#fffbeb"};
-  return{key:"starving",filter:"grayscale(70%) brightness(0.65)",ptsMult:0.5,label:"Голодающий",color:"#ef4444",bg:"#fef2f2"};
+  const h=getHunger();
+  if(h>=80)return{key:"happy",   filter:"brightness(1.12) saturate(1.15)",ptsMult:1.5, label:"Счастливый",color:"#10b981",bg:"#d1fae5"};
+  if(h>=60)return{key:"content", filter:"",                                ptsMult:1.2, label:"Сытый",      color:"#6366f1",bg:"#eef2ff"};
+  if(h>=40)return{key:"normal",  filter:"",                                ptsMult:1.0, label:"Обычный",    color:"#6b7280",bg:"#f3f4f6"};
+  if(h>=20)return{key:"hungry",  filter:"grayscale(35%) brightness(0.88)", ptsMult:0.8, label:"Голодный",   color:"#f59e0b",bg:"#fffbeb"};
+  return           {key:"starving",filter:"grayscale(65%) brightness(0.7)",ptsMult:0.5, label:"Голодающий", color:"#ef4444",bg:"#fef2f2"};
 }
 function playFeedAnimation(){
   const petCont=document.getElementById("pet-container");
@@ -703,33 +748,65 @@ function playFeedAnimation(){
     .onfinish=()=>el.remove();
   },160);
 }
+function petWiggle(){
+  const petCont=document.getElementById("pet-container");
+  if(!petCont)return;
+  const svg=petCont.querySelector("svg");
+  if(!svg)return;
+  svg.classList.remove("pet-wiggle-anim");
+  void svg.offsetWidth;
+  svg.classList.add("pet-wiggle-anim");
+  setTimeout(()=>svg.classList.remove("pet-wiggle-anim"),600);
+  // Tiny speech bubble
+  const rect=petCont.getBoundingClientRect();
+  const msgs=["Привет!","Гав!","Рейтик!","Лапки!","Ням~"];
+  const el=document.createElement("div");
+  el.textContent=msgs[Math.floor(Math.random()*msgs.length)];
+  el.style.cssText=`position:fixed;left:${rect.right-10}px;top:${rect.top+10}px;background:#6366f1;color:#fff;border-radius:12px 12px 12px 4px;padding:4px 10px;font-size:12px;font-weight:600;pointer-events:none;z-index:9999;white-space:nowrap;font-family:'Inter',sans-serif;box-shadow:0 2px 8px rgba(99,102,241,0.4);`;
+  document.body.appendChild(el);
+  el.animate([{opacity:0,transform:"translateY(4px) scale(0.8)"},{opacity:1,transform:"translateY(-4px) scale(1)",offset:.25},{opacity:1,transform:"translateY(-8px) scale(1)",offset:.7},{opacity:0,transform:"translateY(-18px) scale(0.9)"}],{duration:1000,easing:"ease-out",fill:"forwards"}).onfinish=()=>el.remove();
+}
 function feedPet(){
   const food=getFoodTokens();
   if(food<1){showToast("Нет корма! Выполните задания чтобы получить его","error");return;}
+  const cur=getHunger();
+  if(cur>=90){showToast("Рейтик ещё сыт — подождите немного!","error");return;}
+  const newVal=Math.min(100,cur+25);
+  setHunger(newVal);
   localStorage.setItem("ratescan_food",food-1);
-  localStorage.setItem("ratescan_last_fed",new Date().toISOString());
   markQuestDone("feed_pet");
   updateFoodDisplay();
   playFeedAnimation();
   const btn=document.getElementById("feed-btn");
-  if(btn){btn.textContent="Рейтик сыт!";btn.disabled=true;setTimeout(()=>{btn.textContent="Накормить Рейтика";btn.disabled=false;renderCharacterTab();},2200);}
-  showToast("Рейтик счастлив! Бонус ×1.5 к баллам активен на 2 часа");
+  const added=newVal-cur;
+  if(btn){
+    btn.textContent=`+${added}% сытости!`;
+    btn.disabled=true;
+    setTimeout(()=>{btn.textContent="Накормить Рейтика";btn.disabled=false;renderCharacterTab();},2000);
+  }
+  const h=getHungerLevel();
+  showToast(newVal>=80?"Рейтик счастлив! Множитель ×1.5 активен":`Рейтик покормлен (${newVal}%). Ещё ${Math.ceil((90-newVal)/25)} порций до максимума`);
 }
 function updateFoodDisplay(){
-  const el=document.getElementById("food-count");
-  if(el)el.textContent=getFoodTokens();
+  const foodEl=document.getElementById("food-count");
+  if(foodEl)foodEl.textContent=getFoodTokens();
+  const hv=getHunger();
   const h=getHungerLevel();
-  // Apply visual filter to pet container based on hunger
+  // Hunger bar
+  const bar=document.getElementById("hunger-fill-bar");
+  const lbl=document.getElementById("hunger-value-label");
+  if(bar){
+    const col=hv>=80?"#10b981":hv>=60?"#6366f1":hv>=40?"#6b7280":hv>=20?"#f59e0b":"#ef4444";
+    bar.style.width=hv+"%";
+    bar.style.background=col;
+  }
+  if(lbl)lbl.textContent=hv+"%";
+  // Visual filter on pet
   const container=document.getElementById("pet-container");
   if(container)container.style.filter=h.filter||"";
-  // Hunger status badge
+  // Status badge
   const statusEl=document.getElementById("pet-hunger-status");
-  if(statusEl){
-    statusEl.style.display="block";
-    statusEl.style.background=h.bg;
-    statusEl.style.color=h.color;
-    statusEl.textContent=`Состояние: ${h.label}`;
-  }
+  if(statusEl){statusEl.style.display="block";statusEl.style.background=h.bg;statusEl.style.color=h.color;statusEl.textContent=`Состояние: ${h.label}`;}
   // Multiplier badge
   const multEl=document.getElementById("pet-hunger-mult");
   if(multEl){
@@ -737,14 +814,18 @@ function updateFoodDisplay(){
       multEl.style.display="inline-block";
       multEl.style.background=h.ptsMult>1?"#d1fae5":"#fef2f2";
       multEl.style.color=h.ptsMult>1?"#065f46":"#991b1b";
-      multEl.textContent=h.ptsMult>1?`×${h.ptsMult} к бонусным баллам за задания`:`×${h.ptsMult} к баллам — покормите Рейтика`;
-    }else{
-      multEl.style.display="none";
-    }
+      multEl.textContent=h.ptsMult>1?`×${h.ptsMult} к бонусным баллам`:`×${h.ptsMult} к баллам — покормите Рейтика`;
+    }else{multEl.style.display="none";}
   }
-  // Legacy hungry notice
+  // Hungry notice
   const hungryEl=document.getElementById("pet-hungry-notice");
   if(hungryEl)hungryEl.style.display=(h.key==="hungry"||h.key==="starving")?"block":"none";
+  // Feed button state
+  const btn=document.getElementById("feed-btn");
+  if(btn&&!btn.disabled){
+    if(hv>=90){btn.textContent="Рейтик сыт — ждём...";btn.style.opacity="0.55";}
+    else{btn.textContent="Накормить Рейтика";btn.style.opacity="";}
+  }
 }
 
 const ACCESSORIES = [
@@ -896,7 +977,7 @@ function switchTab(name){
   document.querySelectorAll(".tab-btn").forEach((b,i)=>b.classList.toggle("active",ALL_TABS[i]===name));
   currentTab=name;
   if(name==="messages")loadConversations();
-  if(name==="character")renderCharacterTab();
+  if(name==="character"){renderCharacterTab();updateGameDailyBadge();}
   if(name==="rewards")renderCatExpertise();
 }
 
@@ -1712,47 +1793,84 @@ function startBattle(){
   battleState={products:shuffled,round:0,wins:{},total:Math.min(5,Math.floor(shuffled.length/2)),active:true,category:chosenCat};
   renderBattleRound();
 }
+function _battleStars(r){
+  const full=Math.floor(r),half=r-full>=0.5?1:0;
+  let s="";
+  for(let i=0;i<5;i++)s+=`<span style="color:${i<full?"#f59e0b":i===full&&half?"#f59e0b":"#d1d5db"};font-size:13px;">${i<full?"★":i===full&&half?"★":"☆"}</span>`;
+  return s;
+}
 function renderBattleRound(){
   const s=battleState;
   const cont=document.getElementById("battle-content");
   if(!cont)return;
   const badge=document.getElementById("battle-score-badge");
   if(s.round>=s.total){
-    // Show winner
     const winners=Object.entries(s.wins).sort((a,b)=>b[1]-a[1]);
     const champId=winners[0]?.[0];
     const champ=s.products.find(p=>p.id==champId);
     badge.style.display="none";
-    cont.innerHTML=`<div style="text-align:center;padding:20px;">
-      <div style="font-size:32px;margin-bottom:8px;">🏆</div>
-      <div style="font-weight:700;font-size:18px;color:#1a1a2e;margin-bottom:4px;">Победитель!</div>
-      <div style="font-size:15px;font-weight:600;color:#6366f1;margin-bottom:4px;">${champ?champ.name:"—"}</div>
-      <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">${champ?champ.brand:""} · ${champ?(champ.avg_rating.toFixed(1)+" ★"):""}</div>
-      <button onclick="startBattle()" class="btn-outline" style="margin-right:8px;">Ещё баттл</button>
-      <button onclick="document.getElementById('battle-content').innerHTML='<div style=text-align:center;padding:24px><button onclick=startBattle() class=btn-primary style=padding:12px_32px>Начать баттл</button></div>'" class="btn-primary">Завершить</button>
+    const roundLog=(s.roundLog||[]).map((r,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;">
+        <span style="font-size:11px;color:#9ca3af;">Раунд ${i+1}</span>
+        <span style="font-size:12px;font-weight:600;color:#374151;">${r}</span>
+      </div>`).join("");
+    cont.innerHTML=`<div style="text-align:center;padding:12px 8px 6px;">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:17px;color:#1a1a2e;margin-bottom:2px;">Победитель серии!</div>
+      <div style="font-size:16px;font-weight:700;color:#6366f1;margin-bottom:2px;">${champ?champ.name:"—"}</div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;">${champ?champ.brand:""} · ${champ?(champ.avg_rating.toFixed(1)+" ★"):""}</div>
+      <div style="background:#f9fafb;border-radius:10px;padding:8px 12px;margin-bottom:14px;text-align:left;">${roundLog}</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button onclick="startBattle()" class="btn-outline" style="padding:8px 20px;font-size:13px;">Ещё баттл</button>
+        <button onclick="document.getElementById('battle-content').innerHTML='<div style=text-align:center;padding:24px><button onclick=startBattle() class=btn-primary style=padding:12px_32px>Начать баттл</button></div>'" class="btn-primary" style="padding:8px 20px;font-size:13px;">Завершить</button>
+      </div>
     </div>`;
     return;
   }
   const i=s.round*2;
   const p1=s.products[i],p2=s.products[i+1];
   if(!p1||!p2){s.round=s.total;renderBattleRound();return;}
-  badge.style.display="block";badge.textContent=`Раунд ${s.round+1}/${s.total}${s.category?" · "+s.category:""}` ;
-  const card=(p,side)=>`<div onclick="battleVote(${p.id},'${side}')" style="flex:1;border:2px solid #e8e7f5;border-radius:14px;padding:16px;cursor:pointer;text-align:center;transition:all 0.18s;min-width:0;" onmouseover="this.style.borderColor='#6366f1';this.style.background='#f5f4ff'" onmouseout="this.style.borderColor='#e8e7f5';this.style.background='#fff'">
-    <div style="font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.3;">${p.name}</div>
-    <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;">${p.brand}</div>
-    <div style="font-size:28px;font-weight:800;color:#6366f1;">${p.avg_rating.toFixed(1)}</div>
-    <div style="font-size:11px;color:#9ca3af;">${p.review_count} отзывов</div>
-    <button class="btn-primary" style="margin-top:12px;padding:8px 20px;font-size:13px;">Выбрать</button>
-  </div>`;
-  cont.innerHTML=`<div style="display:flex;gap:12px;align-items:stretch;">
-    ${card(p1,"left")}
-    <div style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#9ca3af;flex-shrink:0;">VS</div>
-    ${card(p2,"right")}
-  </div>`;
+  badge.style.display="block";
+  badge.textContent=`Раунд ${s.round+1} из ${s.total}${s.category?" · "+s.category:""}`;
+  const pct=(p)=>p.review_count>0?Math.round(p.avg_rating/5*100):0;
+  const card=(p,side)=>`
+    <div id="bcard-${side}" onclick="battleVote(${p.id},'${side}')"
+      style="flex:1;border:2.5px solid #e8e7f5;border-radius:16px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.2s;min-width:0;position:relative;"
+      onmouseover="this.style.borderColor='#6366f1';this.style.background='#f5f4ff';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(99,102,241,0.15)'"
+      onmouseout="this.style.borderColor='#e8e7f5';this.style.background='#fff';this.style.transform='';this.style.boxShadow=''">
+      <div style="font-size:13px;font-weight:500;color:#9ca3af;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">${p.brand}</div>
+      <div style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:10px;line-height:1.35;">${p.name}</div>
+      <div style="display:inline-flex;flex-direction:column;align-items:center;background:#f9fafb;border-radius:12px;padding:10px 16px;margin-bottom:10px;">
+        <div style="font-size:30px;font-weight:800;color:#6366f1;line-height:1;">${p.avg_rating.toFixed(1)}</div>
+        <div style="margin:4px 0;">${_battleStars(p.avg_rating)}</div>
+        <div style="font-size:11px;color:#9ca3af;">${p.review_count} отзывов</div>
+      </div>
+      <div style="height:5px;background:#e8e7f5;border-radius:4px;overflow:hidden;margin-bottom:12px;">
+        <div style="height:100%;width:${pct(p)}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;"></div>
+      </div>
+      <button class="btn-primary" style="width:100%;padding:9px;font-size:13px;pointer-events:none;">Выбрать</button>
+    </div>`;
+  cont.innerHTML=`
+    <div style="text-align:center;font-size:12px;color:#9ca3af;margin-bottom:10px;">Выберите лучший товар в категории <strong>${s.category||"продукты"}</strong></div>
+    <div style="display:flex;gap:10px;align-items:stretch;">
+      ${card(p1,"left")}
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;flex-shrink:0;">
+        <div style="width:36px;height:36px;background:#f3f4f6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#9ca3af;">VS</div>
+      </div>
+      ${card(p2,"right")}
+    </div>`;
 }
 function battleVote(winnerId,side){
-  // Save vote to localStorage for B2B portrait analytics
   const winner=battleState.products.find(p=>p.id==winnerId);
+  const loserSide=side==="left"?"right":"left";
+  // Animate picked card
+  const picked=document.getElementById("bcard-"+side);
+  const lost=document.getElementById("bcard-"+loserSide);
+  if(picked){picked.style.borderColor="#6366f1";picked.style.background="#eef2ff";picked.style.transform="scale(1.03)";}
+  if(lost){lost.style.opacity="0.45";lost.style.filter="grayscale(60%)";}
+  // Save vote
   if(winner){
     const votes=JSON.parse(localStorage.getItem("ratescan_battle_votes")||"{}");
     const cat=battleState.category||"unknown";
@@ -1761,9 +1879,27 @@ function battleVote(winnerId,side){
     localStorage.setItem("ratescan_battle_votes",JSON.stringify(votes));
   }
   battleState.wins[winnerId]=(battleState.wins[winnerId]||0)+1;
+  if(!battleState.roundLog)battleState.roundLog=[];
+  battleState.roundLog.push(winner?winner.name:"—");
   battleState.round++;
   if(battleState.round===1)markQuestDone("battle_1");
-  renderBattleRound();
+  // Flash result then advance
+  const cont=document.getElementById("battle-content");
+  setTimeout(()=>{
+    if(cont&&battleState.active){
+      const REASONS=["Цена","Качество","Состав","Вкус","Бренд","Упаковка"];
+      const r3=REASONS.sort(()=>Math.random()-0.5).slice(0,3);
+      cont.innerHTML=`<div class="vote-flash" style="text-align:center;padding:18px 12px;">
+        <div style="font-size:13px;color:#9ca3af;margin-bottom:6px;">Вы выбрали</div>
+        <div style="font-size:17px;font-weight:700;color:#6366f1;margin-bottom:12px;">${winner?winner.name:"—"}</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Почему?</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+          ${r3.map(t=>`<span style="background:#eef2ff;color:#6366f1;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;cursor:pointer;">${t}</span>`).join("")}
+        </div>
+      </div>`;
+    }
+    setTimeout(()=>renderBattleRound(),820);
+  },280);
 }
 
 // ═══ CATEGORY EXPERTISE ══════════════════════════════════════════════
@@ -1965,6 +2101,215 @@ async function sendReply(){
   try{await apiPost(`/api/messages/conversations/${currentConvId}/reply`,{text});document.getElementById("chat-input").value="";openConversation(currentConvId);}
   catch(e){showToast(e.message,"error");}
 }
+
+// ═══ BRAND CATCHER GAME ══════════════════════════════════════════════
+const GM_W=360,GM_H=500,C_W=88,C_H=34,C_Y=GM_H-56,BRAND_H=28,PSPD=6,BSPD_BASE=2.4;
+const GAME_BRANDS=[
+  {name:"Starbucks",color:"#00704A"},{name:"Nike",color:"#111111"},
+  {name:"Apple",color:"#555555"},{name:"Samsung",color:"#1428A0"},
+  {name:"L'Oréal",color:"#CF2929"},{name:"Garnier",color:"#1a7a2a"},
+  {name:"Myprotein",color:"#0052cc"},{name:"Costa",color:"#6B1F1F"},
+  {name:"Vichy",color:"#005fa3"},{name:"Optimum",color:"#e65c00"},
+  {name:"Nestle",color:"#0075c9"},{name:"Danone",color:"#007ACC"},
+  {name:"Adidas",color:"#000000"},{name:"H&M",color:"#e40000"},
+  {name:"Zara",color:"#2c2c2c"},{name:"Ikea",color:"#0058A3"},
+];
+function getGameBrands(){
+  const sp=JSON.parse(localStorage.getItem("ratescan_b2b_game_brands")||"[]");
+  return [...GAME_BRANDS,...sp.map(b=>({...b,sponsored:true}))];
+}
+let gm={active:false};
+function _gmRaf(ts){
+  if(!gm.active)return;
+  const dt=Math.min(((ts-(gm.lt||ts))/16.67),3);
+  gm.lt=ts;
+  if(gm.lk)gm.px=Math.max(C_W/2,gm.px-PSPD*dt);
+  if(gm.rk)gm.px=Math.min(GM_W-C_W/2,gm.px+PSPD*dt);
+  // spawn
+  gm.st-=dt;
+  if(gm.st<=0){_gmSpawn();gm.st=Math.max(18,38-gm.spd*4);}
+  // move brands
+  const spd=BSPD_BASE*(1+gm.spd*0.18);
+  for(let i=gm.brands.length-1;i>=0;i--){
+    const b=gm.brands[i];
+    b.y+=spd*dt;
+    if(b.y+BRAND_H>=C_Y-4){
+      const bCx=b.x+b.w/2;
+      if(Math.abs(bCx-gm.px)<(C_W/2+b.w*0.38)){
+        // caught
+        gm.score+=b.sponsored?2:1;
+        gm.combo=(gm.combo||0)+1;
+        if(gm.combo>0&&gm.combo%5===0)gm.spd=Math.min(8,gm.spd+0.5);
+        gm.catchFX.push({x:bCx,y:C_Y,col:b.color,t:18,txt:b.sponsored?"+2":"+1"});
+        gm.brands.splice(i,1);
+      }else if(b.y>GM_H){
+        gm.brands.splice(i,1);
+        gm.combo=0;
+        gm.lives--;
+        gm.missFX.push({x:b.x+b.w/2,y:GM_H-80,t:22});
+        if(gm.lives<=0){_gmEnd();return;}
+      }
+    }
+  }
+  _gmDraw();
+  gm.raf=requestAnimationFrame(_gmRaf);
+}
+function _gmSpawn(){
+  const all=getGameBrands();
+  // sponsored brands appear 3x more often if present
+  const pool=[];
+  all.forEach(b=>{const n=b.sponsored?3:1;for(let i=0;i<n;i++)pool.push(b);});
+  const b=pool[Math.floor(Math.random()*pool.length)];
+  const ctx=document.getElementById("game-canvas").getContext("2d");
+  ctx.font="bold 13px Inter,sans-serif";
+  const tw=ctx.measureText(b.name).width;
+  const w=Math.max(70,tw+24);
+  const x=Math.random()*(GM_W-w-10)+5;
+  gm.brands.push({x,y:-BRAND_H-4,w,name:b.name,color:b.color,sponsored:b.sponsored||false});
+}
+function _gmDraw(){
+  const cv=document.getElementById("game-canvas");
+  if(!cv)return;
+  const ctx=cv.getContext("2d");
+  // BG
+  const grad=ctx.createLinearGradient(0,0,0,GM_H);
+  grad.addColorStop(0,"#0d0d1f");grad.addColorStop(1,"#1a0a2e");
+  ctx.fillStyle=grad;ctx.fillRect(0,0,GM_W,GM_H);
+  // Stars (static, seeded by index)
+  ctx.fillStyle="rgba(255,255,255,0.35)";
+  for(let i=0;i<30;i++){const sx=(i*137.5%1)*GM_W,sy=(i*97.3%1)*GM_H*0.7;ctx.fillRect(sx,sy,1.2,1.2);}
+  // Falling brands
+  gm.brands.forEach(b=>{
+    _gmRR(ctx,b.x,b.y,b.w,BRAND_H,14);
+    ctx.fillStyle=b.color+"dd";ctx.fill();
+    if(b.sponsored){ctx.strokeStyle="#fbbf24";ctx.lineWidth=2;_gmRR(ctx,b.x,b.y,b.w,BRAND_H,14);ctx.stroke();}
+    ctx.fillStyle="#fff";ctx.font="bold 13px Inter,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(b.name,b.x+b.w/2,b.y+BRAND_H/2);
+  });
+  // Catcher (Рейтик body)
+  const cx=gm.px,cy=C_Y;
+  _gmRR(ctx,cx-C_W/2,cy,C_W,C_H,C_H/2);
+  ctx.fillStyle="#6366f1";ctx.fill();
+  // Ears
+  [cx-C_W/2+10,cx+C_W/2-10].forEach((ex,i)=>{
+    ctx.beginPath();ctx.moveTo(ex,cy);
+    ctx.lineTo(ex+(i===0?-6:6),cy-14);ctx.lineTo(ex+(i===0?6:-6),cy-14);ctx.closePath();
+    ctx.fillStyle="#8b5cf6";ctx.fill();
+  });
+  // Eyes
+  ctx.fillStyle="#fff";
+  [[cx-14,cy+C_H/2-2],[cx+14,cy+C_H/2-2]].forEach(([ex,ey])=>{ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);ctx.fill();});
+  ctx.fillStyle="#1a1a2e";
+  [[cx-13,cy+C_H/2-1],[cx+15,cy+C_H/2-1]].forEach(([ex,ey])=>{ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);ctx.fill();});
+  // Smile
+  ctx.beginPath();ctx.arc(cx,cy+C_H/2+1,6,0.1,Math.PI-0.1);ctx.strokeStyle="#fff";ctx.lineWidth=1.8;ctx.stroke();
+  // Catch FX
+  for(let i=gm.catchFX.length-1;i>=0;i--){
+    const f=gm.catchFX[i];
+    ctx.globalAlpha=f.t/18;
+    ctx.fillStyle=f.col;ctx.font="bold 16px Inter,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(f.txt,f.x,f.y-(18-f.t)*2);
+    ctx.globalAlpha=1;
+    f.t--;if(f.t<=0)gm.catchFX.splice(i,1);
+  }
+  // Miss FX
+  for(let i=gm.missFX.length-1;i>=0;i--){
+    const f=gm.missFX[i];
+    ctx.globalAlpha=f.t/22;
+    ctx.fillStyle="#ef4444";ctx.font="bold 16px Inter,sans-serif";ctx.textAlign="center";
+    ctx.fillText("Мимо!",f.x,f.y-(22-f.t)*1.5);
+    ctx.globalAlpha=1;f.t--;if(f.t<=0)gm.missFX.splice(i,1);
+  }
+  // HUD
+  ctx.fillStyle="rgba(255,255,255,0.12)";_gmRR(ctx,0,0,GM_W,36,0);ctx.fill();
+  ctx.fillStyle="#fff";ctx.font="bold 13px Inter,sans-serif";ctx.textAlign="left";ctx.textBaseline="middle";
+  const hearts="♥".repeat(gm.lives)+"♡".repeat(Math.max(0,3-gm.lives));
+  ctx.fillStyle="#ef4444";ctx.fillText(hearts,10,18);
+  ctx.fillStyle="#f59e0b";ctx.textAlign="center";ctx.fillText(`${gm.score} поймано`,GM_W/2,18);
+  ctx.fillStyle="#a5b4fc";ctx.textAlign="right";ctx.fillText(`${gm.tl}с`,GM_W-10,18);
+  if(gm.combo>=3){ctx.fillStyle="#fbbf24";ctx.font="bold 11px Inter,sans-serif";ctx.textAlign="center";ctx.fillText(`Комбо x${gm.combo}!`,GM_W/2,GM_H-16);}
+}
+function _gmRR(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function _gmTimer(){gm.tl--;if(gm.tl<=0){clearInterval(gm.ti);_gmEnd();}}
+function _gmEnd(){
+  gm.active=false;
+  cancelAnimationFrame(gm.raf);
+  clearInterval(gm.ti);
+  const cv=document.getElementById("game-canvas");
+  if(cv)cv.style.display="none";
+  const res=document.getElementById("game-result");
+  if(res)res.style.display="block";
+  document.getElementById("gr-score").textContent=gm.score;
+  // Award points (capped daily)
+  const today=new Date().toDateString();
+  const gl=JSON.parse(localStorage.getItem("ratescan_game_log")||"{}");
+  const todayEarned=gl[today]||0;
+  const earned=Math.min(gm.score*2,100-todayEarned);
+  if(earned>0){gl[today]=todayEarned+earned;localStorage.setItem("ratescan_game_log",JSON.stringify(gl));}
+  document.getElementById("gr-pts").textContent=earned>0?`+${earned} баллов Рейтику!`:"Дневной лимит 100 баллов достигнут";
+  if(earned>0){apiPost("/api/surveys/game-reward",{points:earned}).then(()=>updatePointsDisplay()).catch(()=>{});}
+  updateGameDailyBadge();
+}
+function openGame(){
+  const cv=document.getElementById("game-canvas");
+  const res=document.getElementById("game-result");
+  const modal=document.getElementById("game-modal");
+  if(!cv||!modal)return;
+  const W=Math.min(GM_W,window.innerWidth-24);
+  const scale=W/GM_W;
+  cv.width=GM_W;cv.height=GM_H;
+  cv.style.width=W+"px";cv.style.height=(GM_H*scale)+"px";
+  cv.style.display="block";
+  if(res)res.style.display="none";
+  modal.style.display="flex";
+  gm={active:true,px:GM_W/2,score:0,lives:3,tl:60,brands:[],spd:0,st:30,combo:0,catchFX:[],missFX:[],lk:false,rk:false,lt:0,raf:null,ti:null};
+  gm.ti=setInterval(_gmTimer,1000);
+  // Input
+  const onKey=(e,down)=>{if(e.key==="ArrowLeft"||e.key==="a")gm.lk=down;if(e.key==="ArrowRight"||e.key==="d")gm.rk=down;};
+  document.onkeydown=e=>onKey(e,true);
+  document.onkeyup=e=>onKey(e,false);
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect();gm.px=Math.round((e.clientX-r.left)/scale);};
+  cv.ontouchmove=e=>{e.preventDefault();const r=cv.getBoundingClientRect();const t=e.touches[0];gm.px=Math.round((t.clientX-r.left)/scale);};
+  cv.ontouchstart=e=>{e.preventDefault();const r=cv.getBoundingClientRect();const t=e.touches[0];gm.px=Math.round((t.clientX-r.left)/scale);};
+  gm.raf=requestAnimationFrame(_gmRaf);
+}
+function restartGame(){openGame();}
+function closeGame(){
+  gm.active=false;
+  cancelAnimationFrame(gm.raf);
+  clearInterval(gm.ti);
+  document.getElementById("game-modal").style.display="none";
+  document.onkeydown=null;document.onkeyup=null;
+}
+function updateGameDailyBadge(){
+  const badge=document.getElementById("game-daily-badge");
+  const scoreEl=document.getElementById("game-score-today");
+  const today=new Date().toDateString();
+  const gl=JSON.parse(localStorage.getItem("ratescan_game_log")||"{}");
+  const earned=gl[today]||0;
+  if(badge)badge.style.display=earned>=100?"inline-block":"none";
+  if(scoreEl)scoreEl.textContent=earned>0?`Заработано сегодня: ${earned}/100 баллов`:"";
+}
 </script>
+
+<!-- GAME MODAL -->
+<div id="game-modal">
+  <canvas id="game-canvas"></canvas>
+  <div id="game-result" style="display:none;background:#1e1e3f;border-radius:20px;padding:28px 32px;text-align:center;max-width:320px;width:90%;">
+    <div style="font-size:36px;font-weight:800;color:#fff;margin-bottom:4px;" id="gr-score">0</div>
+    <div style="font-size:14px;color:#a5b4fc;margin-bottom:14px;">брендов поймано</div>
+    <div id="gr-pts" style="font-size:18px;font-weight:700;color:#10b981;margin-bottom:20px;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="restartGame()" class="game-hud-btn">Ещё раз</button>
+      <button onclick="closeGame()" class="game-hud-btn">Закрыть</button>
+    </div>
+  </div>
+  <button onclick="closeGame()" style="position:fixed;top:16px;right:16px;background:rgba(255,255,255,0.12);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</button>
+</div>
 </body>
 </html>

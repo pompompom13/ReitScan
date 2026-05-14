@@ -16,6 +16,8 @@ class User(Base):
     company_name = Column(String, nullable=True)
     company_category = Column(String, nullable=True)
     last_daily_spin = Column(DateTime, nullable=True)
+    last_game_play = Column(DateTime, nullable=True)
+    game_points_today = Column(Integer, default=0)
 
     reviews = relationship("Review", back_populates="author")
     business = relationship("BusinessProfile", back_populates="owner", uselist=False)

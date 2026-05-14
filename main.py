@@ -30,6 +30,17 @@ app.include_router(messages_router.router)
 
 @app.on_event("startup")
 def on_startup():
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        for col, typedef in [
+            ("last_game_play", "DATETIME"),
+            ("game_points_today", "INTEGER DEFAULT 0"),
+        ]:
+            try:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {typedef}"))
+                conn.commit()
+            except Exception:
+                pass
     db = SessionLocal()
     try:
         seed_database(db)
