@@ -111,3 +111,4 @@ class DashboardData(BaseModel):
     monthly_ratings: List[dict]
     recent_reviews: List[ReviewOut]
     response_rate: float
+    product_category: str = ""

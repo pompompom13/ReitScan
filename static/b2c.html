@@ -32,6 +32,24 @@
     @keyframes fadeSlideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
     .fade-in { animation:fadeSlideIn 0.3s ease forwards; }
     .pet-legendary { animation:petFloat 3s ease-in-out infinite; }
+    @keyframes petFeedBounce {
+      0%   { transform:scale(1) rotate(0deg); }
+      12%  { transform:scale(1.18) rotate(-6deg); }
+      25%  { transform:scale(1.22) rotate(6deg); }
+      40%  { transform:scale(1.12) rotate(-4deg); }
+      55%  { transform:scale(1.2) rotate(4deg); }
+      70%  { transform:scale(1.06) rotate(-2deg); }
+      85%  { transform:scale(1.12) rotate(2deg); }
+      100% { transform:scale(1) rotate(0deg); }
+    }
+    @keyframes petFeedGlow {
+      0%   { box-shadow:0 0 0 0 rgba(99,102,241,0); filter:var(--pet-filter,none); }
+      25%  { box-shadow:0 0 0 14px rgba(16,185,129,0.28); filter:var(--pet-filter,none) brightness(1.25) saturate(1.4); }
+      65%  { box-shadow:0 0 0 22px rgba(16,185,129,0.1); filter:var(--pet-filter,none) brightness(1.15) saturate(1.2); }
+      100% { box-shadow:0 0 0 0 rgba(99,102,241,0); filter:var(--pet-filter,none); }
+    }
+    .pet-feeding         { animation:petFeedBounce 0.75s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+    .pet-feeding-glow    { animation:petFeedGlow 1.1s ease-out forwards; }
     .modal-backdrop { position:fixed;inset:0;z-index:50;background:rgba(15,15,35,0.55);display:flex;align-items:center;justify-content:center;padding:16px; }
     .modal-box { background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.18); }
     .star-btn { cursor:pointer; font-size:28px; color:#d1d5db; transition:color 0.1s; }
@@ -137,6 +155,28 @@
       <h3 style="font-weight:600;font-size:16px;margin-bottom:14px;">Опросы</h3>
       <div id="surveys-container" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));"></div>
     </div>
+
+    <!-- КТО ЛУЧШЕ? BATTLE -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <h3 style="font-weight:600;font-size:16px;margin-bottom:2px;">Кто лучше?</h3>
+          <p style="font-size:12px;color:#9ca3af;">Выбирайте лучший товар — ваши голоса видят производители</p>
+        </div>
+        <div id="battle-score-badge" style="display:none;background:#eef2ff;color:#6366f1;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;"></div>
+      </div>
+      <div class="card p-5" id="battle-section">
+        <div id="battle-content">
+          <div style="text-align:center;padding:24px;">
+            <div style="width:50px;height:50px;background:#eef2ff;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M8 6v6m0 0v6m0-6h12M4 6h4M4 18h4" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <p style="font-size:14px;color:#374151;margin-bottom:16px;">Сравнивайте товары и помогайте другим покупателям сделать выбор</p>
+            <button onclick="startBattle()" class="btn-primary" style="padding:12px 32px;">Начать баттл</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -151,12 +191,33 @@
 
 <!-- CHARACTER TAB -->
 <div id="tab-character" class="hidden">
-  <div class="grid gap-5" style="grid-template-columns:1fr 1.4fr;">
+  <div class="grid gap-5" style="grid-template-columns:1fr 1.5fr;">
+    <!-- LEFT: Pet card -->
     <div class="card p-6 flex flex-col items-center gap-4">
       <div id="pet-container" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;"></div>
-      <div style="text-align:center;">
-        <div id="pet-name" style="font-weight:700;font-size:18px;"></div>
-        <div id="pet-stage-label" style="color:#6b7280;font-size:13px;margin-top:2px;"></div>
+      <div style="text-align:center;width:100%;">
+        <div id="pet-display-name" style="font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <span id="pet-name"></span>
+          <button onclick="startRenamePet()" title="Переименовать" style="background:none;border:none;cursor:pointer;color:#c4b5fd;padding:2px;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#c4b5fd'">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div id="pet-rename-area" style="display:none;align-items:center;gap:6px;justify-content:center;margin-top:4px;">
+          <input id="pet-name-input" type="text" maxlength="20" placeholder="Имя питомца..."
+            style="padding:5px 10px;border:1.5px solid #6366f1;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;width:130px;"
+            onkeydown="if(event.key==='Enter')savePetName()"/>
+          <button onclick="savePetName()" style="background:#6366f1;color:#fff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;">OK</button>
+          <button onclick="cancelRenamePet()" style="background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;">✕</button>
+        </div>
+        <div id="pet-stage-label" style="color:#6b7280;font-size:13px;margin-top:4px;"></div>
+      </div>
+      <!-- Mood row -->
+      <div id="pet-mood-row" style="width:100%;background:#f9fafb;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <div id="pet-mood-icon" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+        <div>
+          <div id="pet-mood-label" style="font-size:13px;font-weight:600;"></div>
+          <div id="pet-mood-desc" style="font-size:11px;color:#9ca3af;margin-top:1px;"></div>
+        </div>
       </div>
       <div style="width:100%;">
         <div class="flex justify-between mb-1" style="font-size:12px;color:#6b7280;">
@@ -165,8 +226,29 @@
         </div>
         <div class="progress-bar"><div class="progress-fill" id="pet-progress" style="width:0%;"></div></div>
       </div>
+      <!-- FOOD SYSTEM -->
+      <div style="width:100%;background:#f9fafb;border-radius:12px;padding:12px 14px;border:1px solid #e8e7f5;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:600;color:#374151;">Корм для Рейтика</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#ea580c;">
+            <svg width="14" height="14" fill="#ea580c" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/></svg>
+            <span id="food-count">0</span> порций
+          </div>
+        </div>
+        <!-- Hunger status badge -->
+        <div id="pet-hunger-status" style="display:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;margin-bottom:6px;"></div>
+        <!-- Multiplier badge -->
+        <div id="pet-hunger-mult" style="display:none;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-bottom:8px;"></div>
+        <div id="pet-hungry-notice" style="display:none;background:#fff7ed;border-radius:8px;padding:6px 10px;font-size:12px;color:#b45309;margin-bottom:8px;">
+          Рейтик голоден! Покормите его, чтобы поднять множитель корма
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">Корм за задания. Множитель зависит от сытости Рейтика.</div>
+        <button id="feed-btn" onclick="feedPet()" class="btn-primary" style="width:100%;padding:9px;font-size:14px;transition:transform 0.1s,opacity 0.18s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">🍖 Накормить</button>
+      </div>
       <button onclick="openAccModal()" class="btn-outline" style="width:100%;">Сменить аксессуар</button>
     </div>
+
+    <!-- RIGHT: Lore + Stages -->
     <div class="flex flex-col gap-4">
       <div class="card p-5">
         <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">О Рейтике</h3>
@@ -178,9 +260,49 @@
       </div>
     </div>
   </div>
+
+  <!-- RIDDLE OF THE DAY -->
   <div class="card p-5 mt-5">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:#faf5ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#7c3aed" stroke-width="2"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="#7c3aed"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Загадка дня</div>
+        <div style="font-size:12px;color:#9ca3af;">Правильный ответ — +15 баллов к прогрессу Рейтика</div>
+      </div>
+      <span id="riddle-badge" style="margin-left:auto;display:none;background:#d1fae5;color:#065f46;font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;">Разгадана!</span>
+    </div>
+    <div style="margin-bottom:8px;"><span id="riddle-category-tag" style="display:none;background:#faf5ff;color:#7c3aed;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid #e9d5ff;"></span></div>
+    <div id="riddle-question" style="font-size:15px;font-weight:500;color:#1a1a2e;margin-bottom:16px;line-height:1.5;background:#f9fafb;border-radius:10px;padding:14px;border-left:3px solid #7c3aed;"></div>
+    <div id="riddle-input-area" style="display:flex;gap:8px;">
+      <input id="riddle-input" type="text" placeholder="Ваш ответ..."
+        style="flex:1;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;"
+        onkeydown="if(event.key==='Enter')checkRiddle()"/>
+      <button onclick="checkRiddle()" class="btn-primary" style="padding:10px 20px;">Проверить</button>
+    </div>
+    <div id="riddle-hint" style="font-size:12px;color:#9ca3af;margin-top:8px;"></div>
+    <div id="riddle-feedback" style="margin-top:10px;font-size:13px;font-weight:500;display:none;padding:10px 14px;border-radius:8px;"></div>
+  </div>
+
+  <!-- STORY DIARY -->
+  <div class="card p-5 mt-4">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:#fff7ed;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="#ea580c" stroke-width="2" stroke-linejoin="round"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="#ea580c" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Дневник Рейтика</div>
+        <div style="font-size:12px;color:#9ca3af;">История открывается с каждой новой стадией</div>
+      </div>
+    </div>
+    <div id="story-diary" class="flex flex-col gap-3"></div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="card p-5 mt-4">
     <h3 style="font-weight:600;font-size:15px;margin-bottom:14px;">Достижения</h3>
-    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));" id="achievements-list"></div>
+    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(155px,1fr));" id="achievements-list"></div>
   </div>
 </div>
 
@@ -234,18 +356,35 @@
         </button>
       </div>
       <div id="modal-ratings" class="flex gap-3 flex-wrap mb-4"></div>
-      <div id="modal-prices" class="flex gap-3 mb-5" style="flex-wrap:wrap;"></div>
+      <div id="modal-prices" class="flex gap-3 mb-4" style="flex-wrap:wrap;"></div>
+      <!-- CHART -->
+      <div id="modal-chart-section" style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;display:none;">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Дашборд рейтингов</h3>
+        <div style="position:relative;height:140px;"><canvas id="modal-chart"></canvas></div>
+      </div>
+      <!-- ANALYSIS -->
       <div style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;">
         <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Анализ отзывов</h3>
         <div id="modal-analysis" class="grid gap-3" style="grid-template-columns:1fr 1fr;"></div>
       </div>
+      <!-- DISH RECOMMENDATIONS (restaurants/cafes) -->
+      <div id="modal-dishes" style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;display:none;">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Рекомендуют по отзывам</h3>
+        <div id="modal-dishes-list" class="flex flex-wrap gap-2"></div>
+      </div>
+      <!-- REVIEWS -->
       <div style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;">
         <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Отзывы</h3>
         <div id="modal-reviews" class="flex flex-col gap-3" style="max-height:200px;overflow-y:auto;"></div>
       </div>
+      <!-- ANALOGUES -->
+      <div id="modal-analogues" style="border-top:1px solid #e8e7f5;padding-top:16px;margin-bottom:16px;display:none;">
+        <h3 style="font-weight:600;font-size:15px;margin-bottom:12px;">Аналоги</h3>
+        <div id="modal-analogues-list" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));"></div>
+      </div>
       <div class="flex gap-3">
         <button onclick="openReviewModal()" class="btn-primary" style="flex:1;">Написать отзыв</button>
-        <button id="contact-manufacturer-btn" onclick="openContactModal()" class="btn-outline hidden" style="flex:1;">Связаться с брендом</button>
+        <button id="contact-manufacturer-btn" onclick="openContactModal()" class="btn-outline" style="flex:1;display:none;">Связаться с брендом</button>
       </div>
     </div>
   </div>
@@ -363,6 +502,140 @@ let surveyData = null, surveyStep = 0, surveyAnswers = [], currentSurveyId = nul
 let userPoints = 0;
 let selectedAcc = localStorage.getItem("ratescan_acc") || "none";
 let pendingAcc = selectedAcc;
+let allProducts = [];
+let modalChartInst = null;
+let battleState = {products:[], round:0, wins:{}, total:5, active:false};
+// Food system
+function getFoodTokens(){return parseInt(localStorage.getItem("ratescan_food")||"3");}
+function addFoodTokens(n){localStorage.setItem("ratescan_food",Math.min(20,getFoodTokens()+n));updateFoodDisplay();}
+function getLastFed(){return localStorage.getItem("ratescan_last_fed")||"";}
+function getHungerLevel(){
+  const lastFed=getLastFed();
+  if(!lastFed)return{key:"starving",filter:"grayscale(70%) brightness(0.65)",mult:0.5,label:"Голодающий 😵",color:"#ef4444",bg:"#fef2f2",tip:"Покормите Рейтика! Корм ×0.5"};
+  const h=(Date.now()-new Date(lastFed).getTime())/3600000;
+  if(h<2)  return{key:"just_fed",filter:"brightness(1.15) saturate(1.2)",mult:1.5,label:"Счастливый 😊",color:"#10b981",bg:"#d1fae5",tip:"Рейтик доволен! Корм ×1.5"};
+  if(h<6)  return{key:"satisfied",filter:"",mult:1.0,label:"Сытый 😌",color:"#6366f1",bg:"#eef2ff",tip:"Рейтик в норме. Корм ×1.0"};
+  if(h<12) return{key:"normal",filter:"",mult:1.0,label:"Обычный 😐",color:"#6b7280",bg:"#f3f4f6",tip:"Рейтик в норме. Корм ×1.0"};
+  if(h<24) return{key:"hungry",filter:"grayscale(40%) brightness(0.85)",mult:0.75,label:"Голодный 😟",color:"#f59e0b",bg:"#fffbeb",tip:"Рейтик хочет есть. Корм ×0.75"};
+  return{key:"starving",filter:"grayscale(70%) brightness(0.65)",mult:0.5,label:"Голодающий 😵",color:"#ef4444",bg:"#fef2f2",tip:"Рейтик голодает! Корм ×0.5"};
+}
+function playFeedAnimation(){
+  const petCont=document.getElementById("pet-container");
+  const feedBtn=document.getElementById("feed-btn");
+  if(!petCont||!feedBtn)return;
+
+  // Bounce + glow on the pet SVG
+  petCont.classList.remove("pet-feeding","pet-feeding-glow");
+  void petCont.offsetWidth; // force reflow so animation restarts
+  petCont.classList.add("pet-feeding","pet-feeding-glow");
+  setTimeout(()=>petCont.classList.remove("pet-feeding","pet-feeding-glow"),1300);
+
+  const btnRect=feedBtn.getBoundingClientRect();
+  const petRect=petCont.getBoundingClientRect();
+  const petCX=petRect.left+petRect.width/2;
+  const petCY=petRect.top+petRect.height/2;
+
+  // Flying food particles from button → pet
+  const FOOD_EMOJIS=["🍖","🐟","🥩","🌟","✨"];
+  const N=7;
+  for(let i=0;i<N;i++){
+    setTimeout(()=>{
+      const el=document.createElement("div");
+      el.textContent=FOOD_EMOJIS[i%FOOD_EMOJIS.length];
+      const startX=btnRect.left+btnRect.width/2+(Math.random()*36-18);
+      const startY=btnRect.top+(Math.random()*10);
+      const jitter=(Math.random()*30-15);
+      el.style.cssText=`position:fixed;left:${startX}px;top:${startY}px;font-size:${19+Math.random()*9}px;pointer-events:none;z-index:9999;will-change:transform,opacity;`;
+      document.body.appendChild(el);
+      const dx=petCX-startX+jitter;
+      const dy=petCY-startY+jitter;
+      el.animate([
+        {transform:"translate(0,0) scale(1) rotate(0deg)",      opacity:1},
+        {transform:`translate(${dx*.55}px,${dy*.55}px) scale(1.5) rotate(180deg)`, opacity:1,  offset:.55},
+        {transform:`translate(${dx}px,${dy}px) scale(0.2) rotate(360deg)`, opacity:0},
+      ],{duration:650+Math.random()*250, easing:"cubic-bezier(.25,.46,.45,.94)", fill:"forwards"})
+      .onfinish=()=>el.remove();
+    },i*65);
+  }
+
+  // Hearts / sparkles floating up from pet
+  const HEART_EMOJIS=["❤️","💖","✨","⭐","💫","💚"];
+  for(let i=0;i<5;i++){
+    setTimeout(()=>{
+      const el=document.createElement("div");
+      el.textContent=HEART_EMOJIS[Math.floor(Math.random()*HEART_EMOJIS.length)];
+      const hx=petCX+(Math.random()*70-35);
+      const hy=petRect.top+(Math.random()*30);
+      el.style.cssText=`position:fixed;left:${hx}px;top:${hy}px;font-size:${13+Math.random()*12}px;pointer-events:none;z-index:9999;will-change:transform,opacity;`;
+      document.body.appendChild(el);
+      el.animate([
+        {transform:"translateY(0) scale(0.4)",   opacity:0},
+        {transform:"translateY(-18px) scale(1.3)",opacity:1,  offset:.25},
+        {transform:"translateY(-50px) scale(1)",  opacity:1,  offset:.65},
+        {transform:"translateY(-80px) scale(0.7)",opacity:0},
+      ],{duration:1100+Math.random()*400, easing:"ease-out", fill:"forwards"})
+      .onfinish=()=>el.remove();
+    },350+i*110);
+  }
+
+  // "Счастлив! 🌟" label floating above pet
+  setTimeout(()=>{
+    const el=document.createElement("div");
+    el.textContent="Счастлив! 🌟";
+    el.style.cssText=`position:fixed;left:${petCX-44}px;top:${petRect.top+6}px;font-size:14px;font-weight:700;color:#10b981;pointer-events:none;z-index:9999;font-family:'Inter',sans-serif;text-shadow:0 1px 8px rgba(0,0,0,0.12);white-space:nowrap;`;
+    document.body.appendChild(el);
+    el.animate([
+      {transform:"translateY(0) scale(0.7)",  opacity:0},
+      {transform:"translateY(-8px) scale(1.1)",opacity:1,  offset:.2},
+      {transform:"translateY(-38px) scale(1)", opacity:1,  offset:.7},
+      {transform:"translateY(-68px) scale(.9)",opacity:0},
+    ],{duration:1500, easing:"ease-out", fill:"forwards"})
+    .onfinish=()=>el.remove();
+  },180);
+}
+function feedPet(){
+  const food=getFoodTokens();
+  if(food<1){showToast("Нет корма! Выполните задания чтобы получить его","error");return;}
+  localStorage.setItem("ratescan_food",food-1);
+  localStorage.setItem("ratescan_last_fed",new Date().toISOString());
+  markQuestDone("feed_pet");
+  updateFoodDisplay();
+  playFeedAnimation();
+  const btn=document.getElementById("feed-btn");
+  if(btn){btn.textContent="🌟 Рейтик сыт!";btn.disabled=true;setTimeout(()=>{btn.textContent="🍖 Накормить";btn.disabled=false;renderCharacterTab();},2200);}
+  showToast("Рейтик счастлив! Бонус ×1.5 к корму активен на 2 часа 🌟");
+}
+function updateFoodDisplay(){
+  const el=document.getElementById("food-count");
+  if(el)el.textContent=getFoodTokens();
+  const h=getHungerLevel();
+  // Apply visual filter to pet container based on hunger
+  const container=document.getElementById("pet-container");
+  if(container)container.style.filter=h.filter||"";
+  // Hunger status badge
+  const statusEl=document.getElementById("pet-hunger-status");
+  if(statusEl){
+    statusEl.style.display="block";
+    statusEl.style.background=h.bg;
+    statusEl.style.color=h.color;
+    statusEl.textContent=`Состояние: ${h.label}`;
+  }
+  // Multiplier badge
+  const multEl=document.getElementById("pet-hunger-mult");
+  if(multEl){
+    if(h.mult!==1.0){
+      multEl.style.display="inline-block";
+      multEl.style.background=h.mult>1?"#d1fae5":"#fef2f2";
+      multEl.style.color=h.mult>1?"#065f46":"#991b1b";
+      multEl.textContent=h.mult>1?`×${h.mult} к корму за задания 🌟`:`×${h.mult} к корму (покормите!)`;
+    }else{
+      multEl.style.display="none";
+    }
+  }
+  // Legacy hungry notice
+  const hungryEl=document.getElementById("pet-hungry-notice");
+  if(hungryEl)hungryEl.style.display=(h.key==="hungry"||h.key==="starving")?"block":"none";
+}
 
 const ACCESSORIES = [
   {id:"none",label:"Без аксессуара",minPts:0},
@@ -506,6 +779,7 @@ async function searchProducts(){
     if(q)url+=`q=${encodeURIComponent(q)}&`;
     if(cat)url+=`category=${encodeURIComponent(cat)}&`;
     const prods=await apiGet(url);
+    allProducts=prods;
     renderProducts(prods);
   }catch(e){}
 }
@@ -545,35 +819,95 @@ async function openProductModal(id){
     currentProductData=p;
     document.getElementById("modal-name").textContent=p.name;
     document.getElementById("modal-meta").textContent=`${p.brand} · ${p.category}`;
-    const ratings=[{k:"wb",label:"Wildberries",v:p.rating_wb,color:"#7c3aed"},{k:"ozon",label:"Ozon",v:p.rating_ozon,color:"#1d4ed8"},{k:"ym",label:"ЯМ",v:p.rating_ym,color:"#b45309"},{k:"gmaps",label:"Google",v:p.rating_gmaps,color:"#15803d"},{k:"2gis",label:"2ГИС",v:p.rating_2gis,color:"#065f46"}].filter(r=>r.v>0);
+    const allRatings=[{k:"wb",label:"Wildberries",v:p.rating_wb,color:"#7c3aed"},{k:"ozon",label:"Ozon",v:p.rating_ozon,color:"#1d4ed8"},{k:"ym",label:"ЯМ",v:p.rating_ym,color:"#b45309"},{k:"gmaps",label:"Google",v:p.rating_gmaps,color:"#15803d"},{k:"2gis",label:"2ГИС",v:p.rating_2gis,color:"#065f46"},{k:"perek",label:"Перекрёсток",v:p.rating_perek||0,color:"#16a34a"},{k:"otzovik",label:"Otzovik",v:p.rating_otzovik||0,color:"#d97706"}];
+    const ratings=allRatings.filter(r=>r.v>0);
     document.getElementById("modal-ratings").innerHTML=ratings.map(r=>`<div style="background:#f9fafb;border-radius:10px;padding:6px 12px;text-align:center;min-width:68px;"><div style="font-weight:700;font-size:16px;color:${r.color};">${r.v.toFixed(1)}</div><div style="font-size:11px;color:#6b7280;">${r.label}</div></div>`).join("");
     const prices=[{l:"WB",v:p.price_wb},{l:"Ozon",v:p.price_ozon},{l:"YM",v:p.price_ym}].filter(x=>x.v);
-    document.getElementById("modal-prices").innerHTML=prices.map(x=>`<span style="font-size:15px;font-weight:600;color:#374151;">${x.l}: ${x.v} ₽</span>`).join('<span style="color:#d1d5db;margin:0 4px;">·</span>');
+    document.getElementById("modal-prices").innerHTML=prices.length?prices.map(x=>`<span style="font-size:15px;font-weight:600;color:#374151;">${x.l}: ${x.v} ₽</span>`).join('<span style="color:#d1d5db;margin:0 4px;">·</span>'):"";
+    // Chart
+    const chartSection=document.getElementById("modal-chart-section");
+    if(ratings.length>=2){
+      chartSection.style.display="block";
+      if(modalChartInst)modalChartInst.destroy();
+      modalChartInst=new Chart(document.getElementById("modal-chart"),{
+        type:"bar",
+        data:{
+          labels:ratings.map(r=>r.label),
+          datasets:[{
+            label:"Рейтинг",
+            data:ratings.map(r=>r.v),
+            backgroundColor:ratings.map(r=>r.color+"22"),
+            borderColor:ratings.map(r=>r.color),
+            borderWidth:2,borderRadius:6
+          }]
+        },
+        options:{scales:{y:{min:0,max:5,grid:{color:"#f3f4f6"},ticks:{font:{family:"Inter",size:11}}},x:{grid:{display:false},ticks:{font:{family:"Inter",size:11}}}},plugins:{legend:{display:false}},maintainAspectRatio:false}
+      });
+    }else{chartSection.style.display="none";}
     try{
       const an=await apiGet(`/api/b2c/products/${id}/analysis`);
       const topPros=an.pros.slice(0,3),topCons=an.cons.slice(0,3);
       document.getElementById("modal-analysis").innerHTML=`
         <div>
           <div style="font-size:12px;font-weight:500;color:#10b981;margin-bottom:8px;">Достоинства</div>
-          ${topPros.length?topPros.map(p=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${p.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${p.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
+          ${topPros.length?topPros.map(pp=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${pp.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${pp.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
         </div>
         <div>
           <div style="font-size:12px;font-weight:500;color:#ef4444;margin-bottom:8px;">Недостатки</div>
-          ${topCons.length?topCons.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${c.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${c.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
+          ${topCons.length?topCons.map(cc=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0;"></div><span style="font-size:13px;color:#374151;">${cc.topic}</span><span style="font-size:11px;color:#9ca3af;margin-left:auto;">${cc.pct}%</span></div>`).join(""):'<p style="font-size:12px;color:#9ca3af;">Нет данных</p>'}
         </div>`;
     }catch(e){document.getElementById("modal-analysis").innerHTML="";}
+    // Dish recommendations for restaurants/cafes
+    const dishDiv=document.getElementById("modal-dishes");
+    const dishCats=["ресторан","кофейня"];
+    if(dishCats.includes((p.category||"").toLowerCase())){
+      const DISHES_MAP={"борщ":3,"паста":4,"пицца":3,"суши":4,"роллы":3,"салат":2,"шашлык":5,"стейк":5,"тирамису":4,"капучино":5,"латте":4,"эспрессо":3,"сырники":4,"блины":3,"десерт":3,"торт":2,"завтрак":4,"бизнес-ланч":3,"пельмени":2,"котлеты":2,"лосось":4,"тунец":3,"уха":2,"окрошка":2,"вареники":3};
+      const revTexts=(p.reviews||[]).map(r=>r.text.toLowerCase()).join(" ");
+      const found=Object.entries(DISHES_MAP).filter(([d])=>revTexts.includes(d)).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      if(found.length){
+        dishDiv.style.display="block";
+        document.getElementById("modal-dishes-list").innerHTML=found.map(([d])=>`<span style="background:#fff7ed;color:#ea580c;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500;">🍽 ${d}</span>`).join("");
+      }else{dishDiv.style.display="none";}
+    }else{dishDiv.style.display="none";}
+    // Reviews
+    const platLabels={wb:"WB",ozon:"Ozon",ym:"ЯМ",gmaps:"Google",["2gis"]:"2ГИС",ratescan:"РейтСкан",perek:"Перекрёсток",otzovik:"Otzovik"};
+    const platColors2={wb:"#faf5ff,#7c3aed",ozon:"#eff6ff,#1d4ed8",ym:"#fffbeb,#b45309",gmaps:"#f0fdf4,#15803d","2gis":"#ecfdf5,#065f46",ratescan:"#eef2ff,#6366f1",perek:"#f0fdf4,#16a34a",otzovik:"#fffbeb,#d97706"};
     const revs=p.reviews||[];
-    document.getElementById("modal-reviews").innerHTML=revs.map(r=>`
-      <div style="border:1px solid #e8e7f5;border-radius:10px;padding:10px 12px;">
+    document.getElementById("modal-reviews").innerHTML=revs.map(r=>{
+      const [pbg,ptc]=(platColors2[r.platform]||"#f3f4f6,#374151").split(",");
+      return `<div style="border:1px solid #e8e7f5;border-radius:10px;padding:10px 12px;">
         <div class="flex items-center justify-between mb-1">
-          <span style="font-size:12px;font-weight:500;">${r.author_name}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;font-weight:500;">${r.author_name}</span>
+            ${r.platform?`<span style="font-size:11px;background:${pbg};color:${ptc};padding:1px 7px;border-radius:10px;">${platLabels[r.platform]||r.platform}</span>`:""}
+          </div>
           <span style="font-size:11px;color:#9ca3af;">${formatDate(r.created_at)}</span>
         </div>
         <div class="flex gap-0.5 mb-1">${[1,2,3,4,5].map(i=>`<svg width="10" height="10" fill="${i<=r.rating?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}</div>
         <p style="font-size:13px;color:#4b5563;line-height:1.5;">${r.text}</p>
-      </div>`).join("")||`<p style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">Нет отзывов</p>`;
+      </div>`;
+    }).join("")||`<p style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">Нет отзывов</p>`;
+    // Analogues
+    const analogDiv=document.getElementById("modal-analogues");
+    const analogs=allProducts.filter(x=>x.id!==id&&x.category===p.category).sort((a,b)=>b.avg_rating-a.avg_rating).slice(0,4);
+    if(analogs.length){
+      analogDiv.style.display="block";
+      document.getElementById("modal-analogues-list").innerHTML=analogs.map(a=>{
+        const diff=a.avg_rating-p.avg_rating;
+        const diffStr=diff>0?`<span style="color:#10b981;font-size:11px;font-weight:600;">+${diff.toFixed(1)} vs вы</span>`:`<span style="color:#ef4444;font-size:11px;font-weight:600;">${diff.toFixed(1)} vs вы</span>`;
+        return `<div onclick="closeProductModal();setTimeout(()=>openProductModal(${a.id}),100)" style="border:1px solid #e8e7f5;border-radius:12px;padding:10px 12px;cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(99,102,241,0.12)'" onmouseout="this.style.boxShadow='none'">
+          <div style="font-size:13px;font-weight:600;line-height:1.3;margin-bottom:4px;">${a.name}</div>
+          <div style="font-size:11px;color:#9ca3af;">${a.brand}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+            <span style="font-size:15px;font-weight:700;color:#6366f1;">${a.avg_rating.toFixed(1)}</span>
+            ${diffStr}
+          </div>
+        </div>`;
+      }).join("");
+    }else{analogDiv.style.display="none";}
+    // Contact button
     const btn=document.getElementById("contact-manufacturer-btn");
-    p.business_id?btn.classList.remove("hidden"):btn.classList.add("hidden");
+    btn.style.display=p.business_id?"block":"none";
     document.getElementById("product-modal").classList.remove("hidden");
   }catch(e){showToast("Ошибка загрузки товара","error");}
 }
@@ -663,17 +997,31 @@ async function spinWheel(){
 const QUEST_DEFS=[
   {id:"daily_spin",title:"Ежедневное вращение",desc:"Прокрутите колесо фортуны",points:0,type:"daily"},
   {id:"review_any",title:"Поделитесь мнением",desc:"Напишите первый отзыв на товар",points:10,type:"review"},
-  {id:"review_3",title:"Активный reviewer",desc:"Напишите 3 отзыва",points:30,type:"review"},
+  {id:"review_3",title:"Активный рецензент",desc:"Напишите 3 отзыва на разные товары",points:30,type:"review"},
   {id:"share_review",title:"Подробный отзыв",desc:"Напишите отзыв длиннее 100 символов",points:15,type:"review"},
-  {id:"visit_food",title:"Исследователь",desc:"Изучите категорию «Кофе и чай»",points:20,type:"location",category:"Кофе и чай"},
-  {id:"visit_cosmetics",title:"Бьюти-эксперт",desc:"Изучите категорию «Косметика»",points:20,type:"location",category:"Косметика"},
-  {id:"visit_3cats",title:"Путешественник",desc:"Изучите 3 разных категории",points:40,type:"exploration"},
+  {id:"visit_food",title:"Кофейный эксперт",desc:"Изучите категорию «Кофе и чай»",points:20,type:"location",category:"кофе и чай"},
+  {id:"visit_cosmetics",title:"Бьюти-эксперт",desc:"Изучите категорию «Косметика»",points:20,type:"location",category:"косметика"},
+  {id:"visit_sport",title:"Спортсмен",desc:"Изучите «Спортивное питание»",points:20,type:"location",category:"спортивное питание"},
+  {id:"visit_3cats",title:"Путешественник",desc:"Изучите 3 разные категории",points:40,type:"exploration"},
   {id:"survey_1",title:"Первый опрос",desc:"Пройдите любой опрос",points:0,type:"survey"},
   {id:"login_streak",title:"Постоянный гость",desc:"Заходите 3 дня подряд",points:25,type:"streak"},
+  {id:"riddle_daily",title:"Загадка дня",desc:"Разгадайте ежедневную загадку Рейтика",points:15,type:"riddle"},
+  {id:"pet_named",title:"Имя для Рейтика",desc:"Дайте своё имя питомцу",points:10,type:"pet"},
+  {id:"battle_1",title:"Первый баттл",desc:"Поучаствуйте в «Кто лучше?» и проголосуйте",points:10,type:"battle"},
+  {id:"feed_pet",title:"Накормить Рейтика",desc:"Покормите питомца хотя бы раз",points:5,type:"food"},
 ];
 function getQuestProgress(){return JSON.parse(localStorage.getItem("ratescan_quests")||"{}");}
 function setQuestProgress(d){localStorage.setItem("ratescan_quests",JSON.stringify(d));}
-function markQuestDone(id){const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);renderQuestCards();}
+function markQuestDone(id){
+  const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);renderQuestCards();
+  // Food reward with hunger multiplier
+  const FOOD_REWARDS={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
+  if(FOOD_REWARDS[id]){
+    const h=getHungerLevel();
+    const earned=Math.max(1,Math.round(FOOD_REWARDS[id]*h.mult));
+    addFoodTokens(earned);
+  }
+}
 async function loadQuests(){
   renderQuestCards();
   const today=new Date().toDateString();
@@ -683,33 +1031,65 @@ async function loadQuests(){
     if(streak>=3)markQuestDone("login_streak");
   }
 }
-const TYPE_COLORS={daily:["#e0e7ff","#4338ca"],review:["#dcfce7","#15803d"],location:["#fef3c7","#b45309"],exploration:["#dbeafe","#1d4ed8"],survey:["#fce7f3","#be185d"],streak:["#f0fdf4","#16a34a"]};
+const TYPE_COLORS={
+  daily:["#e0e7ff","#4338ca"],review:["#dcfce7","#15803d"],location:["#fef3c7","#b45309"],
+  exploration:["#dbeafe","#1d4ed8"],survey:["#fce7f3","#be185d"],streak:["#f0fdf4","#16a34a"],
+  riddle:["#faf5ff","#7c3aed"],pet:["#fff7ed","#ea580c"],
+  battle:["#fef3c7","#b45309"],food:["#fff7ed","#ea580c"],
+};
+const TYPE_ICONS={
+  daily:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  review:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  location:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>`,
+  exploration:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  survey:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="2"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="2"/><path d="M9 12h6M9 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  streak:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2c1 3.5-1 6 0 9 0 0 2-2 2-4 1 1 2 3 1 5s-2 4-5 5c0 0 4 0 5-3 0 0 2 2 0 5-1.5 1.5-4 2-5 2 0 0 7 0 7-7 0-3-2-6-5-12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  riddle:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>`,
+  pet:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  battle:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M8 6v6m0 0v6m0-6h12M4 6h4M4 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  food:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12s1-4 4-4 4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+};
 function renderQuestCards(){
   const prog=getQuestProgress();
+  const FOOD_REWARDS_BASE={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
+  const h=getHungerLevel();
   document.getElementById("quests-container").innerHTML=QUEST_DEFS.map(q=>{
     const done=isQuestDone(q,prog);
     const [bg,tc]=TYPE_COLORS[q.type]||["#f3f4f6","#374151"];
-    const typeLabel={daily:"Ежедневное",review:"Отзыв",location:"Локация",exploration:"Исследование",survey:"Опрос",streak:"Серия"}[q.type]||q.type;
+    const icon=TYPE_ICONS[q.type]||TYPE_ICONS.review;
+    const baseFood=FOOD_REWARDS_BASE[q.id]||0;
+    const effFood=baseFood?Math.max(1,Math.round(baseFood*h.mult)):0;
+    let action="";
+    if(!done){
+      if(q.type==="location")action=`<button onclick="markLocationVisit('${q.id}','${q.category}')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Отметить</button>`;
+      else if(q.type==="review")action=`<button onclick="switchTab('search')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">К поиску</button>`;
+      else if(q.type==="riddle")action=`<button onclick="switchTab('character')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Загадка</button>`;
+      else if(q.type==="pet")action=`<button onclick="switchTab('character')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">К питомцу</button>`;
+      else if(q.type==="battle")action=`<button onclick="startBattle()" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Баттл</button>`;
+      else if(q.type==="food")action=`<button onclick="switchTab('character')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">К питомцу</button>`;
+    }
     return `<div class="card p-4 transition-all" style="border-color:${done?"#a7f3d0":"#e8e7f5"};">
       <div class="flex items-start gap-3">
-        <div style="width:38px;height:38px;border-radius:11px;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <span style="font-size:11px;font-weight:600;color:${tc};">${typeLabel}</span>
-        </div>
+        <div style="width:38px;height:38px;border-radius:11px;background:${bg};color:${tc};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:14px;">${q.title}</div>
-          <div style="color:#6b7280;font-size:12px;margin-top:2px;">${q.desc}</div>
-          ${q.points>0?`<div style="font-size:12px;color:#6366f1;font-weight:500;margin-top:4px;">+${q.points} баллов</div>`:""}
+          <div style="color:#6b7280;font-size:12px;margin-top:2px;line-height:1.4;">${q.desc}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+            ${q.points>0?`<span style="font-size:12px;color:#6366f1;font-weight:500;">+${q.points} баллов</span>`:""}
+            ${effFood?`<span style="font-size:11px;color:#ea580c;font-weight:500;">+${effFood}🍖${h.mult!==1.0?` (×${h.mult})`:""}  корм</span>`:""}
+          </div>
         </div>
-        ${done?`<div style="width:22px;height:22px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`:
-          q.type==="location"?`<button onclick="markLocationVisit('${q.id}','${q.category}')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Отметить</button>`:
-          q.type==="review"?`<button onclick="switchTab('search')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">К поиску</button>`:""}
+        ${done?`<div style="width:22px;height:22px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`:action}
       </div>
     </div>`;
   }).join("");
 }
 function isQuestDone(q,prog){
   if(q.id==="review_3")return(prog["review_any"]||0)>=3;
+  if(q.id==="visit_3cats"){
+    const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
+    return cats.length>=3;
+  }
   return!!prog[q.id];
 }
 function markLocationVisit(questId,category){
@@ -831,15 +1211,150 @@ async function loadMyReviews(){
   }catch(e){}
 }
 
-// CHARACTER
+// ═══ PET NAMING ══════════════════════════════════════════════
+function getPetCustomName(){return localStorage.getItem("ratescan_pet_name")||"";}
+function startRenamePet(){
+  document.getElementById("pet-display-name").style.display="none";
+  const ra=document.getElementById("pet-rename-area");
+  ra.style.display="flex";
+  document.getElementById("pet-name-input").value=getPetCustomName();
+  document.getElementById("pet-name-input").focus();
+}
+function cancelRenamePet(){
+  document.getElementById("pet-rename-area").style.display="none";
+  document.getElementById("pet-display-name").style.display="flex";
+}
+function savePetName(){
+  const input=document.getElementById("pet-name-input").value.trim();
+  if(input){localStorage.setItem("ratescan_pet_name",input);markQuestDone("pet_named");}
+  cancelRenamePet();
+  renderCharacterTab();
+  if(input)showToast("Рейтик рад своему новому имени!");
+}
+
+// ═══ MOOD SYSTEM ══════════════════════════════════════════════
+const PET_MOODS=[
+  {key:"sleepy",label:"Дремлющий",desc:"Напишите отзыв — Рейтик оживёт!",bg:"#f3f4f6",ic:"#9ca3af",
+   svg:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2"/></svg>`},
+  {key:"curious",label:"Любопытный",desc:"Рейтик интересуется вашими покупками!",bg:"#eff6ff",ic:"#1d4ed8",
+   svg:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`},
+  {key:"happy",label:"Радостный",desc:"Рейтик доволен! Продолжайте в том же духе.",bg:"#dcfce7",ic:"#15803d",
+   svg:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg>`},
+  {key:"excited",label:"Восторженный",desc:"Рейтик в восторге от вашей активности!",bg:"#fef3c7",ic:"#d97706",
+   svg:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 13s1.5 3 4 3 4-3 4-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg>`},
+  {key:"legendary",label:"Легендарный",desc:"Рейтик достиг просветления! Вы — легенда.",bg:"#fffbeb",ic:"#f59e0b",
+   svg:`<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`},
+];
+function getMoodState(pts,streak,reviewCount){
+  if(pts>=1500)return PET_MOODS[4];
+  if(reviewCount>=5||streak>=7)return PET_MOODS[3];
+  if(reviewCount>=2||streak>=3)return PET_MOODS[2];
+  if(reviewCount>=1||pts>=100)return PET_MOODS[1];
+  return PET_MOODS[0];
+}
+
+// ═══ DAILY RIDDLE ══════════════════════════════════════════════
+const RIDDLES=[
+  {q:"Какой ингредиент в косметике удерживает влагу в 1000 раз больше своего веса и делает кожу упругой?",a:["гиалуроновая кислота","гиалуронат","гиалуроновый"],hint:"Его название происходит от греческого «стекловидный»",category:"косметика"},
+  {q:"Как называется метод заваривания кофе, при котором вода проходит через молотый кофе под давлением пара?",a:["эспрессо","эспрессо-метод"],hint:"Именно из него делают капучино и латте",category:"кофе и чай"},
+  {q:"Какой вид мороженого сделан исключительно из фруктового сока или пюре без молока и сливок?",a:["сорбет","шербет","фруктовый лёд"],hint:"Идеален для тех, кто избегает лактозы",category:"мороженое"},
+  {q:"Как называется белок из молочной сыворотки, который спортсмены принимают сразу после тренировки?",a:["протеин","сывороточный протеин","белок"],hint:"Его используют для роста мышечной массы",category:"спортивное питание"},
+  {q:"Какой витамин в косметике обозначается буквой C, борется с пигментацией и осветляет кожу?",a:["витамин c","витамин с","аскорбиновая кислота","аскорбинка"],hint:"Он же помогает организму при простуде",category:"косметика"},
+  {q:"Как называется напиток из чёрного чая, заваренного с молоком и ароматными пряностями, популярный в Индии?",a:["масала","чай масала","чай со специями"],hint:"Его название — санскритское слово «смешанные специи»",category:"кофе и чай"},
+  {q:"Сколько калорий в среднем содержит одна порция (100 г) классического пломбира?",a:["200","200-250","250","около 200"],hint:"Примерно как небольшой кусок хлеба с маслом",category:"мороженое"},
+  {q:"Как называется традиционный японский суп, который часто подают в ресторанах суши как стартер?",a:["мисо","мисо-суп","мисосуп"],hint:"Готовится на основе ферментированной соевой пасты",category:"ресторан"},
+  {q:"Какой аминокислотный комплекс в спортпите обозначается аббревиатурой из 4 букв и содержит лейцин?",a:["bcaa","бцаа","bcaa аминокислоты"],hint:"Три незаменимые аминокислоты с разветвлённой цепью",category:"спортивное питание"},
+  {q:"Как называется степень обжарки кофе, при которой зёрна становятся тёмно-коричневыми с маслянистым блеском?",a:["тёмная обжарка","тёмная","французская","итальянская"],hint:"Чаще используется для эспрессо, реже для фильтра",category:"кофе и чай"},
+  {q:"Какой натуральный компонент в косметике получают из лепестков розы и он успокаивает раздражённую кожу?",a:["розовая вода","экстракт розы","масло розы","розовое масло"],hint:"Применяется в тониках и спреях для лица",category:"косметика"},
+  {q:"Как называется популярное блюдо итальянской кухни, которое часто заказывают в ресторанах: тонкое тесто + томат + сыр?",a:["пицца"],hint:"Родина этого блюда — Неаполь",category:"ресторан"},
+  {q:"Что такое «гейнер» в спортивном питании?",a:["смесь белков и углеводов","углеводно-белковая смесь","смесь протеина и углеводов","белково-углеводная"],hint:"Используется для набора массы, содержит больше калорий чем протеин",category:"спортивное питание"},
+  {q:"Какой вид чая производится из тех же листьев, что и зелёный, но проходит полную ферментацию?",a:["чёрный чай","чёрный","красный чай"],hint:"Его степень окисления — 100%, в отличие от зелёного",category:"кофе и чай"},
+];
+function getRiddleForToday(){
+  const d=new Date();
+  const idx=(d.getDate()+d.getMonth()*31)%RIDDLES.length;
+  return {riddle:RIDDLES[idx],idx};
+}
+function isRiddleDoneToday(){
+  return localStorage.getItem("ratescan_riddle_date")===new Date().toDateString();
+}
+function checkRiddle(){
+  const input=document.getElementById("riddle-input").value.trim().toLowerCase();
+  const {riddle}=getRiddleForToday();
+  const fb=document.getElementById("riddle-feedback");
+  if(!input){showToast("Введите ответ","error");return;}
+  const correct=riddle.a.some(ans=>input.includes(ans.toLowerCase())||ans.toLowerCase().includes(input));
+  fb.style.display="block";
+  if(correct){
+    if(isRiddleDoneToday()){
+      fb.style.background="#eef2ff";fb.style.color="#4338ca";
+      fb.textContent="Вы уже разгадали сегодняшнюю загадку! Возвращайтесь завтра.";
+      return;
+    }
+    localStorage.setItem("ratescan_riddle_date",new Date().toDateString());
+    // Track riddle category for analytics
+    const rStats=JSON.parse(localStorage.getItem("ratescan_riddle_stats")||"{}");
+    const rCat=riddle.category||"general";
+    rStats[rCat]=(rStats[rCat]||0)+1;
+    localStorage.setItem("ratescan_riddle_stats",JSON.stringify(rStats));
+    markQuestDone("riddle_daily");
+    fb.style.background="#d1fae5";fb.style.color="#065f46";
+    fb.textContent="Верно! Рейтик прыгает от радости! Задание «Загадка дня» выполнено.";
+    document.getElementById("riddle-input-area").style.display="none";
+    document.getElementById("riddle-badge").style.display="inline-block";
+    document.getElementById("riddle-hint").textContent="";
+    showToast("Загадка разгадана! Рейтик счастлив!");
+    renderCharacterTab();
+  } else {
+    fb.style.background="#fef2f2";fb.style.color="#991b1b";
+    fb.textContent="Не совсем... Попробуйте ещё раз!";
+    document.getElementById("riddle-hint").textContent="Подсказка: "+riddle.hint;
+  }
+}
+
+// ═══ STORY DIARY ══════════════════════════════════════════════
+const STORY_ENTRIES=[
+  {title:"Глава 1: Рождение",
+   text:"В глубинах интернета, где потоки данных пересекаются с миром покупок, родилось маленькое таинственное яйцо. Никто не знал, что из него вылупится. Но те, кто делился честным мнением, чувствовали — внутри что-то ждёт своего часа..."},
+  {title:"Глава 2: Первые шаги",
+   text:"Скорлупа треснула, и на свет появился Рейтик — маленький, пушистый, с огромными любопытными глазами. Каждый честный отзыв, каждое мнение питали его и помогали расти. Он начал познавать разницу между хорошим и плохим."},
+  {title:"Глава 3: Взросление",
+   text:"Рейтик подрос. Появились острые ушки и пушистый хвост — наследие лисьей мудрости. Теперь он умел различать настоящие отзывы от ненастоящих и чувствовал качество товара. Его суждения начали влиять на выборы тысяч покупателей."},
+  {title:"Глава 4: Знаток",
+   text:"Рейтик стал настоящим экспертом репутационного мира. Он видел паттерны там, где другие видели лишь хаос отзывов. К нему приходили за советом и бренды, и покупатели. Его оценки точны как швейцарские часы — за плечами тысячи проанализированных мнений."},
+  {title:"Глава 5: Легенда",
+   text:"Золотой Рейтик — существо, достигшее высшей мудрости. Его аура видна из любой точки интернета. Бренды стремятся попасть в его поле зрения, покупатели доверяют каждому слову. Вы вместе — легенда экосистемы честных отзывов."},
+];
+function renderStoryDiary(stageIdx){
+  const stageIcons=["○","◎","◉","★","⬟"];
+  document.getElementById("story-diary").innerHTML=STORY_ENTRIES.map((e,i)=>{
+    const unlocked=i<=stageIdx;
+    return `<div style="display:flex;gap:14px;padding:14px;border-radius:12px;background:${unlocked?"#fff":"#fafafa"};border:1px solid ${unlocked?"#e8e7f5":"#f0f0f0"};opacity:${unlocked?1:0.55};transition:all .2s;">
+      <div style="width:36px;height:36px;border-radius:10px;background:${unlocked?"#eef2ff":"#f3f4f6"};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:${unlocked?"#6366f1":"#9ca3af"};">${unlocked?stageIcons[i]:"🔒"}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px;color:${unlocked?"#4338ca":"#9ca3af"};margin-bottom:4px;">${e.title}${!unlocked?" · Стадия "+(i+1):""}</div>
+        <p style="font-size:13px;color:${unlocked?"#4b5563":"#9ca3af"};line-height:1.6;margin:0;">${unlocked?e.text:"Разблокируется когда Рейтик достигнет стадии "+(i+1)+"..."}</p>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ═══ CHARACTER TAB ══════════════════════════════════════════════
 function renderCharacterTab(){
   const pts=userPoints,stage=getPetStage(pts),si=PET_STAGES.indexOf(stage),acc=selectedAcc;
+
+  // Pet visual
   const container=document.getElementById("pet-container");
   container.innerHTML=petSVG(pts,acc);
   if(si===4){const svg=container.querySelector("svg");if(svg)svg.classList.add("pet-legendary");}
-  document.getElementById("pet-name").textContent=stage.name;
+
+  // Name
+  const customName=getPetCustomName();
+  document.getElementById("pet-name").textContent=customName||stage.name;
   document.getElementById("pet-stage-label").textContent=stage.label;
   document.getElementById("pet-lore").textContent=stage.lore;
+
+  // Progress
   const nextStage=PET_STAGES[si+1];
   if(nextStage){
     const pct=Math.min(100,Math.round((pts-stage.min)/(nextStage.min-stage.min)*100));
@@ -851,6 +1366,19 @@ function renderCharacterTab(){
     document.getElementById("pet-pts-label").textContent=`${pts} баллов — максимум!`;
     document.getElementById("pet-next-label").textContent="";
   }
+
+  // Mood
+  const prog=getQuestProgress();
+  const reviewCount=(prog["review_any"]||0);
+  const streak=parseInt(localStorage.getItem("ratescan_streak")||"0");
+  const mood=getMoodState(pts,streak,reviewCount);
+  const moodIcon=document.getElementById("pet-mood-icon");
+  moodIcon.style.background=mood.bg;moodIcon.style.color=mood.ic;moodIcon.innerHTML=mood.svg;
+  document.getElementById("pet-mood-label").style.color=mood.ic;
+  document.getElementById("pet-mood-label").textContent=mood.label;
+  document.getElementById("pet-mood-desc").textContent=mood.desc;
+
+  // Stages list
   document.getElementById("stages-list").innerHTML=PET_STAGES.map((s,i)=>{
     const unlocked=pts>=s.min,current=si===i;
     return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;background:${current?"#eef2ff":"transparent"};border:1px solid ${current?"#c7d2fe":"transparent"};">
@@ -859,13 +1387,50 @@ function renderCharacterTab(){
       ${current?`<span style="font-size:11px;color:#6366f1;font-weight:500;">Текущий</span>`:""}
     </div>`;
   }).join("");
-  const ACHV=[{id:"review_any",label:"Первый отзыв",desc:"Написан первый отзыв"},{id:"review_3",label:"Ценитель",desc:"3 отзыва"},{id:"daily_spin",label:"Удачливый",desc:"Первое вращение"},{id:"survey_1",label:"Эксперт",desc:"Первый опрос"},{id:"visit_food",label:"Гурман",desc:"Категория еды"},{id:"visit_3cats",label:"Путешественник",desc:"3 категории"}];
-  const prog=getQuestProgress();
+
+  // Riddle
+  const {riddle}=getRiddleForToday();
+  document.getElementById("riddle-question").textContent=riddle.q;
+  const ridCatEl=document.getElementById("riddle-category-tag");
+  if(ridCatEl&&riddle.category){ridCatEl.style.display="inline-block";ridCatEl.textContent="📦 "+riddle.category;}
+  else if(ridCatEl){ridCatEl.style.display="none";}
+  if(isRiddleDoneToday()){
+    document.getElementById("riddle-input-area").style.display="none";
+    document.getElementById("riddle-badge").style.display="inline-block";
+    const fb=document.getElementById("riddle-feedback");
+    fb.style.display="block";fb.style.background="#d1fae5";fb.style.color="#065f46";
+    fb.textContent="Сегодняшняя загадка уже разгадана! Возвращайтесь завтра.";
+  }else{
+    document.getElementById("riddle-input-area").style.display="flex";
+    document.getElementById("riddle-badge").style.display="none";
+    document.getElementById("riddle-feedback").style.display="none";
+    document.getElementById("riddle-hint").textContent="";
+  }
+
+  // Food display
+  updateFoodDisplay();
+
+  // Story diary
+  renderStoryDiary(si);
+
+  // Achievements
+  const ACHV=[
+    {id:"review_any",label:"Первый отзыв",desc:"Написан первый отзыв",color:"#6366f1"},
+    {id:"review_3",label:"Ценитель",desc:"Три отзыва",color:"#8b5cf6"},
+    {id:"daily_spin",label:"Удачливый",desc:"Первое вращение",color:"#3b82f6"},
+    {id:"survey_1",label:"Эксперт",desc:"Первый опрос",color:"#10b981"},
+    {id:"riddle_daily",label:"Мудрец",desc:"Загадка разгадана",color:"#7c3aed"},
+    {id:"pet_named",label:"Друг",desc:"Рейтик получил имя",color:"#f59e0b"},
+    {id:"visit_food",label:"Гурман",desc:"Изучил кофе и чай",color:"#f97316"},
+    {id:"visit_3cats",label:"Путешественник",desc:"3 категории изучены",color:"#0ea5e9"},
+  ];
   document.getElementById("achievements-list").innerHTML=ACHV.map(a=>{
     const earned=!!prog[a.id];
     return `<div style="padding:12px;border-radius:12px;background:${earned?"#eef2ff":"#f9fafb"};border:1px solid ${earned?"#c7d2fe":"#e8e7f5"};">
-      <div style="width:32px;height:32px;border-radius:8px;background:${earned?"#6366f1":"#e5e7eb"};margin-bottom:8px;"></div>
-      <div style="font-size:13px;font-weight:600;color:${earned?"#4338ca":"#9ca3af"};">${a.label}</div>
+      <div style="width:32px;height:32px;border-radius:8px;background:${earned?a.color:"#e5e7eb"};margin-bottom:8px;display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="${earned?"M20 6L9 17l-5-5":"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"}" stroke="${earned?"#fff":"#9ca3af"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:${earned?"#4338ca":"#9ca3af"};">${a.label}</div>
       <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${a.desc}</div>
     </div>`;
   }).join("");
@@ -887,6 +1452,73 @@ function renderAccGrid(){
 }
 function selectAcc(id){pendingAcc=id;renderAccGrid();}
 function saveAccessory(){selectedAcc=pendingAcc;localStorage.setItem("ratescan_acc",selectedAcc);closeAccModal();renderCharacterTab();showToast("Аксессуар сохранён");}
+
+// ═══ BATTLE "КТО ЛУЧШЕ?" ══════════════════════════════════════════════
+function startBattle(){
+  if(!allProducts.length){showToast("Сначала найдите товары в поиске","error");switchTab("search");return;}
+  // Group products by category and only allow same-category battles
+  const cats={};
+  for(const p of allProducts){if(!cats[p.category])cats[p.category]=[];cats[p.category].push(p);}
+  const validCats=Object.entries(cats).filter(([,ps])=>ps.length>=2);
+  if(!validCats.length){showToast("Недостаточно товаров в одной категории для баттла","error");return;}
+  const [chosenCat,catProducts]=validCats[Math.floor(Math.random()*validCats.length)];
+  const shuffled=[...catProducts].sort(()=>Math.random()-0.5);
+  battleState={products:shuffled,round:0,wins:{},total:Math.min(5,Math.floor(shuffled.length/2)),active:true,category:chosenCat};
+  renderBattleRound();
+}
+function renderBattleRound(){
+  const s=battleState;
+  const cont=document.getElementById("battle-content");
+  if(!cont)return;
+  const badge=document.getElementById("battle-score-badge");
+  if(s.round>=s.total){
+    // Show winner
+    const winners=Object.entries(s.wins).sort((a,b)=>b[1]-a[1]);
+    const champId=winners[0]?.[0];
+    const champ=s.products.find(p=>p.id==champId);
+    badge.style.display="none";
+    cont.innerHTML=`<div style="text-align:center;padding:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">🏆</div>
+      <div style="font-weight:700;font-size:18px;color:#1a1a2e;margin-bottom:4px;">Победитель!</div>
+      <div style="font-size:15px;font-weight:600;color:#6366f1;margin-bottom:4px;">${champ?champ.name:"—"}</div>
+      <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">${champ?champ.brand:""} · ${champ?(champ.avg_rating.toFixed(1)+" ★"):""}</div>
+      <button onclick="startBattle()" class="btn-outline" style="margin-right:8px;">Ещё баттл</button>
+      <button onclick="document.getElementById('battle-content').innerHTML='<div style=text-align:center;padding:24px><button onclick=startBattle() class=btn-primary style=padding:12px_32px>Начать баттл</button></div>'" class="btn-primary">Завершить</button>
+    </div>`;
+    return;
+  }
+  const i=s.round*2;
+  const p1=s.products[i],p2=s.products[i+1];
+  if(!p1||!p2){s.round=s.total;renderBattleRound();return;}
+  badge.style.display="block";badge.textContent=`Раунд ${s.round+1}/${s.total}${s.category?" · "+s.category:""}` ;
+  const card=(p,side)=>`<div onclick="battleVote(${p.id},'${side}')" style="flex:1;border:2px solid #e8e7f5;border-radius:14px;padding:16px;cursor:pointer;text-align:center;transition:all 0.18s;min-width:0;" onmouseover="this.style.borderColor='#6366f1';this.style.background='#f5f4ff'" onmouseout="this.style.borderColor='#e8e7f5';this.style.background='#fff'">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.3;">${p.name}</div>
+    <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;">${p.brand}</div>
+    <div style="font-size:28px;font-weight:800;color:#6366f1;">${p.avg_rating.toFixed(1)}</div>
+    <div style="font-size:11px;color:#9ca3af;">${p.review_count} отзывов</div>
+    <button class="btn-primary" style="margin-top:12px;padding:8px 20px;font-size:13px;">Выбрать</button>
+  </div>`;
+  cont.innerHTML=`<div style="display:flex;gap:12px;align-items:stretch;">
+    ${card(p1,"left")}
+    <div style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#9ca3af;flex-shrink:0;">VS</div>
+    ${card(p2,"right")}
+  </div>`;
+}
+function battleVote(winnerId,side){
+  // Save vote to localStorage for B2B portrait analytics
+  const winner=battleState.products.find(p=>p.id==winnerId);
+  if(winner){
+    const votes=JSON.parse(localStorage.getItem("ratescan_battle_votes")||"{}");
+    const cat=battleState.category||"unknown";
+    if(!votes[cat])votes[cat]=[];
+    votes[cat].push({winner:winner.name,brand:winner.brand,winnerId,ts:Date.now()});
+    localStorage.setItem("ratescan_battle_votes",JSON.stringify(votes));
+  }
+  battleState.wins[winnerId]=(battleState.wins[winnerId]||0)+1;
+  battleState.round++;
+  if(battleState.round===1)markQuestDone("battle_1");
+  renderBattleRound();
+}
 
 // MESSAGES
 async function checkUnread(){

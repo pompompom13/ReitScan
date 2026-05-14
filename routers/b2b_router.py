@@ -84,6 +84,7 @@ def dashboard(
 
     recent = sorted(all_reviews, key=lambda x: x.created_at, reverse=True)[:10]
 
+    product_category = profile.products[0].category if profile.products else ""
     return schemas.DashboardData(
         brand_name=profile.brand_name,
         total_reviews=total,
@@ -94,6 +95,7 @@ def dashboard(
         monthly_ratings=monthly,
         recent_reviews=[_review_out(r) for r in recent],
         response_rate=response_rate,
+        product_category=product_category,
     )
 
 
