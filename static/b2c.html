@@ -32,24 +32,44 @@
     @keyframes fadeSlideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
     .fade-in { animation:fadeSlideIn 0.3s ease forwards; }
     .pet-legendary { animation:petFloat 3s ease-in-out infinite; }
+    /* SVG-internal pet animations */
+    @keyframes petBreathe { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-4px)} }
+    @keyframes petTailWag  { 0%,100%{transform:rotate(0deg)} 30%{transform:rotate(14deg)} 65%{transform:rotate(-10deg)} }
+    @keyframes petEarBop   { 0%,100%{transform:rotate(0deg)} 40%{transform:rotate(-8deg)} 70%{transform:rotate(6deg)} }
     @keyframes petFeedBounce {
-      0%   { transform:scale(1) rotate(0deg); }
-      12%  { transform:scale(1.18) rotate(-6deg); }
-      25%  { transform:scale(1.22) rotate(6deg); }
-      40%  { transform:scale(1.12) rotate(-4deg); }
-      55%  { transform:scale(1.2) rotate(4deg); }
-      70%  { transform:scale(1.06) rotate(-2deg); }
-      85%  { transform:scale(1.12) rotate(2deg); }
-      100% { transform:scale(1) rotate(0deg); }
+      0%{transform:scale(1) rotate(0deg)}
+      15%{transform:scale(1.22) rotate(-7deg)}
+      30%{transform:scale(1.28) rotate(7deg)}
+      50%{transform:scale(1.15) rotate(-4deg)}
+      70%{transform:scale(1.2) rotate(3deg)}
+      85%{transform:scale(1.08) rotate(-1deg)}
+      100%{transform:scale(1) rotate(0deg)}
     }
     @keyframes petFeedGlow {
-      0%   { box-shadow:0 0 0 0 rgba(99,102,241,0); filter:var(--pet-filter,none); }
-      25%  { box-shadow:0 0 0 14px rgba(16,185,129,0.28); filter:var(--pet-filter,none) brightness(1.25) saturate(1.4); }
-      65%  { box-shadow:0 0 0 22px rgba(16,185,129,0.1); filter:var(--pet-filter,none) brightness(1.15) saturate(1.2); }
-      100% { box-shadow:0 0 0 0 rgba(99,102,241,0); filter:var(--pet-filter,none); }
+      0%  {box-shadow:0 0 0 0 rgba(16,185,129,0)}
+      30% {box-shadow:0 0 0 16px rgba(16,185,129,0.3)}
+      70% {box-shadow:0 0 0 26px rgba(16,185,129,0.1)}
+      100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}
     }
-    .pet-feeding         { animation:petFeedBounce 0.75s cubic-bezier(0.36,0.07,0.19,0.97) both; }
-    .pet-feeding-glow    { animation:petFeedGlow 1.1s ease-out forwards; }
+    .pet-creature { transform-box:fill-box; transform-origin:center center; animation:petBreathe 3.2s ease-in-out infinite; }
+    .pet-tail-grp { transform-box:fill-box; transform-origin:18% 45%; animation:petTailWag 2.1s ease-in-out infinite; }
+    .pet-ear-grp  { transform-box:fill-box; transform-origin:center bottom; animation:petEarBop 4s ease-in-out infinite; }
+    /* Feed animation targets the SVG .pet-creature directly */
+    .pet-feeding-anim .pet-creature { animation:petFeedBounce 0.8s cubic-bezier(0.36,0.07,0.19,0.97) forwards !important; }
+    .pet-feeding-glow { animation:petFeedGlow 1.2s ease-out forwards; }
+    /* Multiple-choice riddle option buttons */
+    .riddle-opt { background:#f9fafb; border:1.5px solid #e8e7f5; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:500; color:#374151; cursor:pointer; transition:all 0.15s; text-align:left; }
+    .riddle-opt:hover { border-color:#8b5cf6; background:#faf5ff; color:#6d28d9; }
+    .riddle-opt.correct { border-color:#10b981; background:#d1fae5; color:#065f46; }
+    .riddle-opt.wrong   { border-color:#ef4444; background:#fef2f2; color:#991b1b; }
+    /* Mobile responsive */
+    @media(max-width:640px){
+      #tab-character>.grid { grid-template-columns:1fr !important; }
+      #pet-container { width:130px!important; height:130px!important; }
+      .tab-btn { padding:5px 9px; font-size:12px; }
+      .modal-box { border-radius:14px; margin:8px; }
+      .card { border-radius:12px; }
+    }
     .modal-backdrop { position:fixed;inset:0;z-index:50;background:rgba(15,15,35,0.55);display:flex;align-items:center;justify-content:center;padding:16px; }
     .modal-box { background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.18); }
     .star-btn { cursor:pointer; font-size:28px; color:#d1d5db; transition:color 0.1s; }
@@ -210,6 +230,7 @@
           <button onclick="cancelRenamePet()" style="background:#f3f4f6;color:#6b7280;border:none;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;">✕</button>
         </div>
         <div id="pet-stage-label" style="color:#6b7280;font-size:13px;margin-top:4px;"></div>
+        <span id="pet-time-badge" style="font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;margin-top:4px;display:inline-block;"></span>
       </div>
       <!-- Mood row -->
       <div id="pet-mood-row" style="width:100%;background:#f9fafb;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
@@ -243,7 +264,7 @@
           Рейтик голоден! Покормите его, чтобы поднять множитель корма
         </div>
         <div style="font-size:11px;color:#9ca3af;margin-bottom:10px;">Корм за задания. Множитель зависит от сытости Рейтика.</div>
-        <button id="feed-btn" onclick="feedPet()" class="btn-primary" style="width:100%;padding:9px;font-size:14px;transition:transform 0.1s,opacity 0.18s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">🍖 Накормить</button>
+        <button id="feed-btn" onclick="feedPet()" class="btn-primary" style="width:100%;padding:9px;font-size:14px;transition:transform 0.1s,opacity 0.18s;" onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform=''" onmouseleave="this.style.transform=''">Накормить Рейтика</button>
       </div>
       <button onclick="openAccModal()" class="btn-outline" style="width:100%;">Сменить аксессуар</button>
     </div>
@@ -275,12 +296,7 @@
     </div>
     <div style="margin-bottom:8px;"><span id="riddle-category-tag" style="display:none;background:#faf5ff;color:#7c3aed;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid #e9d5ff;"></span></div>
     <div id="riddle-question" style="font-size:15px;font-weight:500;color:#1a1a2e;margin-bottom:16px;line-height:1.5;background:#f9fafb;border-radius:10px;padding:14px;border-left:3px solid #7c3aed;"></div>
-    <div id="riddle-input-area" style="display:flex;gap:8px;">
-      <input id="riddle-input" type="text" placeholder="Ваш ответ..."
-        style="flex:1;padding:10px 14px;border:1.5px solid #e8e7f5;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;"
-        onkeydown="if(event.key==='Enter')checkRiddle()"/>
-      <button onclick="checkRiddle()" class="btn-primary" style="padding:10px 20px;">Проверить</button>
-    </div>
+    <div id="riddle-options" class="flex flex-col gap-2"></div>
     <div id="riddle-hint" style="font-size:12px;color:#9ca3af;margin-top:8px;"></div>
     <div id="riddle-feedback" style="margin-top:10px;font-size:13px;font-weight:500;display:none;padding:10px 14px;border-radius:8px;"></div>
   </div>
@@ -297,6 +313,60 @@
       </div>
     </div>
     <div id="story-diary" class="flex flex-col gap-3"></div>
+  </div>
+
+  <!-- REPUTATION TRAIL -->
+  <div class="card p-5 mt-4">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;background:#f0fdf4;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#15803d" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#15803d" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#15803d" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#15803d" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Репутационный след</div>
+        <div style="font-size:12px;color:#9ca3af;">Сколько людей прочли ваши отзывы</div>
+      </div>
+    </div>
+    <div style="background:#f0fdf4;border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px;">
+      <div style="flex:1;">
+        <div style="font-size:28px;font-weight:800;color:#15803d;line-height:1;" id="reputation-reads">0</div>
+        <div style="font-size:12px;color:#4ade80;margin-top:2px;">человек прочли ваши отзывы</div>
+      </div>
+      <div style="width:44px;height:44px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#15803d" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#15803d" stroke-width="2"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND COLLECTIBLE CARDS -->
+  <div class="card p-5 mt-4">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;background:#faf5ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2" stroke="#7c3aed" stroke-width="2"/><path d="M2 9h20" stroke="#7c3aed" stroke-width="2"/><path d="M7 15h4M7 12h4" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Коллекция брендов</div>
+        <div style="font-size:12px;color:#9ca3af;">Пишите отзывы — собирайте карточки брендов</div>
+      </div>
+    </div>
+    <div id="brand-cards-section">
+      <div style="font-size:13px;color:#9ca3af;padding:6px 0;">Напишите отзыв на любой бренд — карточка появится здесь</div>
+    </div>
+  </div>
+
+  <!-- SECRET ACHIEVEMENTS -->
+  <div class="card p-5 mt-4">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;background:#f5f3ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#7c3aed" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">Тайные достижения</div>
+        <div style="font-size:12px;color:#9ca3af;">Рейтик почуял что-то интересное...</div>
+      </div>
+    </div>
+    <div id="secret-achievements-list" class="flex flex-col gap-2">
+      <div style="font-size:13px;color:#9ca3af;padding:8px 0;">Тайные достижения откроются сами — продолжайте активничать</div>
+    </div>
   </div>
 
   <!-- ACHIEVEMENTS -->
@@ -511,87 +581,100 @@ function addFoodTokens(n){localStorage.setItem("ratescan_food",Math.min(20,getFo
 function getLastFed(){return localStorage.getItem("ratescan_last_fed")||"";}
 function getHungerLevel(){
   const lastFed=getLastFed();
-  if(!lastFed)return{key:"starving",filter:"grayscale(70%) brightness(0.65)",mult:0.5,label:"Голодающий 😵",color:"#ef4444",bg:"#fef2f2",tip:"Покормите Рейтика! Корм ×0.5"};
+  if(!lastFed)return{key:"starving",filter:"grayscale(70%) brightness(0.65)",ptsMult:0.5,label:"Голодающий",color:"#ef4444",bg:"#fef2f2"};
   const h=(Date.now()-new Date(lastFed).getTime())/3600000;
-  if(h<2)  return{key:"just_fed",filter:"brightness(1.15) saturate(1.2)",mult:1.5,label:"Счастливый 😊",color:"#10b981",bg:"#d1fae5",tip:"Рейтик доволен! Корм ×1.5"};
-  if(h<6)  return{key:"satisfied",filter:"",mult:1.0,label:"Сытый 😌",color:"#6366f1",bg:"#eef2ff",tip:"Рейтик в норме. Корм ×1.0"};
-  if(h<12) return{key:"normal",filter:"",mult:1.0,label:"Обычный 😐",color:"#6b7280",bg:"#f3f4f6",tip:"Рейтик в норме. Корм ×1.0"};
-  if(h<24) return{key:"hungry",filter:"grayscale(40%) brightness(0.85)",mult:0.75,label:"Голодный 😟",color:"#f59e0b",bg:"#fffbeb",tip:"Рейтик хочет есть. Корм ×0.75"};
-  return{key:"starving",filter:"grayscale(70%) brightness(0.65)",mult:0.5,label:"Голодающий 😵",color:"#ef4444",bg:"#fef2f2",tip:"Рейтик голодает! Корм ×0.5"};
+  if(h<2)  return{key:"just_fed",filter:"brightness(1.15) saturate(1.2)",ptsMult:1.5,label:"Счастливый",color:"#10b981",bg:"#d1fae5"};
+  if(h<6)  return{key:"satisfied",filter:"",ptsMult:1.0,label:"Сытый",color:"#6366f1",bg:"#eef2ff"};
+  if(h<12) return{key:"normal",filter:"",ptsMult:1.0,label:"Обычный",color:"#6b7280",bg:"#f3f4f6"};
+  if(h<24) return{key:"hungry",filter:"grayscale(40%) brightness(0.85)",ptsMult:0.75,label:"Голодный",color:"#f59e0b",bg:"#fffbeb"};
+  return{key:"starving",filter:"grayscale(70%) brightness(0.65)",ptsMult:0.5,label:"Голодающий",color:"#ef4444",bg:"#fef2f2"};
 }
 function playFeedAnimation(){
   const petCont=document.getElementById("pet-container");
   const feedBtn=document.getElementById("feed-btn");
   if(!petCont||!feedBtn)return;
 
-  // Bounce + glow on the pet SVG
-  petCont.classList.remove("pet-feeding","pet-feeding-glow");
-  void petCont.offsetWidth; // force reflow so animation restarts
-  petCont.classList.add("pet-feeding","pet-feeding-glow");
-  setTimeout(()=>petCont.classList.remove("pet-feeding","pet-feeding-glow"),1300);
+  // Bounce animation on the SVG .pet-creature group
+  const svg=petCont.querySelector("svg");
+  if(svg){
+    svg.classList.remove("pet-feeding-anim");
+    void svg.offsetWidth;
+    svg.classList.add("pet-feeding-anim");
+    setTimeout(()=>svg.classList.remove("pet-feeding-anim"),900);
+  }
+  // Glow on container
+  petCont.classList.remove("pet-feeding-glow");
+  void petCont.offsetWidth;
+  petCont.classList.add("pet-feeding-glow");
+  setTimeout(()=>petCont.classList.remove("pet-feeding-glow"),1300);
 
   const btnRect=feedBtn.getBoundingClientRect();
   const petRect=petCont.getBoundingClientRect();
   const petCX=petRect.left+petRect.width/2;
   const petCY=petRect.top+petRect.height/2;
 
-  // Flying food particles from button → pet
-  const FOOD_EMOJIS=["🍖","🐟","🥩","🌟","✨"];
-  const N=7;
+  // Colored dot particles (no emoji — pure SVG circles)
+  const COLORS=["#6366f1","#10b981","#f59e0b","#ec4899","#8b5cf6","#3b82f6","#06b6d4"];
+  const N=8;
   for(let i=0;i<N;i++){
     setTimeout(()=>{
       const el=document.createElement("div");
-      el.textContent=FOOD_EMOJIS[i%FOOD_EMOJIS.length];
-      const startX=btnRect.left+btnRect.width/2+(Math.random()*36-18);
-      const startY=btnRect.top+(Math.random()*10);
-      const jitter=(Math.random()*30-15);
-      el.style.cssText=`position:fixed;left:${startX}px;top:${startY}px;font-size:${19+Math.random()*9}px;pointer-events:none;z-index:9999;will-change:transform,opacity;`;
+      const col=COLORS[i%COLORS.length];
+      const size=7+Math.random()*7;
+      const startX=btnRect.left+btnRect.width/2+(Math.random()*40-20);
+      const startY=btnRect.top+(Math.random()*8);
+      el.style.cssText=`position:fixed;left:${startX}px;top:${startY}px;width:${size}px;height:${size}px;border-radius:50%;background:${col};pointer-events:none;z-index:9999;box-shadow:0 0 6px ${col}88;`;
       document.body.appendChild(el);
-      const dx=petCX-startX+jitter;
-      const dy=petCY-startY+jitter;
+      const dx=petCX-startX+(Math.random()*24-12);
+      const dy=petCY-startY+(Math.random()*20-10);
       el.animate([
-        {transform:"translate(0,0) scale(1) rotate(0deg)",      opacity:1},
-        {transform:`translate(${dx*.55}px,${dy*.55}px) scale(1.5) rotate(180deg)`, opacity:1,  offset:.55},
-        {transform:`translate(${dx}px,${dy}px) scale(0.2) rotate(360deg)`, opacity:0},
-      ],{duration:650+Math.random()*250, easing:"cubic-bezier(.25,.46,.45,.94)", fill:"forwards"})
+        {transform:"translate(0,0) scale(1)",    opacity:1},
+        {transform:`translate(${dx*.5}px,${dy*.5}px) scale(1.6)`, opacity:1, offset:.5},
+        {transform:`translate(${dx}px,${dy}px) scale(0.15)`, opacity:0},
+      ],{duration:600+Math.random()*250,easing:"cubic-bezier(.25,.46,.45,.94)",fill:"forwards"})
       .onfinish=()=>el.remove();
-    },i*65);
+    },i*55);
   }
 
-  // Hearts / sparkles floating up from pet
-  const HEART_EMOJIS=["❤️","💖","✨","⭐","💫","💚"];
-  for(let i=0;i<5;i++){
+  // SVG heart shapes floating up from pet
+  const HCOLS=["#6366f1","#ec4899","#10b981","#f59e0b","#8b5cf6"];
+  const HPATHS=["M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z","M12 4.5l1.91 3.886 4.26.617-3.086 3.007.729 4.241L12 14l-3.813 2.001.73-4.241L5.83 8.503l4.26-.617z"];
+  for(let i=0;i<4;i++){
     setTimeout(()=>{
-      const el=document.createElement("div");
-      el.textContent=HEART_EMOJIS[Math.floor(Math.random()*HEART_EMOJIS.length)];
-      const hx=petCX+(Math.random()*70-35);
-      const hy=petRect.top+(Math.random()*30);
-      el.style.cssText=`position:fixed;left:${hx}px;top:${hy}px;font-size:${13+Math.random()*12}px;pointer-events:none;z-index:9999;will-change:transform,opacity;`;
+      const el=document.createElementNS("http://www.w3.org/2000/svg","svg");
+      const s=12+Math.random()*10;
+      const hx=petCX+(Math.random()*64-32);
+      const hy=petRect.top+(Math.random()*24);
+      el.setAttribute("width",s);el.setAttribute("height",s);
+      el.setAttribute("viewBox","0 0 24 24");
+      el.setAttribute("fill",HCOLS[i%HCOLS.length]);
+      el.style.cssText=`position:fixed;left:${hx}px;top:${hy}px;pointer-events:none;z-index:9999;filter:drop-shadow(0 1px 4px ${HCOLS[i%HCOLS.length]}66);`;
+      el.innerHTML=`<path d="${HPATHS[i%2]}"/>`;
       document.body.appendChild(el);
       el.animate([
-        {transform:"translateY(0) scale(0.4)",   opacity:0},
-        {transform:"translateY(-18px) scale(1.3)",opacity:1,  offset:.25},
-        {transform:"translateY(-50px) scale(1)",  opacity:1,  offset:.65},
+        {transform:"translateY(0) scale(0.3)",opacity:0},
+        {transform:"translateY(-16px) scale(1.2)",opacity:1,offset:.2},
+        {transform:"translateY(-52px) scale(1)",opacity:1,offset:.65},
         {transform:"translateY(-80px) scale(0.7)",opacity:0},
-      ],{duration:1100+Math.random()*400, easing:"ease-out", fill:"forwards"})
+      ],{duration:1100+Math.random()*350,easing:"ease-out",fill:"forwards"})
       .onfinish=()=>el.remove();
-    },350+i*110);
+    },320+i*100);
   }
 
-  // "Счастлив! 🌟" label floating above pet
+  // Elegant "Счастлив" text — no emoji
   setTimeout(()=>{
     const el=document.createElement("div");
-    el.textContent="Счастлив! 🌟";
-    el.style.cssText=`position:fixed;left:${petCX-44}px;top:${petRect.top+6}px;font-size:14px;font-weight:700;color:#10b981;pointer-events:none;z-index:9999;font-family:'Inter',sans-serif;text-shadow:0 1px 8px rgba(0,0,0,0.12);white-space:nowrap;`;
+    el.textContent="Счастлив";
+    el.style.cssText=`position:fixed;left:${petCX-32}px;top:${petRect.top+8}px;font-size:13px;font-weight:700;color:#10b981;pointer-events:none;z-index:9999;font-family:'Inter',sans-serif;letter-spacing:0.5px;`;
     document.body.appendChild(el);
     el.animate([
-      {transform:"translateY(0) scale(0.7)",  opacity:0},
-      {transform:"translateY(-8px) scale(1.1)",opacity:1,  offset:.2},
-      {transform:"translateY(-38px) scale(1)", opacity:1,  offset:.7},
-      {transform:"translateY(-68px) scale(.9)",opacity:0},
-    ],{duration:1500, easing:"ease-out", fill:"forwards"})
+      {transform:"translateY(0) scale(0.7)",opacity:0},
+      {transform:"translateY(-10px) scale(1.1)",opacity:1,offset:.2},
+      {transform:"translateY(-42px) scale(1)",opacity:1,offset:.7},
+      {transform:"translateY(-72px) scale(.85)",opacity:0},
+    ],{duration:1500,easing:"ease-out",fill:"forwards"})
     .onfinish=()=>el.remove();
-  },180);
+  },160);
 }
 function feedPet(){
   const food=getFoodTokens();
@@ -602,8 +685,8 @@ function feedPet(){
   updateFoodDisplay();
   playFeedAnimation();
   const btn=document.getElementById("feed-btn");
-  if(btn){btn.textContent="🌟 Рейтик сыт!";btn.disabled=true;setTimeout(()=>{btn.textContent="🍖 Накормить";btn.disabled=false;renderCharacterTab();},2200);}
-  showToast("Рейтик счастлив! Бонус ×1.5 к корму активен на 2 часа 🌟");
+  if(btn){btn.textContent="Рейтик сыт!";btn.disabled=true;setTimeout(()=>{btn.textContent="Накормить Рейтика";btn.disabled=false;renderCharacterTab();},2200);}
+  showToast("Рейтик счастлив! Бонус ×1.5 к баллам активен на 2 часа");
 }
 function updateFoodDisplay(){
   const el=document.getElementById("food-count");
@@ -623,11 +706,11 @@ function updateFoodDisplay(){
   // Multiplier badge
   const multEl=document.getElementById("pet-hunger-mult");
   if(multEl){
-    if(h.mult!==1.0){
+    if(h.ptsMult!==1.0){
       multEl.style.display="inline-block";
-      multEl.style.background=h.mult>1?"#d1fae5":"#fef2f2";
-      multEl.style.color=h.mult>1?"#065f46":"#991b1b";
-      multEl.textContent=h.mult>1?`×${h.mult} к корму за задания 🌟`:`×${h.mult} к корму (покормите!)`;
+      multEl.style.background=h.ptsMult>1?"#d1fae5":"#fef2f2";
+      multEl.style.color=h.ptsMult>1?"#065f46":"#991b1b";
+      multEl.textContent=h.ptsMult>1?`×${h.ptsMult} к бонусным баллам за задания`:`×${h.ptsMult} к баллам — покормите Рейтика`;
     }else{
       multEl.style.display="none";
     }
@@ -667,7 +750,18 @@ function buildHatSVG(hat,cx,cy,s){
   return "";
 }
 
-function petSVG(pts,hat){
+function getPetTraits(){
+  const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
+  return{
+    coffee:    cats.some(c=>c.includes("кофе")),
+    cosmetics: cats.some(c=>c.includes("косметик")),
+    sport:     cats.some(c=>c.includes("спорт")),
+    food:      cats.some(c=>c.includes("ресторан")||c.includes("кофейн")||c.includes("мороженое")),
+  };
+}
+
+function petSVG(pts,hat,traits){
+  const tr=traits||{};
   const stageIdx=PET_STAGES.findIndex(s=>pts>=s.min&&pts<=s.max);
   const si=Math.max(0,Math.min(stageIdx,4));
   const sz=160,cx=80,cy=80;
@@ -679,6 +773,8 @@ function petSVG(pts,hat){
     {body:"#f59e0b",inner:"#fde68a",ear:"#d97706",eye:"#78350f",cheek:"#fbbf24",bg:"#fffbeb"},
   ];
   const c=configs[si];
+  // Category trait overrides
+  const earColor=tr.coffee?"#7c4a1e":c.ear;  // coffee → warm brown ear tips
   const glowEl=si===4?`<circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="none" stroke="#fde68a" stroke-width="3" opacity="0.3"/>
     <circle cx="${cx}" cy="${cy}" r="${sz/2-2}" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.2"/>`:"";
   const hatEl=buildHatSVG(hat,cx,cy,sz);
@@ -686,14 +782,16 @@ function petSVG(pts,hat){
   if(si===0){
     return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="${c.bg}"/>
-      <ellipse cx="${cx}" cy="${cy+8}" rx="42" ry="54" fill="${c.body}"/>
-      <ellipse cx="${cx}" cy="${cy+12}" rx="28" ry="38" fill="${c.inner}"/>
-      <ellipse cx="${cx-8}" cy="${cy-6}" rx="5" ry="7" fill="${c.spot}" opacity="0.6"/>
-      <circle cx="${cx-10}" cy="${cy+4}" r="7" fill="white"/>
-      <circle cx="${cx+10}" cy="${cy+4}" r="7" fill="white"/>
-      <circle cx="${cx-8}" cy="${cy+4}" r="4" fill="#312e81"/>
-      <circle cx="${cx+12}" cy="${cy+4}" r="4" fill="#312e81"/>
-      <path d="M${cx-6} ${cy+18} Q${cx} ${cy+24} ${cx+6} ${cy+18}" stroke="#312e81" stroke-width="1.5" stroke-linecap="round"/>
+      <g class="pet-creature">
+        <ellipse cx="${cx}" cy="${cy+8}" rx="42" ry="54" fill="${c.body}"/>
+        <ellipse cx="${cx}" cy="${cy+12}" rx="28" ry="38" fill="${c.inner}"/>
+        <ellipse cx="${cx-8}" cy="${cy-6}" rx="5" ry="7" fill="${c.spot}" opacity="0.6"/>
+        <circle cx="${cx-10}" cy="${cy+4}" r="7" fill="white"/>
+        <circle cx="${cx+10}" cy="${cy+4}" r="7" fill="white"/>
+        <circle cx="${cx-8}" cy="${cy+4}" r="4" fill="#312e81"/>
+        <circle cx="${cx+12}" cy="${cy+4}" r="4" fill="#312e81"/>
+        <path d="M${cx-6} ${cy+18} Q${cx} ${cy+24} ${cx+6} ${cy+18}" stroke="#312e81" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
       ${hatEl}</svg>`;
   }
 
@@ -702,32 +800,43 @@ function petSVG(pts,hat){
   const bx=cx,by=cy+12*scale;
   const hx=cx,hy=cy-10*scale;
   const e1x=cx-13*scale,e2x=cx+13*scale,ey=hy-2;
-  const tailEl=`<path d="M${bx+26*scale} ${by-8*scale} Q${bx+46*scale} ${by-24*scale} ${bx+44*scale} ${by+18*scale} Q${bx+28*scale} ${by+36*scale} ${bx+14*scale} ${by+22*scale}" stroke="${c.ear}" stroke-width="${10*scale}" stroke-linecap="round" fill="none"/>
+  const tailEl=`<path d="M${bx+26*scale} ${by-8*scale} Q${bx+46*scale} ${by-24*scale} ${bx+44*scale} ${by+18*scale} Q${bx+28*scale} ${by+36*scale} ${bx+14*scale} ${by+22*scale}" stroke="${earColor}" stroke-width="${10*scale}" stroke-linecap="round" fill="none"/>
     <path d="M${bx+26*scale} ${by-8*scale} Q${bx+42*scale} ${by-20*scale} ${bx+40*scale} ${by+16*scale} Q${bx+26*scale} ${by+32*scale} ${bx+14*scale} ${by+20*scale}" stroke="${c.inner}" stroke-width="${5*scale}" stroke-linecap="round" fill="none"/>`;
   const earOffX=22*scale,earOffY=16*scale;
-  const earsEl=`<polygon points="${hx-earOffX},${hy-earOffY} ${hx-earOffX-12*scale},${hy+10*scale} ${hx-earOffX+8*scale},${hy+8*scale}" fill="${c.ear}"/>
-    <polygon points="${hx+earOffX},${hy-earOffY} ${hx+earOffX+12*scale},${hy+10*scale} ${hx+earOffX-8*scale},${hy+8*scale}" fill="${c.ear}"/>
+  const earsEl=`<polygon points="${hx-earOffX},${hy-earOffY} ${hx-earOffX-12*scale},${hy+10*scale} ${hx-earOffX+8*scale},${hy+8*scale}" fill="${earColor}"/>
+    <polygon points="${hx+earOffX},${hy-earOffY} ${hx+earOffX+12*scale},${hy+10*scale} ${hx+earOffX-8*scale},${hy+8*scale}" fill="${earColor}"/>
     <polygon points="${hx-earOffX},${hy-earOffY+4*scale} ${hx-earOffX-8*scale},${hy+8*scale} ${hx-earOffX+6*scale},${hy+7*scale}" fill="${c.inner}" opacity="0.7"/>
     <polygon points="${hx+earOffX},${hy-earOffY+4*scale} ${hx+earOffX+8*scale},${hy+8*scale} ${hx+earOffX-6*scale},${hy+7*scale}" fill="${c.inner}" opacity="0.7"/>`;
+  // Cosmetics trait: sparkle dots near eyes
+  const sparkleEl=tr.cosmetics?`<circle cx="${e1x-4*scale}" cy="${ey-10*scale}" r="${1.8}" fill="#ec4899" opacity="0.7"/>
+    <circle cx="${e2x+6*scale}" cy="${ey-8*scale}" r="${1.4}" fill="#f472b6" opacity="0.6"/>
+    <circle cx="${hx+20*scale}" cy="${hy-18*scale}" r="${1.2}" fill="#c084fc" opacity="0.5"/>`:"";
+  // Sport trait: subtle energy lines
+  const sportEl=tr.sport?`<path d="M${bx-br*0.8} ${by} Q${bx-br*0.6} ${by-8*scale} ${bx-br*0.4} ${by}" stroke="#6366f1" stroke-width="1.5" opacity="0.3" fill="none"/>
+    <path d="M${bx+br*0.4} ${by} Q${bx+br*0.6} ${by-8*scale} ${bx+br*0.8} ${by}" stroke="#6366f1" stroke-width="1.5" opacity="0.3" fill="none"/>`:"";
 
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="${cx}" cy="${cy}" r="${sz/2-4}" fill="${c.bg}"/>
     ${glowEl}
-    ${tailEl}
-    <ellipse cx="${bx}" cy="${by}" rx="${br}" ry="${br*0.78}" fill="${c.body}"/>
-    <ellipse cx="${bx}" cy="${by+4*scale}" rx="${br*0.68}" ry="${br*0.55}" fill="${c.inner}"/>
-    <circle cx="${hx}" cy="${hy}" r="${hr}" fill="${c.body}"/>
-    ${earsEl}
-    <ellipse cx="${e1x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
-    <ellipse cx="${e2x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
-    <circle cx="${e1x+2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
-    <circle cx="${e2x-2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
-    <circle cx="${e1x+3*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
-    <circle cx="${e2x-1*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
-    <ellipse cx="${hx-16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
-    <ellipse cx="${hx+16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
-    <ellipse cx="${hx}" cy="${hy+18*scale}" rx="${3*scale}" ry="${2*scale}" fill="${c.ear}"/>
-    <path d="M${hx-7*scale} ${hy+23*scale} Q${hx} ${hy+29*scale} ${hx+7*scale} ${hy+23*scale}" stroke="${c.eye}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <g class="pet-tail-grp">${tailEl}</g>
+    <g class="pet-creature">
+      <ellipse cx="${bx}" cy="${by}" rx="${br}" ry="${br*0.78}" fill="${c.body}"/>
+      <ellipse cx="${bx}" cy="${by+4*scale}" rx="${br*0.68}" ry="${br*0.55}" fill="${c.inner}"/>
+      ${sportEl}
+      <circle cx="${hx}" cy="${hy}" r="${hr}" fill="${c.body}"/>
+      <g class="pet-ear-grp">${earsEl}</g>
+      <ellipse cx="${e1x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
+      <ellipse cx="${e2x}" cy="${ey}" rx="${8*scale}" ry="${9*scale}" fill="white"/>
+      <circle cx="${e1x+2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
+      <circle cx="${e2x-2*scale}" cy="${ey+1}" r="${4.5*scale}" fill="${c.eye}"/>
+      <circle cx="${e1x+3*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
+      <circle cx="${e2x-1*scale}" cy="${ey-1}" r="${1.5}" fill="white"/>
+      ${sparkleEl}
+      <ellipse cx="${hx-16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
+      <ellipse cx="${hx+16*scale}" cy="${hy+14*scale}" rx="${8*scale}" ry="${5*scale}" fill="${c.cheek}" opacity="0.55"/>
+      <ellipse cx="${hx}" cy="${hy+18*scale}" rx="${3*scale}" ry="${2*scale}" fill="${earColor}"/>
+      <path d="M${hx-7*scale} ${hy+23*scale} Q${hx} ${hy+29*scale} ${hx+7*scale} ${hy+23*scale}" stroke="${c.eye}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </g>
     ${hatEl}
   </svg>`;
 }
@@ -789,12 +898,16 @@ function renderProducts(prods){
   if(!prods.length){
     grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#9ca3af;font-size:14px;">Товары не найдены</div>`;return;
   }
-  grid.innerHTML=prods.map(p=>`
-    <div class="card p-4 cursor-pointer hover:shadow-md transition-shadow fade-in" onclick="openProductModal(${p.id})">
+  const HOT_THRESHOLD=15;
+  grid.innerHTML=prods.map(p=>{
+    const isHot=p.review_count>=HOT_THRESHOLD;
+    const fireSVG=`<svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" style="flex-shrink:0;"><path d="M12 2c1 3.5-1 6 0 9 0 0 2-2 2-4 1 1 2 3 1 5s-2 4-5 5c0 0 4 0 5-3 0 0 2 2 0 5-1.5 1.5-4 2-5 2 0 0 7 0 7-7 0-3-2-6-5-12z"/></svg>`;
+    return `<div class="card p-4 cursor-pointer hover:shadow-md transition-shadow fade-in" onclick="openProductModal(${p.id})" style="${isHot?"border-color:#fca5a5;":""}" >
       <div class="flex items-start justify-between mb-2">
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:14px;line-height:1.4;">${p.name}</div>
+          <div style="font-weight:600;font-size:14px;line-height:1.4;display:flex;align-items:center;gap:5px;">${isHot?fireSVG:""}${p.name}</div>
           <div style="color:#6b7280;font-size:12px;margin-top:3px;">${p.brand} · ${p.category}</div>
+          ${isHot?`<div style="font-size:11px;color:#ef4444;font-weight:500;margin-top:2px;">Популярный · двойной корм за отзыв</div>`:""}
         </div>
         <div style="text-align:right;flex-shrink:0;margin-left:8px;">
           <div style="font-weight:700;font-size:16px;color:#6366f1;">${p.avg_rating.toFixed(1)}</div>
@@ -809,7 +922,8 @@ function renderProducts(prods){
       <div class="flex items-center gap-0.5 mt-3">
         ${[1,2,3,4,5].map(i=>`<svg width="11" height="11" fill="${i<=Math.round(p.avg_rating)?'#f59e0b':'#e5e7eb'}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join("")}
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 async function openProductModal(id){
@@ -924,6 +1038,21 @@ async function submitReview(){
     closeReviewModal();showToast("Отзыв опубликован!");
     markQuestDone("review_any");
     if(text.length>100)markQuestDone("share_review");
+    // Hot product: double food bonus
+    const HOT_THRESHOLD=15;
+    if(currentProductData&&currentProductData.review_count>=HOT_THRESHOLD){
+      addFoodTokens(2);showToast("Горячий товар — двойной корм за отзыв!");
+    }
+    // Add brand card for this product
+    if(currentProductData&&currentProductData.brand){
+      addBrandCard(currentProductData.brand,currentProductData.category||"");
+    }
+    // Track category visit for category morphs
+    if(currentProductData&&currentProductData.category){
+      const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
+      const catLow=currentProductData.category.toLowerCase();
+      if(!cats.includes(catLow)){cats.push(catLow);localStorage.setItem("ratescan_cats_visited",JSON.stringify(cats));}
+    }
     await Promise.all([updatePointsDisplay(),loadMyReviews()]);
   }catch(e){showToast(e.message,"error");}
 }
@@ -1013,14 +1142,12 @@ const QUEST_DEFS=[
 function getQuestProgress(){return JSON.parse(localStorage.getItem("ratescan_quests")||"{}");}
 function setQuestProgress(d){localStorage.setItem("ratescan_quests",JSON.stringify(d));}
 function markQuestDone(id){
-  const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);renderQuestCards();
-  // Food reward with hunger multiplier
+  const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);
+  checkSecretAchievements(id,p);
+  renderQuestCards();
+  // Food rewards are FIXED (hunger multiplies bonus POINTS, not food)
   const FOOD_REWARDS={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
-  if(FOOD_REWARDS[id]){
-    const h=getHungerLevel();
-    const earned=Math.max(1,Math.round(FOOD_REWARDS[id]*h.mult));
-    addFoodTokens(earned);
-  }
+  if(FOOD_REWARDS[id]) addFoodTokens(FOOD_REWARDS[id]);
 }
 async function loadQuests(){
   renderQuestCards();
@@ -1053,12 +1180,13 @@ function renderQuestCards(){
   const prog=getQuestProgress();
   const FOOD_REWARDS_BASE={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
   const h=getHungerLevel();
+  const pm=h.ptsMult;
   document.getElementById("quests-container").innerHTML=QUEST_DEFS.map(q=>{
     const done=isQuestDone(q,prog);
     const [bg,tc]=TYPE_COLORS[q.type]||["#f3f4f6","#374151"];
     const icon=TYPE_ICONS[q.type]||TYPE_ICONS.review;
     const baseFood=FOOD_REWARDS_BASE[q.id]||0;
-    const effFood=baseFood?Math.max(1,Math.round(baseFood*h.mult)):0;
+    const effFood=baseFood;
     let action="";
     if(!done){
       if(q.type==="location")action=`<button onclick="markLocationVisit('${q.id}','${q.category}')" class="btn-outline" style="padding:5px 10px;font-size:11px;flex-shrink:0;">Отметить</button>`;
@@ -1075,8 +1203,8 @@ function renderQuestCards(){
           <div style="font-weight:600;font-size:14px;">${q.title}</div>
           <div style="color:#6b7280;font-size:12px;margin-top:2px;line-height:1.4;">${q.desc}</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
-            ${q.points>0?`<span style="font-size:12px;color:#6366f1;font-weight:500;">+${q.points} баллов</span>`:""}
-            ${effFood?`<span style="font-size:11px;color:#ea580c;font-weight:500;">+${effFood}🍖${h.mult!==1.0?` (×${h.mult})`:""}  корм</span>`:""}
+            ${q.points>0?`<span style="font-size:12px;color:#6366f1;font-weight:500;">+${q.points} б${pm!==1.0?` <span style="color:${pm>1?'#10b981':'#ef4444'};font-size:11px;">(×${pm})</span>`:""}</span>`:""}
+            ${effFood?`<span style="font-size:11px;color:#ea580c;font-weight:500;">+${effFood} корм</span>`:""}
           </div>
         </div>
         ${done?`<div style="width:22px;height:22px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`:action}
@@ -1253,22 +1381,50 @@ function getMoodState(pts,streak,reviewCount){
   return PET_MOODS[0];
 }
 
-// ═══ DAILY RIDDLE ══════════════════════════════════════════════
+// ═══ DAILY RIDDLE (multiple-choice) ══════════════════════════════════════════════
 const RIDDLES=[
-  {q:"Какой ингредиент в косметике удерживает влагу в 1000 раз больше своего веса и делает кожу упругой?",a:["гиалуроновая кислота","гиалуронат","гиалуроновый"],hint:"Его название происходит от греческого «стекловидный»",category:"косметика"},
-  {q:"Как называется метод заваривания кофе, при котором вода проходит через молотый кофе под давлением пара?",a:["эспрессо","эспрессо-метод"],hint:"Именно из него делают капучино и латте",category:"кофе и чай"},
-  {q:"Какой вид мороженого сделан исключительно из фруктового сока или пюре без молока и сливок?",a:["сорбет","шербет","фруктовый лёд"],hint:"Идеален для тех, кто избегает лактозы",category:"мороженое"},
-  {q:"Как называется белок из молочной сыворотки, который спортсмены принимают сразу после тренировки?",a:["протеин","сывороточный протеин","белок"],hint:"Его используют для роста мышечной массы",category:"спортивное питание"},
-  {q:"Какой витамин в косметике обозначается буквой C, борется с пигментацией и осветляет кожу?",a:["витамин c","витамин с","аскорбиновая кислота","аскорбинка"],hint:"Он же помогает организму при простуде",category:"косметика"},
-  {q:"Как называется напиток из чёрного чая, заваренного с молоком и ароматными пряностями, популярный в Индии?",a:["масала","чай масала","чай со специями"],hint:"Его название — санскритское слово «смешанные специи»",category:"кофе и чай"},
-  {q:"Сколько калорий в среднем содержит одна порция (100 г) классического пломбира?",a:["200","200-250","250","около 200"],hint:"Примерно как небольшой кусок хлеба с маслом",category:"мороженое"},
-  {q:"Как называется традиционный японский суп, который часто подают в ресторанах суши как стартер?",a:["мисо","мисо-суп","мисосуп"],hint:"Готовится на основе ферментированной соевой пасты",category:"ресторан"},
-  {q:"Какой аминокислотный комплекс в спортпите обозначается аббревиатурой из 4 букв и содержит лейцин?",a:["bcaa","бцаа","bcaa аминокислоты"],hint:"Три незаменимые аминокислоты с разветвлённой цепью",category:"спортивное питание"},
-  {q:"Как называется степень обжарки кофе, при которой зёрна становятся тёмно-коричневыми с маслянистым блеском?",a:["тёмная обжарка","тёмная","французская","итальянская"],hint:"Чаще используется для эспрессо, реже для фильтра",category:"кофе и чай"},
-  {q:"Какой натуральный компонент в косметике получают из лепестков розы и он успокаивает раздражённую кожу?",a:["розовая вода","экстракт розы","масло розы","розовое масло"],hint:"Применяется в тониках и спреях для лица",category:"косметика"},
-  {q:"Как называется популярное блюдо итальянской кухни, которое часто заказывают в ресторанах: тонкое тесто + томат + сыр?",a:["пицца"],hint:"Родина этого блюда — Неаполь",category:"ресторан"},
-  {q:"Что такое «гейнер» в спортивном питании?",a:["смесь белков и углеводов","углеводно-белковая смесь","смесь протеина и углеводов","белково-углеводная"],hint:"Используется для набора массы, содержит больше калорий чем протеин",category:"спортивное питание"},
-  {q:"Какой вид чая производится из тех же листьев, что и зелёный, но проходит полную ферментацию?",a:["чёрный чай","чёрный","красный чай"],hint:"Его степень окисления — 100%, в отличие от зелёного",category:"кофе и чай"},
+  {q:"Какой ингредиент в косметике удерживает влагу в 1000 раз больше своего веса?",
+   options:["Гиалуроновая кислота","Ретинол","Коллаген","Витамин E"],answerIdx:0,
+   explanation:"Гиалуронат натрия — молекула-губка, удерживающая воду в 1000× своего веса.",category:"косметика"},
+  {q:"Как называется метод заваривания, при котором вода под давлением проходит через молотый кофе?",
+   options:["Эспрессо","Пуровер","Холодная заварка","Аэропресс"],answerIdx:0,
+   explanation:"Эспрессо — основа капучино и латте, давление 9 бар.",category:"кофе и чай"},
+  {q:"Какой вид мороженого сделан исключительно из фруктового сока без молока?",
+   options:["Сорбет","Пломбир","Парфе","Семифредо"],answerIdx:0,
+   explanation:"Сорбет не содержит молочных продуктов — чистый фруктовый лёд.",category:"мороженое"},
+  {q:"Как называется белок молочной сыворотки, который спортсмены пьют после тренировки?",
+   options:["Сывороточный протеин","Казеин","Гейнер","Креатин"],answerIdx:0,
+   explanation:"Whey protein быстро усваивается — идеален в первые 30 минут после нагрузки.",category:"спортивное питание"},
+  {q:"Какой витамин осветляет кожу и борется с пигментацией?",
+   options:["Витамин С","Витамин D","Витамин A","Витамин B12"],answerIdx:0,
+   explanation:"Аскорбиновая кислота (витамин С) блокирует выработку меланина.",category:"косметика"},
+  {q:"Из чего готовят традиционный японский мисо-суп?",
+   options:["Ферментированная соевая паста","Рисовый уксус","Водоросли нори","Соевый соус"],answerIdx:0,
+   explanation:"Мисо — паста из ферментированных соевых бобов, основа японской кухни.",category:"ресторан"},
+  {q:"Сколько граммов протеина в среднем в одной порции сывороточного протеина?",
+   options:["25–30 г","5–10 г","50–60 г","15–20 г"],answerIdx:0,
+   explanation:"Стандартная порция (30 г порошка) содержит 22–27 г белка.",category:"спортивное питание"},
+  {q:"Какая степень обжарки кофе используется для эспрессо?",
+   options:["Тёмная","Светлая","Средняя","Ультра-светлая"],answerIdx:0,
+   explanation:"Тёмная обжарка даёт горький вкус и меньше кислотности — классика эспрессо.",category:"кофе и чай"},
+  {q:"Что такое гейнер в спортивном питании?",
+   options:["Смесь белков и углеводов","Чистый протеин","Витаминный комплекс","Жиросжигатель"],answerIdx:0,
+   explanation:"Гейнер — высококалорийная смесь для набора мышечной массы.",category:"спортивное питание"},
+  {q:"Какой натуральный компонент косметики получают из лепестков розы?",
+   options:["Розовая вода","Гиалуроновая кислота","Ретинол","Ниацинамид"],answerIdx:0,
+   explanation:"Розовая вода успокаивает, тонизирует и увлажняет кожу.",category:"косметика"},
+  {q:"В какой стране придумали пиццу маргарита?",
+   options:["Италия","Греция","Испания","Франция"],answerIdx:0,
+   explanation:"Пицца маргарита создана в Неаполе в 1889 году для королевы Маргариты.",category:"ресторан"},
+  {q:"Из каких листьев делают чёрный и зелёный чай?",
+   options:["Одного куста — Camellia sinensis","Разных растений","Мяты и полыни","Чёрной смородины"],answerIdx:0,
+   explanation:"Разница — в степени окисления. Чёрный чай ферментируют полностью, зелёный — нет.",category:"кофе и чай"},
+  {q:"Какое мороженое не содержит молочного жира по ГОСТу?",
+   options:["Фруктовый лёд","Пломбир","Крем-брюле","Молочное"],answerIdx:0,
+   explanation:"Фруктовый лёд делают только из сока и сахара без молочных компонентов.",category:"мороженое"},
+  {q:"Что означает аббревиатура BCAA в спортпите?",
+   options:["Аминокислоты с разветвлённой цепью","Быстрые углеводы и аминокислоты","Белково-углеводный антиоксидант","Биологически активная аминокислота"],answerIdx:0,
+   explanation:"Branched-Chain Amino Acids — лейцин, изолейцин, валин. Главные строители мышц.",category:"спортивное питание"},
 ];
 function getRiddleForToday(){
   const d=new Date();
@@ -1278,37 +1434,42 @@ function getRiddleForToday(){
 function isRiddleDoneToday(){
   return localStorage.getItem("ratescan_riddle_date")===new Date().toDateString();
 }
-function checkRiddle(){
-  const input=document.getElementById("riddle-input").value.trim().toLowerCase();
+function checkRiddle(chosenIdx){
   const {riddle}=getRiddleForToday();
   const fb=document.getElementById("riddle-feedback");
-  if(!input){showToast("Введите ответ","error");return;}
-  const correct=riddle.a.some(ans=>input.includes(ans.toLowerCase())||ans.toLowerCase().includes(input));
+  const optEl=document.getElementById("riddle-options");
+  if(isRiddleDoneToday()){
+    fb.style.display="block";fb.style.background="#eef2ff";fb.style.color="#4338ca";
+    fb.textContent="Сегодняшняя загадка уже разгадана! Возвращайтесь завтра.";return;
+  }
+  // Highlight chosen option
+  if(optEl){
+    optEl.querySelectorAll(".riddle-opt").forEach((btn,i)=>{
+      btn.disabled=true;
+      if(i===chosenIdx) btn.classList.add(chosenIdx===riddle.answerIdx?"correct":"wrong");
+      if(i===riddle.answerIdx && chosenIdx!==riddle.answerIdx) btn.classList.add("correct");
+    });
+  }
   fb.style.display="block";
-  if(correct){
-    if(isRiddleDoneToday()){
-      fb.style.background="#eef2ff";fb.style.color="#4338ca";
-      fb.textContent="Вы уже разгадали сегодняшнюю загадку! Возвращайтесь завтра.";
-      return;
-    }
+  if(chosenIdx===riddle.answerIdx){
     localStorage.setItem("ratescan_riddle_date",new Date().toDateString());
-    // Track riddle category for analytics
     const rStats=JSON.parse(localStorage.getItem("ratescan_riddle_stats")||"{}");
     const rCat=riddle.category||"general";
     rStats[rCat]=(rStats[rCat]||0)+1;
     localStorage.setItem("ratescan_riddle_stats",JSON.stringify(rStats));
     markQuestDone("riddle_daily");
     fb.style.background="#d1fae5";fb.style.color="#065f46";
-    fb.textContent="Верно! Рейтик прыгает от радости! Задание «Загадка дня» выполнено.";
-    document.getElementById("riddle-input-area").style.display="none";
+    fb.textContent=riddle.explanation||"Верно! Рейтик доволен.";
     document.getElementById("riddle-badge").style.display="inline-block";
-    document.getElementById("riddle-hint").textContent="";
-    showToast("Загадка разгадана! Рейтик счастлив!");
-    renderCharacterTab();
-  } else {
+    showToast("Загадка разгадана!");
+    setTimeout(()=>renderCharacterTab(),1200);
+  }else{
     fb.style.background="#fef2f2";fb.style.color="#991b1b";
-    fb.textContent="Не совсем... Попробуйте ещё раз!";
-    document.getElementById("riddle-hint").textContent="Подсказка: "+riddle.hint;
+    fb.textContent="Не то... Правильный ответ подсвечен зелёным.";
+    setTimeout(()=>{
+      localStorage.setItem("ratescan_riddle_date",new Date().toDateString()+"_failed");
+      renderCharacterTab();
+    },2000);
   }
 }
 
@@ -1343,10 +1504,15 @@ function renderStoryDiary(stageIdx){
 function renderCharacterTab(){
   const pts=userPoints,stage=getPetStage(pts),si=PET_STAGES.indexOf(stage),acc=selectedAcc;
 
-  // Pet visual
+  // Pet visual with category traits
   const container=document.getElementById("pet-container");
-  container.innerHTML=petSVG(pts,acc);
+  const traits=getPetTraits();
+  container.innerHTML=petSVG(pts,acc,traits);
   if(si===4){const svg=container.querySelector("svg");if(svg)svg.classList.add("pet-legendary");}
+  // Time-of-day context badge
+  const tctx=getPetTimeState();
+  const tcEl=document.getElementById("pet-time-badge");
+  if(tcEl){tcEl.style.background=tctx.color;tcEl.textContent=tctx.label;}
 
   // Name
   const customName=getPetCustomName();
@@ -1388,23 +1554,29 @@ function renderCharacterTab(){
     </div>`;
   }).join("");
 
-  // Riddle
+  // Riddle (multiple choice)
   const {riddle}=getRiddleForToday();
   document.getElementById("riddle-question").textContent=riddle.q;
   const ridCatEl=document.getElementById("riddle-category-tag");
-  if(ridCatEl&&riddle.category){ridCatEl.style.display="inline-block";ridCatEl.textContent="📦 "+riddle.category;}
+  if(ridCatEl&&riddle.category){ridCatEl.style.display="inline-block";ridCatEl.textContent=riddle.category;}
   else if(ridCatEl){ridCatEl.style.display="none";}
+  const optEl=document.getElementById("riddle-options");
+  const doneFailed=localStorage.getItem("ratescan_riddle_date")===(new Date().toDateString()+"_failed");
   if(isRiddleDoneToday()){
-    document.getElementById("riddle-input-area").style.display="none";
+    if(optEl)optEl.innerHTML="";
     document.getElementById("riddle-badge").style.display="inline-block";
     const fb=document.getElementById("riddle-feedback");
     fb.style.display="block";fb.style.background="#d1fae5";fb.style.color="#065f46";
     fb.textContent="Сегодняшняя загадка уже разгадана! Возвращайтесь завтра.";
+  }else if(doneFailed){
+    if(optEl)optEl.innerHTML=`<div style="font-size:13px;color:#9ca3af;">Правильный ответ: <b style="color:#065f46">${riddle.options[riddle.answerIdx]}</b><br/>${riddle.explanation}</div>`;
+    document.getElementById("riddle-badge").style.display="none";
+    const fb=document.getElementById("riddle-feedback");fb.style.display="none";
   }else{
-    document.getElementById("riddle-input-area").style.display="flex";
+    // Render option buttons
+    if(optEl)optEl.innerHTML=riddle.options.map((opt,i)=>`<button class="riddle-opt" onclick="checkRiddle(${i})">${opt}</button>`).join("");
     document.getElementById("riddle-badge").style.display="none";
     document.getElementById("riddle-feedback").style.display="none";
-    document.getElementById("riddle-hint").textContent="";
   }
 
   // Food display
@@ -1412,6 +1584,30 @@ function renderCharacterTab(){
 
   // Story diary
   renderStoryDiary(si);
+
+  // Reputation trail
+  const reputEl=document.getElementById("reputation-reads");
+  if(reputEl){
+    const rc=(getQuestProgress()["review_any"]||0);
+    const reads=rc>0?rc*Math.floor(220+pts*0.3):0;
+    reputEl.textContent=reads>0?reads.toLocaleString("ru-RU"):"0";
+  }
+
+  // Brand cards
+  renderBrandCardsUI();
+
+  // Secret achievements
+  const secretsEl=document.getElementById("secret-achievements-list");
+  if(secretsEl){
+    const secrets=JSON.parse(localStorage.getItem("ratescan_secrets")||"{}");
+    const earned=SECRET_ACHIEVEMENTS.filter(sa=>secrets[sa.id]);
+    secretsEl.innerHTML=earned.length?earned.map(sa=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#f5f3ff;border:1px solid #e9d5ff;">
+      <div style="width:28px;height:28px;border-radius:8px;background:#7c3aed;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#fff"/></svg>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:#6d28d9;">${sa.label}</div><div style="font-size:11px;color:#9ca3af;">${sa.desc}</div></div>
+    </div>`).join(""):`<div style="font-size:13px;color:#9ca3af;padding:8px 0;">Тайные достижения откроются сами — продолжайте активничать</div>`;
+  }
 
   // Achievements
   const ACHV=[
@@ -1442,7 +1638,7 @@ function closeAccModal(){document.getElementById("acc-modal").classList.add("hid
 function renderAccGrid(){
   document.getElementById("acc-grid").innerHTML=ACCESSORIES.map(a=>{
     const unlocked=userPoints>=a.minPts;
-    const preview=petSVG(Math.max(300,userPoints),a.id).replace(`width="160" height="160"`,`width="50" height="50"`);
+    const preview=petSVG(Math.max(300,userPoints),a.id,getPetTraits()).replace(`width="160" height="160"`,`width="50" height="50"`);
     return `<div class="acc-item ${pendingAcc===a.id?"selected":""} ${!unlocked?"opacity-50":""}" onclick="${unlocked?`selectAcc('${a.id}')`:""}" style="${!unlocked?"cursor:not-allowed;":""}">
       <div style="height:54px;display:flex;align-items:center;justify-content:center;">${preview}</div>
       <div style="font-size:11px;font-weight:500;margin-top:4px;color:#374151;">${a.label}</div>
@@ -1518,6 +1714,113 @@ function battleVote(winnerId,side){
   battleState.round++;
   if(battleState.round===1)markQuestDone("battle_1");
   renderBattleRound();
+}
+
+// ═══ TIME-OF-DAY PET STATE ══════════════════════════════════════════════
+function getPetTimeState(){
+  const h=new Date().getHours();
+  if(h>=5&&h<10) return{label:"Утро",color:"#fef3c7",tc:"#b45309",tip:"Рейтик зевает и потягивается"};
+  if(h>=10&&h<18)return{label:"День",color:"#eff6ff",tc:"#1d4ed8",tip:"Рейтик бодрый и активный"};
+  if(h>=18&&h<22)return{label:"Вечер",color:"#fce7f3",tc:"#9d174d",tip:"Рейтик ждёт ужин"};
+  return{label:"Ночь",color:"#f5f3ff",tc:"#6d28d9",tip:"Рейтик дремлет..."};
+}
+
+// ═══ SECRET ACHIEVEMENTS ══════════════════════════════════════════════
+const SECRET_ACHIEVEMENTS=[
+  {id:"night_owl",    label:"Ночная сова",     desc:"Заходили на сайт между 2 и 4 ночи"},
+  {id:"speed_reviewer",label:"Молниеносный",   desc:"Написали 3 отзыва за один день"},
+  {id:"food_collector",label:"Кормилец",       desc:"Накормили Рейтика 10 раз"},
+  {id:"category_expert",label:"Всезнайка",     desc:"Побывали в 4 основных категориях"},
+  {id:"riddle_streak", label:"Мастер загадок", desc:"Разгадали 5 загадок правильно"},
+  {id:"brand_fan",     label:"Бренд-коллектор",desc:"Собрали 5 карточек брендов"},
+];
+function checkSecretAchievements(id,prog){
+  const secrets=JSON.parse(localStorage.getItem("ratescan_secrets")||"{}");
+  let changed=false;
+  function unlock(sid,label){
+    if(!secrets[sid]){secrets[sid]=Date.now();changed=true;showSecretToast(label);}
+  }
+  // Night owl — check hour
+  const hr=new Date().getHours();
+  if(hr>=2&&hr<4) unlock("night_owl","Ночная сова");
+  // Speed reviewer — 3 reviews in one day
+  if(id==="review_any"){
+    const today=new Date().toDateString();
+    const rtKey="ratescan_rev_today";
+    const rt=JSON.parse(localStorage.getItem(rtKey)||"{}");
+    rt[today]=(rt[today]||0)+1;
+    localStorage.setItem(rtKey,JSON.stringify(rt));
+    if(rt[today]>=3) unlock("speed_reviewer","Молниеносный");
+  }
+  // Food collector — fed 10 times
+  if(id==="feed_pet"&&(prog["feed_pet"]||0)>=10) unlock("food_collector","Кормилец");
+  // Category expert — visited all 4 major cats
+  {
+    const cats=JSON.parse(localStorage.getItem("ratescan_cats_visited")||"[]");
+    const needed=["кофе","косметик","спорт","ресторан"];
+    if(needed.every(n=>cats.some(c=>c.includes(n)))) unlock("category_expert","Всезнайка");
+  }
+  // Riddle streak — 5 correct riddles
+  {
+    const rs=JSON.parse(localStorage.getItem("ratescan_riddle_stats")||"{}");
+    const total=Object.values(rs).reduce((a,b)=>a+b,0);
+    if(total>=5) unlock("riddle_streak","Мастер загадок");
+  }
+  // Brand fan — 5 brand cards
+  {
+    const bc=getBrandCards();
+    if(Object.keys(bc).length>=5) unlock("brand_fan","Бренд-коллектор");
+  }
+  if(changed)localStorage.setItem("ratescan_secrets",JSON.stringify(secrets));
+}
+function showSecretToast(label){
+  showToast(`Рейтик почуял что-то интересное... Тайное достижение: «${label}»`);
+}
+
+// ═══ BRAND COLLECTIBLE CARDS ══════════════════════════════════════════════
+function getBrandCards(){return JSON.parse(localStorage.getItem("ratescan_brand_cards")||"{}");}
+function addBrandCard(brand,category){
+  const cards=getBrandCards();
+  if(!cards[brand]){
+    cards[brand]={brand,category:category||"",ts:Date.now()};
+    localStorage.setItem("ratescan_brand_cards",JSON.stringify(cards));
+    checkBrandCollections(cards);
+    showToast(`Карточка бренда «${brand}» добавлена в коллекцию!`);
+    const prog=getQuestProgress();
+    checkSecretAchievements("_brand",prog);
+  }
+  return cards;
+}
+function checkBrandCollections(cards){
+  const count=Object.keys(cards).length;
+  if(count>=5&&!localStorage.getItem("ratescan_brand5_reward")){
+    localStorage.setItem("ratescan_brand5_reward","1");
+    addFoodTokens(3);
+    showToast("Собрано 5 карточек брендов! +3 корма в награду");
+  }
+  if(count>=10&&!localStorage.getItem("ratescan_brand10_reward")){
+    localStorage.setItem("ratescan_brand10_reward","1");
+    showToast("Собрано 10 карточек брендов! Вы настоящий коллекционер");
+  }
+}
+function renderBrandCardsUI(){
+  const el=document.getElementById("brand-cards-section");
+  if(!el)return;
+  const cards=getBrandCards();
+  const list=Object.values(cards).sort((a,b)=>b.ts-a.ts);
+  if(!list.length){
+    el.innerHTML=`<div style="font-size:13px;color:#9ca3af;padding:6px 0;">Напишите отзыв на любой бренд — карточка появится здесь</div>`;
+    return;
+  }
+  const need5=!localStorage.getItem("ratescan_brand5_reward");
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">` +
+    list.slice(0,12).map(c=>`<div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:10px;padding:7px 12px;">
+      <div style="font-size:12px;font-weight:600;color:#6d28d9;">${c.brand}</div>
+      <div style="font-size:10px;color:#a78bfa;margin-top:1px;">${c.category}</div>
+    </div>`).join("") +
+    (list.length>12?`<div style="background:#f3f4f6;border-radius:10px;padding:7px 12px;font-size:12px;color:#9ca3af;align-self:center;">+${list.length-12} ещё</div>`:"") +
+    `</div>` +
+    `<div style="font-size:11px;color:#9ca3af;">${list.length} карточек${need5?" · нужно ещё "+(5-list.length)+" до награды":""}</div>`;
 }
 
 // MESSAGES
