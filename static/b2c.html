@@ -664,8 +664,8 @@ let battleState = {products:[], round:0, wins:{}, total:5, active:false};
 let _battleAdvance=null;
 // ═══ FOOD / HUNGER SYSTEM ═══════════════════════════════════════════
 // Hunger is value 0-100 stored as {v, t}. Decays 8 pts/hr while not fed.
-function getFoodTokens(){return parseInt(localStorage.getItem("ratescan_food")||"3");}
-function addFoodTokens(n){localStorage.setItem("ratescan_food",Math.min(20,getFoodTokens()+n));updateFoodDisplay();}
+function getFoodTokens(){return parseInt(localStorage.getItem("ratescan_food")||"2");}
+function addFoodTokens(n){localStorage.setItem("ratescan_food",Math.min(10,getFoodTokens()+n));updateFoodDisplay();}
 function _hungerStore(){return JSON.parse(localStorage.getItem("ratescan_hunger")||"null");}
 function getHunger(){
   const s=_hungerStore();
@@ -1172,10 +1172,10 @@ async function submitReview(){
     closeReviewModal();showToast("Отзыв опубликован!");
     markQuestDone("review_any");
     if(text.length>100)markQuestDone("share_review");
-    // Hot product: double food bonus
+    // Hot product: badge only, food already given via markQuestDone("review_any")
     const HOT_THRESHOLD=15;
     if(currentProductData&&currentProductData.review_count>=HOT_THRESHOLD){
-      addFoodTokens(2);showToast("Горячий товар — двойной корм за отзыв!");
+      showToast("Горячий товар! Отзыв особенно ценен.");
     }
     // Add brand card for this product
     if(currentProductData&&currentProductData.brand){
@@ -1277,12 +1277,16 @@ const QUEST_DEFS=[
 function getQuestProgress(){return JSON.parse(localStorage.getItem("ratescan_quests")||"{}");}
 function setQuestProgress(d){localStorage.setItem("ratescan_quests",JSON.stringify(d));}
 function markQuestDone(id){
-  const p=getQuestProgress();p[id]=(p[id]||0)+1;setQuestProgress(p);
+  const p=getQuestProgress();
+  const isFirst=!p[id];
+  p[id]=(p[id]||0)+1;setQuestProgress(p);
   checkSecretAchievements(id,p);
   renderQuestCards();
-  // Food rewards are FIXED (hunger multiplies bonus POINTS, not food)
-  const FOOD_REWARDS={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
-  if(FOOD_REWARDS[id]) addFoodTokens(FOOD_REWARDS[id]);
+  // Daily quests give food every time; one-time quests only on first completion
+  const DAILY_FOOD={daily_spin:1,riddle_daily:1};
+  const ONETIME_FOOD={review_any:1,survey_1:1,battle_1:1};
+  if(DAILY_FOOD[id])addFoodTokens(DAILY_FOOD[id]);
+  else if(isFirst&&ONETIME_FOOD[id])addFoodTokens(ONETIME_FOOD[id]);
 }
 async function loadQuests(){
   renderQuestCards();
@@ -1313,7 +1317,7 @@ const TYPE_ICONS={
 };
 function renderQuestCards(){
   const prog=getQuestProgress();
-  const FOOD_REWARDS_BASE={review_any:2,survey_1:3,battle_1:1,riddle_daily:1,daily_spin:1};
+  const FOOD_REWARDS_BASE={review_any:1,survey_1:1,battle_1:1,riddle_daily:1,daily_spin:1};
   const h=getHungerLevel();
   const pm=h.ptsMult;
   document.getElementById("quests-container").innerHTML=QUEST_DEFS.map(q=>{
@@ -1431,13 +1435,15 @@ async function surveyNext(){
 function closeSurveyModal(){document.getElementById("survey-modal").classList.add("hidden");}
 
 // REWARDS
+const _REWARD_ICON_MAP={'🛒':'shopping_cart','🎵':'music_note','📦':'local_shipping','🏪':'store','🍽️':'restaurant','💪':'fitness_center','💚':'card_membership','🚴':'directions_bike','🎁':'redeem','💳':'credit_card','🍕':'local_pizza','☕':'local_cafe','💊':'medication','🎮':'sports_esports'};
+function _rewardMI(e){return _REWARD_ICON_MAP[e]||'redeem';}
 async function loadRewards(){
   try{
     const rewards=await apiGet("/api/b2c/rewards");
     document.getElementById("rewards-grid").innerHTML=rewards.map(r=>`
       <div class="card p-4 ${r.already_purchased?"opacity-70":""}">
         <div class="flex items-start gap-3 mb-3">
-          <div style="width:44px;height:44px;background:#eef2ff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${r.icon}</div>
+          <div style="width:44px;height:44px;background:#eef2ff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="material-icons-round" style="font-size:22px;color:#6366f1;">${_rewardMI(r.icon)}</span></div>
           <div><div style="font-weight:600;font-size:14px;">${r.name}</div><div style="font-size:12px;color:#6b7280;">${r.partner}</div></div>
         </div>
         <p style="font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:12px;">${r.description}</p>
@@ -1821,8 +1827,11 @@ function startBattle(){
   const validCats=Object.entries(cats).filter(([,ps])=>ps.length>=2);
   if(!validCats.length){showToast("Недостаточно товаров в одной категории для баттла","error");return;}
   const [chosenCat,catProducts]=validCats[Math.floor(Math.random()*validCats.length)];
-  const shuffled=[...catProducts].sort(()=>Math.random()-0.5);
-  battleState={products:shuffled,round:0,wins:{},total:Math.min(5,Math.floor(shuffled.length/2)),active:true,category:chosenCat};
+  // Expand pool so we always get at least 7 rounds even with few unique products
+  let pool=[...catProducts];
+  while(pool.length<14)pool=[...pool,...catProducts];
+  const shuffled=pool.sort(()=>Math.random()-0.5).slice(0,14);
+  battleState={products:shuffled,round:0,wins:{},total:Math.min(7,Math.floor(shuffled.length/2)),active:true,category:chosenCat};
   renderBattleRound();
 }
 function _battleStars(r){
@@ -1945,7 +1954,7 @@ function battleVote(winnerId,side){
       let battleTimer=null;
       const advance=()=>{if(battleTimer)clearTimeout(battleTimer);_battleAdvance=null;renderBattleRound();};
       _battleAdvance=advance;
-      cont.innerHTML=`<div class="vote-flash" style="text-align:center;padding:24px 16px;">
+      cont.innerHTML=`<div style="text-align:center;padding:24px 16px;">
         <div style="font-size:12px;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Ваш выбор</div>
         <div style="font-size:19px;font-weight:700;color:#6366f1;margin-bottom:4px;">${winner?winner.name:"—"}</div>
         <div style="font-size:12px;color:#9ca3af;margin-bottom:16px;">${winner?winner.brand:""}</div>
@@ -2083,7 +2092,7 @@ function checkBrandCollections(cards){
   const count=Object.keys(cards).length;
   if(count>=5&&!localStorage.getItem("ratescan_brand5_reward")){
     localStorage.setItem("ratescan_brand5_reward","1");
-    addFoodTokens(3);
+    addFoodTokens(1);
     showToast("Собрано 5 карточек брендов! +3 корма в награду");
   }
   if(count>=10&&!localStorage.getItem("ratescan_brand10_reward")){
